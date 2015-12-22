@@ -171,7 +171,7 @@ class Server extends \Sabre\DAV\Server
 			/* Locks Plugin */
 			$this->addPlugin(new \Sabre\DAV\Locks\Plugin(new \Sabre\DAV\Locks\Backend\File(\CApi::DataPath() . '/locks.dat')));
 
-			$this->subscribeEvent('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
+			$this->on('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
 		}
     }
 	

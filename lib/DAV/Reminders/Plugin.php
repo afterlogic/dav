@@ -56,9 +56,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
         $this->server = $server;
 		
-		$this->server->subscribeEvent('beforeMethod', array($this, 'beforeMethod'), 90);
-		$this->server->subscribeEvent('afterCreateFile', array($this, 'afterCreateFile'), 90);		
-		$this->server->subscribeEvent('afterWriteContent', array($this, 'afterWriteContent'), 90);		
+		$this->server->on('beforeMethod', array($this, 'beforeMethod'), 90);
+		$this->server->on('afterCreateFile', array($this, 'afterCreateFile'), 90);		
+		$this->server->on('afterWriteContent', array($this, 'afterWriteContent'), 90);		
     }
 	
 	protected function getUser()

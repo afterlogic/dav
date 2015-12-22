@@ -84,9 +84,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     public function initialize(\Sabre\DAV\Server $server) {
 
         $this->server = $server;
-		$this->server->subscribeEvent('beforeMethod', array($this, 'beforeMethod'));   
-		$this->server->subscribeEvent('beforeBind', array($this, 'beforeBind'), 30);
-		$this->server->subscribeEvent('afterUnbind', array($this, 'afterUnbind'), 30);
+		$this->server->on('beforeMethod', array($this, 'beforeMethod'));   
+		$this->server->on('beforeBind', array($this, 'beforeBind'), 30);
+		$this->server->on('afterUnbind', array($this, 'afterUnbind'), 30);
 		
 	}
 
