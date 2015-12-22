@@ -15,10 +15,9 @@
 		"sabre/dav": "~1.8.12"
 	},
 	"autoload": {
-        "psr-0" : {
-            "Afterlogic\\DAV": "lib/"
-        }
-	},
+        "psr-4" : {
+            "Afterlogic\\DAV\\": "lib/DAV/"
+        }	},
 	"extra": {
 		"branch-alias": {
 			"dev-master": "1.0.x-dev"
