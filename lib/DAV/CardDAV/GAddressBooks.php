@@ -131,6 +131,10 @@ class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDir
 
     }
 	
+	public function propPatch(\Sabre\DAV\PropPatch $propPatch) {
+		return false;
+	}
+	
     /**
      * Returns the owner principal
      *

@@ -113,8 +113,8 @@ class Utils
 				{
 					$oStmt = $oPdo->prepare(
 						'INSERT INTO '.$dbPrefix.Constants::T_CALENDARS.'
-							(principaluri, displayname, uri, description, components, ctag, calendarcolor)
-							VALUES (?, ?, ?, ?, ?, 1, ?)'
+							(principaluri, displayname, uri, description, components, calendarcolor)
+							VALUES (?, ?, ?, ?, ?, ?)'
 					);
 
 					$oStmt->execute(array(
@@ -163,8 +163,8 @@ class Utils
 
 				$stmt1 = $oPdo->prepare(
 					'INSERT INTO '.$dbPrefix.Constants::T_ADDRESSBOOKS.'
-						(principaluri, displayname, uri, description, ctag)
-						VALUES (?, ?, ?, ?, 1)'
+						(principaluri, displayname, uri, description)
+						VALUES (?, ?, ?, ?)'
 				);
 				if (!$bHasDefaultAddressbooks)
 				{

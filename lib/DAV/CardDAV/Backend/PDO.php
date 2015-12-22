@@ -29,7 +29,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      */
     public function getAddressBookForUser($principalUri, $addressbookUri) {
 
-        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, ctag FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
+        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -39,7 +39,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			'principaluri' => $row['principaluri'],
 			'{DAV:}displayname' => $row['displayname'],
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
-			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
+//			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Property\SupportedAddressData(),
 		);
 
@@ -86,7 +86,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			'principaluri' => $sPrincipalUri,
 			'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME,
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME,
-			'{http://calendarserver.org/ns/}getctag' => date('Gi'),
+//			'{http://calendarserver.org/ns/}getctag' => date('Gi'),
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' =>
 				new \Sabre\CardDAV\Property\SupportedAddressData()
 		);

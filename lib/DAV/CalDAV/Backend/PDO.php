@@ -198,7 +198,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			$bRemoveResult = $stmt->execute($aParams);
 		}
 
-		$stmt = $this->pdo->prepare("UPDATE " . $this->calendarTableName . " SET ctag = ctag + 1 WHERE id = ?");
+//		$stmt = $this->pdo->prepare("UPDATE " . $this->calendarTableName . " SET ctag = ctag + 1 WHERE id = ?");
         $stmt->execute(array($mCalendarId));		
 		
 		return $bAddResult && $bRemoveResult;
@@ -249,7 +249,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$aFields = array_values($this->propertyMap);
 		$aFields[] = 'id';
 		$aFields[] = 'uri';
-		$aFields[] = 'ctag';
+//		$aFields[] = 'ctag';
 		$aFields[] = 'components';
 		$aFields[] = 'principaluri';
 		$aFields[] = 'transparent';
@@ -322,7 +322,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 				'id' => $aRows['id'],
 				'uri' => $aRows['uri'],
 				'principaluri' => $aRows['principaluri'],
-				'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $aRows['ctag']?$aRows['ctag']:'0',
+//				'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $aRows['ctag']?$aRows['ctag']:'0',
 				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Property\SupportedCalendarComponentSet($aComponents),
 				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new \Sabre\CalDAV\Property\ScheduleCalendarTransp($aRows['transparent']?'transparent':'opaque'),
 			);
@@ -386,7 +386,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 							'id' => $calRow['id'],
 							'uri' => $calRow['uri'],
 							'principaluri' => $bSharedToAll ? $sTenantPrincipalUri : $sPrincipalUri,
-							'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $calRow['ctag'] ? $calRow['ctag'] : '0',
+//							'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $calRow['ctag'] ? $calRow['ctag'] : '0',
 							'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Property\SupportedCalendarComponentSet($aComponents),
 							'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new \Sabre\CalDAV\Property\ScheduleCalendarTransp($calRow['transparent'] ? 'transparent' : 'opaque'),
 						);
