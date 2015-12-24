@@ -20,7 +20,7 @@ class Utils
 	
 	public static function getCurrentAccount()
 	{
-		return self::getUsersManager()->getAccountByEmail(\Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser());
+		return \Afterlogic\DAV\Server::getInstance()->getAccount();
 	}
 	
 	public static function getTenantUser($oAccount)
@@ -36,7 +36,7 @@ class Utils
 			}
 		}
 		
-		return Backend::Principal()->getPrincipalByEmail($sEmail);
+		return $sEmail;
 	}
 	
 	public static function getTenantPrincipalUri($principalUri)
@@ -46,8 +46,8 @@ class Utils
 		$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(basename($principalUri));
 		if ($oAccount)
 		{
-			$sTenantEmail = self::getTenantUser($oAccount);
-			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sTenantEmail;
+			$aTenantEmail = self::getTenantUser($oAccount);
+			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $aTenantEmail;
 		}
 		
 		return $sTenantPrincipalUri;
@@ -210,33 +210,34 @@ class Utils
 	{
 		$sEmail = trim(str_ireplace("mailto:", "", $sEmail));
 		
-		$oPrincipalBackend = Backend::Principal();
-		$mPrincipalPath = $oPrincipalBackend->searchPrincipals(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, array('{http://sabredav.org/ns}email-address'=>$sEmail));
-		if(is_array($mPrincipalPath) && count($mPrincipalPath) === 0) 
-		{
+		$aPrincipalsPath = Backend::Principal()->searchPrincipals(
+				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, 
+				array(
+					'{http://sabredav.org/ns}email-address' => $sEmail
+				)
+		);
+		if(is_array($aPrincipalsPath) && count($aPrincipalsPath) === 0) {
 			\Afterlogic\DAV\Utils::CheckPrincipals($sEmail);
-			$mPrincipalPath = $oPrincipalBackend->searchPrincipals(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, array('{http://sabredav.org/ns}email-address'=>$sEmail));
-			if(is_array($mPrincipalPath) && count($mPrincipalPath) === 0) 
-			{
+			$aPrincipalsPath = Backend::Principal()->searchPrincipals(
+					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, 
+					array(
+						'{http://sabredav.org/ns}email-address' => $sEmail
+					)
+			);
+			if(is_array($aPrincipalsPath) && count($aPrincipalsPath) === 0) {
 				throw new \Exception("Unknown email address");
 			}
 		}
 		
-		$sPrincipal = null;
-		foreach ($mPrincipalPath as $aPrincipal)
-		{
-			if ($aPrincipal === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sEmail)
-			{
-				$sPrincipal = $aPrincipal;
-				break;
-			}
-		}
-		if (!isset($sPrincipal))
-		{
+		$aPrincipals = array_filter($aPrincipalsPath, function ($sPrincipalPath) use ($sEmail) {
+			return ($sPrincipalPath === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sEmail);
+		});
+		
+		if (count($aPrincipals) === 0) {
 			throw new \Exception("Unknown email address");
 		}
 		
-		return $oPrincipalBackend->getPrincipalByPath($sPrincipal);
+		return Backend::Principal()->getPrincipalByPath($aPrincipals[0]);
 	}
 	
 }

@@ -8,24 +8,31 @@ class_exists('CApi') || die();
 
 class Server extends \Sabre\DAV\Server
 {
+	private static $_instance = null;
+    
 	/**
 	 * @var \CApiCapabilityManager
 	 */
 	private $oApiCapaManager;
 	
 	public $oAccount = null;
-
+	
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
-	public static function NewInstance($baseUri = '/')
-	{
-		return new self($baseUri);
-	}
+	static public function getInstance($baseUri = '/') { 
+		
+		if(is_null(self::$_instance)) { 
+			self::$_instance = new self($baseUri); 
+			
+		} 
+		return self::$_instance; 
 	
+	}	
+
 	public function __construct($baseUri = '/')
 	{
-		$this->debugExceptions = false;
+		$this->debugExceptions = true;
 		self::$exposeVersion = false;
 
 		$this->setBaseUri($baseUri);
@@ -34,7 +41,7 @@ class Server extends \Sabre\DAV\Server
 		if (\CApi::GetPDO())
 		{
 			/* Authentication Plugin */
-			$this->addPlugin(new \Sabre\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
+			$this->addPlugin(new \Afterlogic\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
 
 			/* Logs Plugin */
 			$this->addPlugin(new Logs\Plugin());
@@ -55,7 +62,7 @@ class Server extends \Sabre\DAV\Server
 			/* Directory tree */
 			$aTree = array(
 				($bIsOwncloud) ? new CardDAV\AddressBookRoot(Backend::Principal(), Backend::getBackend('carddav-owncloud')) : new CardDAV\AddressBookRoot(Backend::Principal(), Backend::Carddav()),
-				new CalDAV\CalendarRootNode(Backend::Principal(), Backend::Caldav()),
+				new CalDAV\CalendarRoot(Backend::Principal(), Backend::Caldav()),
 				new CardDAV\GAddressBooks('gab', Constants::GLOBAL_CONTACTS), /* Global Address Book */
 			);
 
@@ -161,6 +168,9 @@ class Server extends \Sabre\DAV\Server
 
 			/* Calendar Sharing Plugin */
 			$this->addPlugin(new \Sabre\CalDAV\SharingPlugin());
+			
+			/* DAV Sync Plugin */
+			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
 			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false)
@@ -179,14 +189,34 @@ class Server extends \Sabre\DAV\Server
 	{
 		if (null === $this->oAccount)
 		{
-			$sUser = \Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser();
-			if (!empty($sUser))
+			$oAuthPlugin = $this->getPlugin('auth');
+			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin)
 			{
-				$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUser);
+				list(, $userName) = \Sabre\HTTP\URLUtil::splitPath( 
+						$oAuthPlugin->getCurrentPrincipal()
+				);
+
+				if (!empty($userName))
+				{
+					$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($userName);
+				}
 			}
 		}
 		return $this->oAccount;
 	}	
+	
+	public function setAccount($oAccount)
+	{
+		if ($oAccount instanceof \CAccount)
+		{
+			$oAuthPlugin = $this->getPlugin('auth');
+			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin)
+			{
+				$oAuthPlugin->setCurrentPrincipal(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->IncomingMailLogin);
+			}
+		}
+		
+	}
 
 	/**
 	 * @param string $path
@@ -200,7 +230,7 @@ class Server extends \Sabre\DAV\Server
 		$oAccount = $this->getAccount();
 		if (isset($oAccount)/* && $node->getName() === 'root'*/)
 		{
-			$carddavPlugin = $this->getPlugin('Sabre\CardDAV\Plugin');
+			$carddavPlugin = $this->getPlugin('carddav');
 			if (null !== $oAccount && isset($carddavPlugin) &&
 				$this->oApiCapaManager->isGlobalContactsSupported($oAccount, false))
 			{

@@ -14,11 +14,6 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
     public function __construct()
 	{
     }
-
-    public function setCurrentUser($user)
-	{
-		$this->currentUser = $user;
-	}
 	
 	public function getDigestHash($sRealm, $sUserName)
 	{

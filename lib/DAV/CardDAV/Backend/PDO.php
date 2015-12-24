@@ -13,11 +13,12 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      */
     public function __construct() {
 
-		$oPdo = \CApi::GetPDO();
+		parent::__construct(\CApi::GetPDO());
+		
 		$sDbPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
-
-		parent::__construct($oPdo, $sDbPrefix.Constants::T_ADDRESSBOOKS, $sDbPrefix.Constants::T_CARDS);
-
+		$this->cardsTableName = $sDbPrefix.Constants::T_CARDS;
+		$this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
+		$this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
     }
 	
     /**
@@ -40,7 +41,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			'{DAV:}displayname' => $row['displayname'],
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
 //			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
-			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Property\SupportedAddressData(),
+			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Xml\Property\SupportedAddressData(),
 		);
 
     }	
@@ -88,7 +89,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME,
 //			'{http://calendarserver.org/ns/}getctag' => date('Gi'),
 			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' =>
-				new \Sabre\CardDAV\Property\SupportedAddressData()
+				new \Sabre\CardDAV\Xml\Property\SupportedAddressData()
 		);
 	}
 	

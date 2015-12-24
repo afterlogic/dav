@@ -10,10 +10,10 @@ class RootPersonal extends Directory{
 
 	public function initPath() {
 		
-		$username = \Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser();
-		if ($this->rootPath === null)
+		$oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
+		if ($this->rootPath === null && $oAccount instanceof \CAccount)
 		{
-			$this->rootPath = $this->path . '/' . $username;
+			$this->rootPath = $this->path . '/' . $oAccount->IncomingMailLogin;
 			if (!file_exists($this->rootPath))
 			{
 				mkdir($this->rootPath, 0777, true);
@@ -44,8 +44,7 @@ class RootPersonal extends Directory{
 
         $Size = 0;
 		$aResult = \api_Utils::GetDirectorySize($this->path);
-		if ($aResult && $aResult['size'])
-		{
+		if ($aResult && $aResult['size']) {
 			$Size = (int) $aResult['size'];
 		}
 		return array(

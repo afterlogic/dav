@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-class UserCalendars extends \Sabre\CalDAV\UserCalendars{
+class UserCalendars extends \Sabre\CalDAV\CalendarHome{
 
     /**
      * Returns a list of calendars
@@ -32,7 +32,8 @@ class UserCalendars extends \Sabre\CalDAV\UserCalendars{
 
         // We're adding a notifications node, if it's supported by the backend.
 		
-        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport && \CApi::GetConf('labs.dav.caldav.notification', false)) {
+        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport && 
+				\CApi::GetConf('labs.dav.caldav.notification', false)) {
             $objs[] = new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
         }
 		return $objs;

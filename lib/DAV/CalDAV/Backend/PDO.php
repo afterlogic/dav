@@ -53,15 +53,16 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	 */
 	public function __construct() 
 	{
-		$oPdo = \CApi::GetPDO();
-		$sDbPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
+		parent::__construct(\CApi::GetPDO());
 		
-		$this->dBPrefix = $sDbPrefix;
-		parent::__construct($oPdo, $sDbPrefix.Constants::T_CALENDARS, $sDbPrefix.Constants::T_CALENDAROBJECTS);
+		$this->dBPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
 		
-		$this->calendarSharesTableName = $sDbPrefix.Constants::T_CALENDARSHARES;
-		$this->principalsTableName = $sDbPrefix.Constants::T_PRINCIPALS;
-		$this->notificationsTableName = $sDbPrefix.Constants::T_NOTIFICATIONS;
+		$this->calendarTableName = $this->dBPrefix.Constants::T_CALENDARS;
+		$this->calendarChangesTableName = $this->dBPrefix.Constants::T_CALENDARCHANGES;
+		$this->calendarObjectTableName = $this->dBPrefix . Constants::T_CALENDAROBJECTS;
+		$this->calendarSharesTableName = $this->dBPrefix . Constants::T_CALENDARSHARES;
+		$this->principalsTableName = $this->dBPrefix . Constants::T_PRINCIPALS;
+		$this->notificationsTableName = $this->dBPrefix . Constants::T_NOTIFICATIONS;
 
 	}
         
@@ -247,12 +248,14 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	protected function getCalendarFields()
 	{
 		$aFields = array_values($this->propertyMap);
-		$aFields[] = 'id';
-		$aFields[] = 'uri';
-//		$aFields[] = 'ctag';
-		$aFields[] = 'components';
-		$aFields[] = 'principaluri';
-		$aFields[] = 'transparent';
+		
+        $aFields[] = 'id';
+        $aFields[] = 'uri';
+        $aFields[] = 'synctoken';
+        $aFields[] = 'components';
+        $aFields[] = 'principaluri';
+        $aFields[] = 'transparent';
+		
 
 		// Making fields a comma-delimited list
 		return implode(', ', $aFields);		
@@ -319,14 +322,14 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			}
 
 			$aCalendar = array(
-				'id' => $aRows['id'],
-				'uri' => $aRows['uri'],
-				'principaluri' => $aRows['principaluri'],
-//				'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $aRows['ctag']?$aRows['ctag']:'0',
-				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Property\SupportedCalendarComponentSet($aComponents),
-				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new \Sabre\CalDAV\Property\ScheduleCalendarTransp($aRows['transparent']?'transparent':'opaque'),
+                'id'                                                                 => $aRows['id'],
+                'uri'                                                                => $aRows['uri'],
+                'principaluri'                                                       => $aRows['principaluri'],
+                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag'           => 'http://sabre.io/ns/sync/' . ($aRows['synctoken'] ? $aRows['synctoken'] : '0'),
+                '{http://sabredav.org/ns}sync-token'                                 => $aRows['synctoken'] ? $aRows['synctoken'] : '0',
+                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet($aComponents),
+                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp'         => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($aRows['transparent'] ? 'transparent' : 'opaque'),
 			);
-
 			foreach($this->propertyMap as $xmlName=>$dbName) 
 			{
 				$aCalendar[$xmlName] = $aRows[$dbName];
@@ -544,6 +547,6 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	 * @param \Sabre\CalDAV\Notifications\INotificationType $oNotification
 	 * @return void
 	 */
-	public function deleteNotification($sPrincipalUri, \Sabre\CalDAV\Notifications\INotificationType $oNotification){ }
+	public function deleteNotification($sPrincipalUri, \Sabre\CalDAV\Xml\Notification\NotificationInterface $oNotification){ }
 
 }

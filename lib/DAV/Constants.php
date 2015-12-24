@@ -10,8 +10,10 @@ class Constants
 	const T_PRINCIPALS = 'adav_principals';
 	const T_GROUPMEMBERS = 'adav_groupmembers';
 	const T_CALENDARS = 'adav_calendars';
+	const T_CALENDARCHANGES = 'adav_calendarchanges';
 	const T_CALENDAROBJECTS = 'adav_calendarobjects';
 	const T_ADDRESSBOOKS = 'adav_addressbooks';
+	const T_ADDRESSBOOKCHANGES = 'adav_addressbookchanges';
 	const T_CARDS = 'adav_cards';
 	const T_LOCKS = 'adav_locks';
 	const T_CACHE = 'adav_cache';

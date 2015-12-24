@@ -23,7 +23,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-		$this->oApiContactsManager = \CApi::Manager('contactsmain');
+		$oContactsModule = \CApi::GetModuleManager()->GetModule('Contacts');
+		if ($oContactsModule instanceof \AApiModule)
+		{
+			$this->oApiContactsManager = $oContactsModule->GetManager('main');
+		}
 	}
 
     public function initialize(\Sabre\DAV\Server $server)

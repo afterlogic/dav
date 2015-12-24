@@ -15,11 +15,6 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 	{
     }
 	
-    public function setCurrentUser($user)
-	{
-		$this->currentUser = $user;
-	}
-	
     /**
      * Validates a username and password
      *

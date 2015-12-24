@@ -42,7 +42,7 @@ class SharedFile extends File{
 		}
 		else 
 		{
-	        list(, $name)  = \Sabre\DAV\URLUtil::splitPath($this->linkPath);
+	        list(, $name)  = \Sabre\HTTP\URLUtil::splitPath($this->linkPath);
 		    return $name;
 		}
 

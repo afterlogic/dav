@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
-class EmptyAddressBooks extends \Sabre\CardDAV\UserAddressBooks{
+class EmptyAddressBooks extends \Sabre\CardDAV\AddressBookHome {
 
 	/**
      * Returns a list of addressbooks

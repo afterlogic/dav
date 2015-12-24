@@ -53,7 +53,7 @@ class SharedItem{
 	
     public function getName() {
 
-        list(, $name)  = \Sabre\DAV\URLUtil::splitPath($this->getLink());
+        list(, $name)  = \Sabre\HTTP\URLUtil::splitPath($this->getLink());
         return $name;
 
     }	

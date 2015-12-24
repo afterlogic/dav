@@ -188,31 +188,10 @@ class PDOExt extends \Sabre\DAVACL\PrincipalBackend\PDO
 	
     /**
      * @param string $uri 
-     * @param string $email 
-     * @param string $displayname 
-     * @return void
-     */
-	public function createPrincipal($uri, $email = '', $displayname = '') 
-	{
-    }
-	
-    /**
-     * @param string $uri 
      * @return void
      */
 	public function deletePrincipal($uri) 
 	{
     } 	
 	
-    /**
-     * @param string $sEmail 
-     * @return string
-     */
-	public function getPrincipalByEmail($sEmail)
-	{
-	
-		return $sEmail;
-		
-	}	
-
 }

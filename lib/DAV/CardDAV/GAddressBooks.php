@@ -37,8 +37,7 @@ class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDir
 	{
 		if ($this->account == null)
 		{
-			$sUser = \Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser();
-			$this->account = \Afterlogic\DAV\Utils::GetAccountByLogin($sUser);
+			$this->account = \Afterlogic\DAV\Server::getInstance()->getAccount();
 		}
 		return $this->account;
 	}

@@ -29,7 +29,11 @@ class SharedAddressBook extends AddressBook {
 	{
 		if (!isset($this->oApiContactsManager))
 		{
-			$this->oApiContactsManager = \CApi::Manager('contacts');
+			$oContactsModule = \CApi::GetModuleManager()->GetModule('Contacts');
+			if ($oContactsModule instanceof \AApiModule)
+			{
+				$this->oApiContactsManager = $oContactsModule->GetManager('main');
+			}
 		}
 		return $this->oApiContactsManager;
 	}

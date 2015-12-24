@@ -10,22 +10,17 @@ class RootPublic extends Directory {
 
     public function initPath() {
 		
-		$sUserName = \Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser();
 		if ($this->rootPath === null)
 		{
-			if (isset($sUserName))
+			$oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
+			if ($oAccount instanceof \CAccount)
 			{
-				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
-				if ($oAccount)
+				$this->rootPath = $this->path . '/' . $oAccount->IdTenant;
+				if (!file_exists($this->rootPath))
 				{
-					$this->rootPath = $this->path . '/' . $oAccount->IdTenant;
-					if (!file_exists($this->rootPath))
-					{
-						mkdir($this->rootPath, 0777, true);
-					}
+					mkdir($this->rootPath, 0777, true);
 				}
 			}
-			
 		}
 		if ($this->rootPath !== null)
 		{

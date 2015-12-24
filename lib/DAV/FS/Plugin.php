@@ -39,6 +39,20 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	protected $sNewPath = null;
 	protected $sNewID = null;
 
+	/*
+     * Returns a plugin name.
+     *
+     * Using this name other plugins will be able to access other plugins
+     * using DAV\Server::getPlugin
+     *
+     * @return string
+     */
+    function getPluginName() {
+
+        return 'files';
+
+    }	
+	
 	public function getTenantsMan()
 	{
 		if ($this->oApiTenants === null)
