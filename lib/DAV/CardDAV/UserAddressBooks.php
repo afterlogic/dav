@@ -18,6 +18,24 @@ class UserAddressBooks extends \Sabre\CardDAV\AddressBookHome {
 		$oApiCapaManager = \CApi::GetCoreManager('capability');
 		
 		$addressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
+		if (count($addressbooks) === 0)
+		{
+			$this->carddavBackend->createAddressBook(
+				$this->principalUri, 
+				\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME, 
+				[
+					'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_DISPLAY_NAME
+				]
+			);
+			$this->carddavBackend->createAddressBook(
+				$this->principalUri, 
+				\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME, 
+				[
+					'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME
+				]
+			);
+			$addressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
+		}
 		foreach($addressbooks as $addressbook) 
 		{
 			$objs[] = new AddressBook($this->carddavBackend, $addressbook);

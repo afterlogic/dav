@@ -54,11 +54,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 
 				if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
 						(($bIsMobileSync && !$bIsOutlookSyncClient) || ($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-					$bIsDemo || ($sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))
-				)
-				{
-					\Afterlogic\DAV\Utils::CheckPrincipals($sUserName);
-					
+					$bIsDemo || ($sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
 					return true;
 				}
 			}

@@ -147,7 +147,10 @@ class Server extends \Sabre\DAV\Server
 			
 			/* Reminders Plugin */
 			$this->addPlugin(new Reminders\Plugin(Backend::Reminders()));
-
+			
+			$this->addPlugin(new \Sabre\CalDAV\Schedule\Plugin());
+			$this->addPlugin(new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host'));
+			
 			/* Contacts Plugin */
 			$this->addPlugin(new Contacts\Plugin());
 

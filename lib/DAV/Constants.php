@@ -9,17 +9,21 @@ class Constants
 	const T_ACCOUNTS = 'awm_accounts';
 	const T_PRINCIPALS = 'adav_principals';
 	const T_GROUPMEMBERS = 'adav_groupmembers';
+
 	const T_CALENDARS = 'adav_calendars';
 	const T_CALENDARCHANGES = 'adav_calendarchanges';
 	const T_CALENDAROBJECTS = 'adav_calendarobjects';
+	const T_SCHEDULINGOBJECTS = 'adav_schedulingobjects';
+	const T_CALENDARSUBSCRIPTIONS = 'adav_calendarsubscriptions';
+	const T_CALENDARSHARES = 'adav_calendarshares';
+	const T_REMINDERS = 'adav_reminders';
+
 	const T_ADDRESSBOOKS = 'adav_addressbooks';
 	const T_ADDRESSBOOKCHANGES = 'adav_addressbookchanges';
 	const T_CARDS = 'adav_cards';
+
 	const T_LOCKS = 'adav_locks';
 	const T_CACHE = 'adav_cache';
-	const T_CALENDARSHARES = 'adav_calendarshares';
-	const T_NOTIFICATIONS = 'adav_notifications';
-	const T_REMINDERS = 'adav_reminders';
 	
 	const GLOBAL_CONTACTS = 'Global Contacts';
 	const CALENDAR_DEFAULT_NAME = 'Default';

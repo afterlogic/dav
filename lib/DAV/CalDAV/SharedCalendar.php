@@ -21,6 +21,10 @@ class SharedCalendar extends \Sabre\CalDAV\SharedCalendar{
         parent::__construct($caldavBackend, $calendarInfo);
 
     }
+	public function getId()
+	{
+		return $this->calendarInfo['id'];
+	}
 	
 	/**
      * Returns a list of ACE's for this node.
