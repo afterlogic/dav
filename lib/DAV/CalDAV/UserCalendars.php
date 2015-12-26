@@ -113,7 +113,7 @@ class UserCalendars extends \Sabre\CalDAV\CalendarHome{
 
         }
 
-        throw new NotFound('Node with name \'' . $name . '\' could not be found');
+        throw new \Sabre\DAV\Exception\NotFound('Node with name \'' . $name . '\' could not be found');
 
     }
 
