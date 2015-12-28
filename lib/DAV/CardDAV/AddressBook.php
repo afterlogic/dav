@@ -11,9 +11,13 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 
 	public function getContactsManager()
 	{
-		if (!isset($this->oApiContactsManager))
-		{
-			$this->oApiContactsManager = \CApi::Manager('contacts');
+		if (!isset($this->oApiContactsManager)) {
+			
+			$oContactsModule = \CApi::GetModule('Contacts');
+			if ($oContactsModule instanceof \AApiModule) {
+				
+				$this->oApiContactsManager = $oContactsModule->GetManager('main');
+			}
 		}
 		return $this->oApiContactsManager;
 	}
@@ -30,9 +34,14 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 		
         $children = array();
         foreach($objs as $obj) {
-			if (!in_array($obj['uri'], $aContactIds))
-			{
-				$children[] = new \Sabre\CardDAV\Card($this->carddavBackend, $this->addressBookInfo, $obj);
+			
+			if (!in_array($obj['uri'], $aContactIds)) {
+				
+				$children[] = new \Sabre\CardDAV\Card(
+						$this->carddavBackend, 
+						$this->addressBookInfo, 
+						$obj
+				);
 			}
         }
         return $children;
@@ -49,12 +58,15 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 		$aContactIds = array();
 		
 		$oAccount = \Afterlogic\DAV\Utils::getCurrentAccount();
-		if ($oAccount)
-		{
+		if ($oAccount) {
+			
 			$oContactsManager = $this->getContactsManager();
-			if ($oContactsManager)
-			{
-				$aContactIds = $oContactsManager->getSharedContactIds($oAccount->IdUser, $oAccount->IdTenant);
+			if ($oContactsManager) {
+				
+				$aContactIds = $oContactsManager->getSharedContactIds(
+						$oAccount->IdUser, 
+						$oAccount->IdTenant
+				);
 			}
 		}
 		
@@ -69,10 +81,18 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
      */
     public function getChildrenByOffset($iOffset = 0, $iRequestLimit = 20) {
 
-        $objs = $this->carddavBackend->getCardsByOffset($this->addressBookInfo['id'], $iOffset, $iRequestLimit);
+        $objs = $this->carddavBackend->getCardsByOffset(
+				$this->addressBookInfo['id'], 
+				$iOffset, 
+				$iRequestLimit
+		);
         $children = array();
         foreach($objs as $obj) {
-            $children[] = new \Sabre\CardDAV\Card($this->carddavBackend,$this->addressBookInfo,$obj);
+            $children[] = new \Sabre\CardDAV\Card(
+					$this->carddavBackend,
+					$this->addressBookInfo,
+					$obj
+			);
         }
         return $children;
 

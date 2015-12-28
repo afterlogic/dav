@@ -11,8 +11,8 @@ class Backend
 	public static function __callStatic($sMethod, $aArgs)
 	{
 		$oResult = null;
-		if (!method_exists('\Afterlogic\DAV\Backend', $sMethod))
-		{
+		if (!method_exists('\Afterlogic\DAV\Backend', $sMethod)) {
+			
 			$oResult = self::getBackend(strtolower($sMethod));
 		}
 		return $oResult;
@@ -20,8 +20,7 @@ class Backend
 	
 	public static function getBackend($sName)
 	{
-		if (!isset(self::$aBackends[$sName]))
-		{
+		if (!isset(self::$aBackends[$sName])) {
 			$oBackend = null;
 			switch ($sName) {
 				case 'auth':
@@ -46,8 +45,8 @@ class Backend
 					$oBackend = new \Afterlogic\DAV\Reminders\Backend\PDO();
 					break;
 			}
-			if (isset($oBackend))
-			{
+			if (isset($oBackend)) {
+				
 				self::$aBackends[$sName] = $oBackend;
 			}
 		}

@@ -18,14 +18,18 @@ class RootShared extends RootPersonal{
 		
         $path = $this->path . '/' . trim($name, '/');
 
-        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located');
+        if (!file_exists($path)) {
 
-		if (!is_dir($path))
-		{
-			$item = new SharedItem($this->authPlugin, $path);
+			throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located');
 			
-			if (!$item->exists())
-			{
+		}
+
+		if (!is_dir($path)) {
+			
+			$item = new Shared\Item($this->authPlugin, $path);
+			
+			if (!$item->exists()) {
+				
 				$item->delete();
 			}
 /*
@@ -37,9 +41,8 @@ class RootShared extends RootPersonal{
 			));
 */		
 			return $item->getItem();
-		}
-		else 
-		{
+		} else {
+			
 			return false;
 		}
 
@@ -49,20 +52,19 @@ class RootShared extends RootPersonal{
 
 		$this->initPath();
 		
-		$nodes = array();
-		
-		if(!file_exists($this->path))
-		{
+		if(!file_exists($this->path)) {
+			
 			mkdir($this->path);
 		}
 		
-        foreach(scandir($this->path) as $node) 
-		{
-			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node!== API_HELPDESK_PUBLIC_NAME) 
-			{
+		$nodes = array();
+        foreach(scandir($this->path) as $node)  {
+			
+			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node!== API_HELPDESK_PUBLIC_NAME) {
+
 				$child = $this->getChild($node);
-				if ($child)
-				{
+				if ($child) {
+					
 					$nodes[] = $child;
 				}
 			}

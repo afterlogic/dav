@@ -2,9 +2,9 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\CardDAV;
+namespace Afterlogic\DAV\CardDAV\GAB;
 
-class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirectory, \Sabre\DAV\IProperties, \Sabre\DAVACL\IACL {
+class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirectory, \Sabre\DAV\IProperties, \Sabre\DAVACL\IACL {
 
     /**
 	 * @var string
@@ -35,8 +35,8 @@ class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDir
 
 	public function getAccount()
 	{
-		if ($this->account == null)
-		{
+		if ($this->account == null) {
+			
 			$this->account = \Afterlogic\DAV\Server::getInstance()->getAccount();
 		}
 		return $this->account;
@@ -61,18 +61,27 @@ class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDir
 		$oApiCapabilityManager = /* @var \CApiCapabilityManager */ \CApi::GetCoreManager('capability');
 
 		if ($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isGlobalContactsSupported($oAccount))
-		{
+			$oApiCapabilityManager->isGlobalContactsSupported($oAccount)) {
+			
 			$aContacts = array();
-			$oApiGcontactManager = /* @var \CApiGcontactsManager */ \CApi::Manager('gcontacts');
-			if ($oApiGcontactManager)
-			{
-				$aContacts = $oApiGcontactManager->getContactItems($oAccount,
-					\EContactSortField::EMail, \ESortOrder::ASC, 0, 9999);
+			$oContactsModule = \CApi::GetModule('Contacts');
+			if ($oContactsModule instanceof \AApiModule) {
+				
+				$oGcontactManager = $oContactsModule->GetManager('global');
+				if ($oGcontactManager) {
+
+					$aContacts = $oGcontactManager->getContactItems(
+							$oAccount,
+							\EContactSortField::EMail, 
+							\ESortOrder::ASC, 
+							0, 
+							9999
+					);
+				}
 			}
 
-			foreach($aContacts as $oContact)
-			{
+			foreach($aContacts as $oContact) {
+				
 				$sUID = md5($oContact->Email .'-'. $oContact->Id);
 				$vCard = new \Sabre\VObject\Component\VCard(
 					array(
@@ -92,7 +101,7 @@ class GAddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDir
 					)
 				);				
 
-				$aCards[] = new GCard(
+				$aCards[] = new Card(
 					array(
 						'uri' => $sUID . '.vcf',
 						'carddata' => $vCard->serialize(),

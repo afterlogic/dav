@@ -2,9 +2,9 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS;
+namespace Afterlogic\DAV\FS\Shared;
 
-class SharedItem{
+class Item{
 	
 	protected $path;
 	
@@ -40,8 +40,7 @@ class SharedItem{
 
 	public function getLink() {
 
-        $link = $this->getProperty('link');
-		return $link;
+        return $this->getProperty('link');
 
     }
 
@@ -69,8 +68,9 @@ class SharedItem{
      */
     protected function getData() 
 	{
-
-        if (!file_exists($this->path)) return array();
+        if (!file_exists($this->path)) {
+			return array();
+		}
 
         // opening up the file, and creating a shared lock
         $handle = fopen($this->path,'r');
@@ -160,13 +160,12 @@ class SharedItem{
 	
 	public function getItem()
 	{
-		if ($this->getProperty('directory'))
-		{
-			return new SharedDirectory($this->path, $this, true);
-		}
-		else
-		{
-			return new SharedFile($this->path, $this, true);
+		if ($this->getProperty('directory')) {
+			
+			return new Directory($this->path, $this, true);
+		} else {
+			
+			return new File($this->path, $this, true);
 		}
 	}
 	

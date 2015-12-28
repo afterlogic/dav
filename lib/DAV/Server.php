@@ -15,6 +15,9 @@ class Server extends \Sabre\DAV\Server
 	 */
 	private $oApiCapaManager;
 	
+	/**
+	 * @var \CAccount
+	 */
 	public $oAccount = null;
 	
 	/**
@@ -23,6 +26,7 @@ class Server extends \Sabre\DAV\Server
 	static public function getInstance($baseUri = '/') { 
 		
 		if(is_null(self::$_instance)) { 
+			
 			self::$_instance = new self($baseUri); 
 			
 		} 
@@ -38,13 +42,13 @@ class Server extends \Sabre\DAV\Server
 		$this->setBaseUri($baseUri);
 		date_default_timezone_set('GMT');
 
-		if (\CApi::GetPDO())
-		{
+		if (\CApi::GetPDO()) {
+
 			/* Authentication Plugin */
 			$this->addPlugin(new \Afterlogic\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
 
 			/* Logs Plugin */
-			$this->addPlugin(new Logs\Plugin());
+//			$this->addPlugin(new Logs\Plugin());
 
 			/* DAV ACL Plugin */
 			$aclPlugin = new \Sabre\DAVACL\Plugin();
@@ -52,79 +56,93 @@ class Server extends \Sabre\DAV\Server
 			$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
 			
 			$mAdminPrincipal = \CApi::GetConf('labs.dav.admin-principal', false);
-			if ($mAdminPrincipal !== false)
-			{
-				$aclPlugin->adminPrincipals = array(Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal);
-			}
+			$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
+					array(Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal) : array();
 			$this->addPlugin($aclPlugin);
 
 			$bIsOwncloud = false;
 			/* Directory tree */
 			$aTree = array(
-				($bIsOwncloud) ? new CardDAV\AddressBookRoot(Backend::Principal(), Backend::getBackend('carddav-owncloud')) : new CardDAV\AddressBookRoot(Backend::Principal(), Backend::Carddav()),
-				new CalDAV\CalendarRoot(Backend::Principal(), Backend::Caldav()),
-				new CardDAV\GAddressBooks('gab', Constants::GLOBAL_CONTACTS), /* Global Address Book */
+				($bIsOwncloud) ? 
+					new CardDAV\AddressBookRoot(
+							Backend::Principal(), 
+							Backend::getBackend('carddav-owncloud')
+					) : 
+					new CardDAV\AddressBookRoot(
+							Backend::Principal(), 
+							Backend::Carddav()
+					),
+				new CalDAV\CalendarRoot(
+						Backend::Principal(), 
+						Backend::Caldav()),
+				new CardDAV\GAB\AddressBooks(
+						'gab', 
+						Constants::GLOBAL_CONTACTS
+				), /* Global Address Book */
 			);
 
 			$this->oApiCapaManager = \CApi::GetCoreManager('capability');
 
 			/* Files folder */
-			if ($this->oApiCapaManager->isFilesSupported())
-			{
+			if ($this->oApiCapaManager->isFilesSupported()) {
+				
 				$bErrorCreateDir = false;
 				
 				/* Public files folder */
 				$publicDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
-				if (!file_exists($publicDir))
-				{
-					if (!@mkdir($publicDir))
-					{
+				if (!file_exists($publicDir)) {
+
+					if (!@mkdir($publicDir)) {
+						
 						$bErrorCreateDir = true;
 					}
 				}
 
 				$publicDir .= Constants::FILESTORAGE_PATH_CORPORATE;
-				if (!file_exists($publicDir))	
-				{
-					if (!@mkdir($publicDir))
-					{
+				if (!file_exists($publicDir)) {
+					
+					if (!@mkdir($publicDir)) {
+						
 						$bErrorCreateDir = true;
 					}
 				}
 
 				$personalDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
 						Constants::FILESTORAGE_PATH_PERSONAL;
-				if (!file_exists($personalDir))
-				{
-					if (!@mkdir($personalDir))
-					{
+				if (!file_exists($personalDir)) {
+					
+					if (!@mkdir($personalDir)) {
+						
 						$bErrorCreateDir = true;
 					}
 				}
 				$sharedDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
 						Constants::FILESTORAGE_PATH_SHARED;
-				if (!file_exists($sharedDir))
-				{
-					if (!@mkdir($sharedDir))
-					{
+				if (!file_exists($sharedDir)) {
+					
+					if (!@mkdir($sharedDir)) {
+						
 						$bErrorCreateDir = true;
 					}
 				}
 				
-				if ($bErrorCreateDir)
-				{
-					throw new \Sabre\DAV\Exception('Can\'t create directory in ' . \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT , 500);
+				if ($bErrorCreateDir) {
+					
+					throw new \Sabre\DAV\Exception(
+							'Can\'t create directory in ' . \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT, 
+							500
+					);
 				}
 
 				$aFilesTree = array(
 					new FS\RootPersonal($personalDir)
 				);
-				if ($this->oApiCapaManager->isCollaborationSupported())
-				{
+				if ($this->oApiCapaManager->isCollaborationSupported()) {
+					
 					array_push($aFilesTree, new FS\RootPublic($publicDir));
 				}
-				if (\CApi::GetConf('labs.files-sharing', false))
-				{
+				if (\CApi::GetConf('labs.files-sharing', false)) {
+					
 					array_push($aFilesTree, new FS\RootShared($sharedDir));
 				}
 				
@@ -154,8 +172,8 @@ class Server extends \Sabre\DAV\Server
 			/* Contacts Plugin */
 			$this->addPlugin(new Contacts\Plugin());
 
-			if ($this->oApiCapaManager->isMobileSyncSupported())
-			{
+			if ($this->oApiCapaManager->isMobileSyncSupported()) {
+				
 				/* CalDAV Plugin */
 				$this->addPlugin(new \Sabre\CalDAV\Plugin());
 
@@ -176,13 +194,15 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false)
-			{
+			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false) {
+				
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin(false, false));
 			}
 
 			/* Locks Plugin */
-			$this->addPlugin(new \Sabre\DAV\Locks\Plugin(new \Sabre\DAV\Locks\Backend\File(\CApi::DataPath() . '/locks.dat')));
+			$this->addPlugin(new \Sabre\DAV\Locks\Plugin(
+					new \Sabre\DAV\Locks\Backend\File(\CApi::DataPath() . '/locks.dat'))
+			);
 
 			$this->on('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
 		}
@@ -190,17 +210,17 @@ class Server extends \Sabre\DAV\Server
 	
 	public function getAccount()
 	{
-		if (null === $this->oAccount)
-		{
+		if (null === $this->oAccount) {
+			
 			$oAuthPlugin = $this->getPlugin('auth');
-			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin)
-			{
+			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
+				
 				list(, $userName) = \Sabre\HTTP\URLUtil::splitPath( 
 						$oAuthPlugin->getCurrentPrincipal()
 				);
 
-				if (!empty($userName))
-				{
+				if (!empty($userName)) {
+					
 					$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($userName);
 				}
 			}
@@ -208,14 +228,16 @@ class Server extends \Sabre\DAV\Server
 		return $this->oAccount;
 	}	
 	
-	public function setAccount($oAccount)
+	public function setAccount($oAccount) 
 	{
-		if ($oAccount instanceof \CAccount)
-		{
+		if ($oAccount instanceof \CAccount) {
+			
 			$oAuthPlugin = $this->getPlugin('auth');
-			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin)
-			{
-				$oAuthPlugin->setCurrentPrincipal(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->IncomingMailLogin);
+			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
+				
+				$oAuthPlugin->setCurrentPrincipal(
+						\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->IncomingMailLogin
+				);
 			}
 		}
 		
@@ -234,9 +256,8 @@ class Server extends \Sabre\DAV\Server
 		if (isset($oAccount)/* && $node->getName() === 'root'*/)
 		{
 			$carddavPlugin = $this->getPlugin('carddav');
-			if (null !== $oAccount && isset($carddavPlugin) &&
-				$this->oApiCapaManager->isGlobalContactsSupported($oAccount, false))
-			{
+			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($oAccount, false)) {
+				
 				$carddavPlugin->directories = array('gab');
 			}
 		}

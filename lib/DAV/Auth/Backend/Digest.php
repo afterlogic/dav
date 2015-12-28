@@ -6,27 +6,19 @@ namespace Afterlogic\DAV\Auth\Backend;
 
 class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 {
-    /**
-     * Creates the backend object.
-     *
-     * @return void
-     */
-    public function __construct()
-	{
-    }
-	
+
 	public function getDigestHash($sRealm, $sUserName)
 	{
-		if (class_exists('CApi') && \CApi::IsValid())
-		{
+		if (class_exists('CApi') && \CApi::IsValid()) {
+			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
 			$oApiCapabilityManager = \CApi::GetCoreManager('capability');
 
-			if ($oApiCapabilityManager)
-			{
+			if ($oApiCapabilityManager) {
+				
 				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
-				if ($oAccount && $oAccount->IsDisabled)
-				{
+				if ($oAccount && $oAccount->IsDisabled) {
+					
 					return null;
 				}
 
@@ -36,16 +28,21 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 				$bIsOutlookSync = false;
 				$bIsDemo = false;
 
-				if ($oAccount)
-				{
+				if ($oAccount) {
+					
 					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($oAccount);
 					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($oAccount);
 					
-					\CApi::Plugin()->RunHook('plugin-is-demo-account', array(&$oAccount, &$bIsDemo));
+					\CApi::Plugin()->RunHook(
+							'plugin-is-demo-account', 
+							array(&$oAccount, &$bIsDemo)
+					);
 				}
 				
-				if (($oAccount && (($bIsMobileSync && !$bIsOutlookSyncClient) || ($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-					$bIsDemo || ($oApiCalendarManager && $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
+				if (($oAccount && (($bIsMobileSync && !$bIsOutlookSyncClient) || 
+						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
+						$bIsDemo || ($oApiCalendarManager && 
+								$sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
 					
 					return md5($sUserName.':'.$sRealm.':'.($bIsDemo ? 'demo' : $oAccount->IncomingMailPassword));
 				}

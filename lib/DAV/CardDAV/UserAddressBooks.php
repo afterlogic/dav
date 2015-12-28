@@ -17,9 +17,9 @@ class UserAddressBooks extends \Sabre\CardDAV\AddressBookHome {
 		/* @var $oApiCapaManager \CApiCapabilityManager */
 		$oApiCapaManager = \CApi::GetCoreManager('capability');
 		
-		$addressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
-		if (count($addressbooks) === 0)
-		{
+		$aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
+		if (count($aAddressbooks) === 0) {
+			
 			$this->carddavBackend->createAddressBook(
 				$this->principalUri, 
 				\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME, 
@@ -34,16 +34,23 @@ class UserAddressBooks extends \Sabre\CardDAV\AddressBookHome {
 					'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME
 				]
 			);
-			$addressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
+			$aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
 		}
-		foreach($addressbooks as $addressbook) 
-		{
-			$objs[] = new AddressBook($this->carddavBackend, $addressbook);
+		foreach($aAddressbooks as $addressbook) {
+			
+			$objs[] = new AddressBook(
+					$this->carddavBackend, 
+					$addressbook
+			);
 		}
-		if ($oApiCapaManager->isCollaborationSupported())
-		{
+		if ($oApiCapaManager->isCollaborationSupported()) {
+			
 			$sharedAddressbook = $this->carddavBackend->getSharedAddressBook($this->principalUri);
-			$objs[] = new SharedAddressBook($this->carddavBackend, $sharedAddressbook, $this->principalUri);
+			$objs[] = new Shared\AddressBook(
+					$this->carddavBackend, 
+					$sharedAddressbook, 
+					$this->principalUri
+			);
 		}
         return $objs;
 

@@ -60,7 +60,6 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
      */
     public function deleteCalendar($calendarId) {
 
-		\CApi::Log('deleteCalendar', \ELogLevel::Full, 'del-');
 		parent::deleteCalendar($calendarId);
 		
 		$this->deleteCalendarShares($calendarId);
@@ -101,10 +100,10 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$bAddResult = true;
 		$bRemoveResult = true;
 		
-		if(count($aAdd)>0) 
-		{
-			foreach ($aAdd as $aAddItem)
-			{
+		if(count($aAdd) > 0) {
+			
+			foreach ($aAdd as $aAddItem) {
+				
 				$aFieldNames = array();
 				$aFields = array();
 
@@ -118,12 +117,11 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 				$aFieldNames[] = 'status';
 				$aFields[':status'] = \Sabre\CalDAV\SharingPlugin::STATUS_NORESPONSE;
 
-
 				// check we have all the required fields
-				foreach($this->sharesProperties as $sField) 
-				{
-					if(isset($aAddItem[$sField])) 
-					{
+				foreach($this->sharesProperties as $sField) {
+					
+					if(isset($aAddItem[$sField])) {
+						
 						$aFieldNames[] = $sField;
 						$aFields[':'.$sField] = $aAddItem[$sField];
 					}
@@ -155,12 +153,12 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		}
 
 // 		are we removing any shares?
-		if(count($aRemove)>0) 
-		{
+		if(count($aRemove) > 0) {
+			
 			$aParams = array($mCalendarId);
 			$aMembers = array();
-			foreach($aRemove as $sRemoveItem) 
-			{
+			foreach($aRemove as $sRemoveItem) {
+				
 				// get the principalid
 				$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sRemoveItem;
 				$aMembers[] = $sPrincipalUri;
@@ -195,8 +193,8 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$stmt->execute(array($mCalendarId));
 
 		$aShares = array();
-		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) 
-		{ 
+		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) { 
+			
 			$aShare = array(	
 				'calendarid' => $aRow['calendarid'],
 				'principalpath' => $aRow['principaluri'],
@@ -254,21 +252,45 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	public function getCalendarsForUser($principalUri) {
 	
 		$aCalendars = $this->getOwnCalendarsForUser($principalUri);
-		$aSharedCalendars = $this->getSharedCalendarsForUser($principalUri);
-		$aSharedToAllCalendars = $this->getSharedCalendarsForUser(\Afterlogic\DAV\Utils::getTenantPrincipalUri($principalUri));
 		
-		foreach ($aSharedToAllCalendars as $iKey => $aSharedToAllCalendar)
-		{
-			if (isset($aCalendars[$iKey]))
-			{
+        if (count($aCalendars) === 0) {
+			
+			$oUsersManager = \CApi::GetCoreManager('users');
+			$oAccount = $oUsersManager->getAccountByEmail(basename($principalUri));
+			if ($oAccount) {
+				
+				$this->createCalendar(
+					$principalUri, 
+					\Sabre\DAV\UUIDUtil::getUUID(), 
+					[
+						'{DAV:}displayname' => \CApi::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', $oAccount),
+						'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
+						'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
+						'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,
+						'{http://apple.com/ns/ical/}calendar-order' => 0
+					]
+				);
+				$aCalendars = $this->getOwnCalendarsForUser($principalUri);
+			}
+		}
+		
+		$aSharedCalendars = $this->getSharedCalendarsForUser($principalUri);
+		$aSharedToAllCalendars = $this->getSharedCalendarsForUser(
+				\Afterlogic\DAV\Utils::getTenantPrincipalUri($principalUri)
+		);
+		
+		foreach ($aSharedToAllCalendars as $iKey => $aSharedToAllCalendar) {
+			
+			if (isset($aCalendars[$iKey])) {
+				
 				$aSharedToAllCalendar['{http://sabredav.org/ns}read-only'] = false;
 			}
 			$aCalendars[$iKey] = $aSharedToAllCalendar;
 		}
-		foreach ($aSharedCalendars as $iKey => $aSharedCalendar)
-		{
-			if (isset($aCalendars[$iKey]))
-			{
+		foreach ($aSharedCalendars as $iKey => $aSharedCalendar) {
+			
+			if (isset($aCalendars[$iKey])) {
+				
 				$aSharedCalendar['{http://sabredav.org/ns}read-only'] = false;
 			}
 			$aCalendars[$iKey] = $aSharedCalendar;
@@ -284,25 +306,20 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$oStmt->execute(array($principalUri));
 
 		$aCalendars = array();
-		while($aRows = $oStmt->fetch(\PDO::FETCH_ASSOC)) 
-		{
-			$aComponents = array();
-			if ($aRows['components']) 
-			{
-				$aComponents = explode(',', $aRows['components']);
-			}
+		while($aRows = $oStmt->fetch(\PDO::FETCH_ASSOC)) {
+			
+			$aComponents = (isset($aRows['components'])) ? explode(',', $aRows['components']) : array();
 
 			$aCalendar = array(
-                'id'                                                                 => $aRows['id'],
-                'uri'                                                                => $aRows['uri'],
-                'principaluri'                                                       => $aRows['principaluri'],
-                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag'           => 'http://sabre.io/ns/sync/' . ($aRows['synctoken'] ? $aRows['synctoken'] : '0'),
-                '{http://sabredav.org/ns}sync-token'                                 => $aRows['synctoken'] ? $aRows['synctoken'] : '0',
+                'id' => $aRows['id'],
+                'uri' => $aRows['uri'],
+                'principaluri' => $aRows['principaluri'],
+                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($aRows['synctoken'] ? $aRows['synctoken'] : '0'),
+                '{http://sabredav.org/ns}sync-token' => $aRows['synctoken'] ? $aRows['synctoken'] : '0',
                 '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet($aComponents),
-                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp'         => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($aRows['transparent'] ? 'transparent' : 'opaque'),
+                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($aRows['transparent'] ? 'transparent' : 'opaque'),
 			);
-			foreach($this->propertyMap as $xmlName=>$dbName) 
-			{
+			foreach($this->propertyMap as $xmlName => $dbName) {
 				$aCalendar[$xmlName] = $aRows[$dbName];
 			}
 
@@ -317,15 +334,14 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$aCalendars = array();
 		$sTenantPrincipalUri = null;
 		
-		if (!$sPrincipalUri)
-		{
+		if (!$sPrincipalUri) {
+			
 			return $aCalendars;
 		}
 		
-		if ($sPrincipalUri)
-		{
-			if ($bSharedToAll)
-			{
+		if ($sPrincipalUri) {
+			
+			if ($bSharedToAll) {
 				$sTenantPrincipalUri = $sPrincipalUri;
 				$sPrincipalUri = \Afterlogic\DAV\Utils::getTenantPrincipalUri($sPrincipalUri);
 			}
@@ -338,19 +354,15 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			$oStmt->execute(array($sPrincipalUri));
 			$aRows = $oStmt->fetchAll(\PDO::FETCH_ASSOC);
 
-			foreach ($aRows as $aRow) 
-			{
+			foreach ($aRows as $aRow) {
+				
 				// get the original calendar
 				$oCalStmt = $this->pdo->prepare("SELECT " . $sFields . " FROM ".$this->calendarTableName." WHERE id = ? ORDER BY id ASC LIMIT 1");
 				$oCalStmt->execute(array($aRow['calendarid']));
 
-				while($calRow = $oCalStmt->fetch(\PDO::FETCH_ASSOC)) 
-				{
-					$aComponents = array();
-					if ($calRow['components']) 
-					{
-						$aComponents = explode(',', $calRow['components']);
-					}
+				while($calRow = $oCalStmt->fetch(\PDO::FETCH_ASSOC)) {
+					
+					$aComponents = (isset($aRows['components'])) ? explode(',', $aRows['components']) : array();
 
 					$aCalendar = array(
 						'id' => $calRow['id'],
@@ -366,18 +378,17 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 					$aCalendar['{http://sabredav.org/ns}read-only'] = $aRow['readonly'];
 					$aCalendar['{http://calendarserver.org/ns/}summary'] = $aRow['summary'];
 
-					foreach($this->propertyMap as $xmlName=>$dbName) 
-					{
-						if($xmlName == '{DAV:}displayname') 
-						{ 
+					foreach($this->propertyMap as $xmlName=>$dbName)  {
+						
+						if($xmlName == '{DAV:}displayname') { 
+							
 							$aCalendar[$xmlName] = $calRow['displayname'];//$aRow['displayname'] == null ? $calRow['displayname'] : $aRow['displayname'];
 						} 
-						elseif($xmlName == '{http://apple.com/ns/ical/}calendar-color') 
-						{
+						elseif($xmlName == '{http://apple.com/ns/ical/}calendar-color') {
+							
 							$aCalendar[$xmlName] = $aRow['color'] == null ? $calRow['calendarcolor'] : $aRow['color'];
-						} 
-						else 
-						{
+						} else {
+							
 							$aCalendar[$xmlName] = $calRow[$dbName];
 						}
 					}

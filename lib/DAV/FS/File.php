@@ -6,12 +6,6 @@ namespace Afterlogic\DAV\FS;
 
 class File extends \Sabre\DAV\FSExt\File{
 	
-    public function __construct($path) {
-
-        $this->path = $path;
-
-    }
-	
 	public function getPath() {
 
         return $this->path;
@@ -28,8 +22,7 @@ class File extends \Sabre\DAV\FSExt\File{
 
         parent::delete();
 		
-		$oDirectory = $this->getDirectory();
-		$oDirectory->updateQuota();
+		$this->getDirectory()->updateQuota();
 
     }
 	

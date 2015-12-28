@@ -12,24 +12,32 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 	{
 		if (null === $this->oAccount)
 		{
-			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(basename($principalUri));
+			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(
+					basename($principalUri)
+			);
 		}
 		return $this->oAccount;
 	}
 
-	public function getChildForPrincipal(array $principal)
+	public function getChildForPrincipal(array $aPrincipal)
 	{
-		$oApiCapabilityManager = /* @var \CApiCapabilityManager */ \CApi::GetCoreManager('capability');
+		/* @var \CApiCapabilityManager */
+		$oApiCapabilityManager = \CApi::GetCoreManager('capability');
 		
-		$oAccount = $this->getAccount($principal['uri']);
+		$oAccount = $this->getAccount($aPrincipal['uri']);
 		if ($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isPersonalContactsSupported($oAccount))
-		{
-			return new UserAddressBooks($this->carddavBackend, $principal['uri']);
-		}
-		else
-		{
-			return new EmptyAddressBooks($this->carddavBackend, $principal['uri']);
+			$oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
+			
+			return new UserAddressBooks(
+					$this->carddavBackend, 
+					$aPrincipal['uri']
+			);
+		} else {
+			
+			return new EmptyAddressBooks(
+					$this->carddavBackend, 
+					$aPrincipal['uri']
+			);
 		}
     }
 

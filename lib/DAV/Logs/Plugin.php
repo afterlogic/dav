@@ -25,7 +25,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public function initialize(\Sabre\DAV\Server $server)
     {
         $this->server = $server;
-        $this->server->on('beforeMethod', array($this, 'beforeMethod'),30);
+        $this->server->on('beforeMethod', array($this, 'beforeMethod'), 30);
     }
 
     /**
@@ -57,16 +57,16 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     	\CApi::LogObject($aHeaders, \ELogLevel::Full, 'sabredav-');
 
 		$bLogBody = (bool) \CApi::GetConf('labs.dav.log-body', false);
-		if ($bLogBody)
-		{
-			$body = $this->server->httpRequest->getBody(true); 		
+		if ($bLogBody) {
+			
+			$body = $this->server->httpRequest->getBodyAsString(); 		
 			$this->server->httpRequest->setBody($body);
 			\CApi::LogObject($body, \ELogLevel::Full, 'sabredav-');
 		}
-    	
-		\CApi::Log('-------------------------------------------', \ELogLevel::Full, 'sabredav-');
+		\CApi::Log('', \ELogLevel::Full, 'sabredav-');
 
     	return;
     }
+
 }
 

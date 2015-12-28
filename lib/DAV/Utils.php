@@ -6,13 +6,30 @@ namespace Afterlogic\DAV;
 
 class Utils
 {
+	/* 
+	 * @var $oUsersManager \CApiUsersManager 
+	 */
 	public static $oUsersManager = null;
 	
+	public static function getServer()
+	{
+		return \Afterlogic\DAV\Server::getInstance();
+	}
+
+	public static function getPlugins()
+	{
+		return self::getServer()->getPlugins();
+	}	
+	
+	public static function getPlugin($sName)
+	{
+		return self::getServer()->getPlugin($sName);
+	}	
+
 	public static function getUsersManager()
 	{
-		if (null === self::$oUsersManager)
-		{
-			/* @var $oUsersManager \CApiUsersManager */
+		if (null === self::$oUsersManager) {
+			
 			self::$oUsersManager = \CApi::GetCoreManager('users');
 		}
 		return self::$oUsersManager;
@@ -20,18 +37,18 @@ class Utils
 	
 	public static function getCurrentAccount()
 	{
-		return \Afterlogic\DAV\Server::getInstance()->getAccount();
+		return self::getServer()->getAccount();
 	}
 	
 	public static function getTenantUser($oAccount)
 	{
 		$sEmail = 'default_' . Constants::DAV_TENANT_PRINCIPAL;
-		if ($oAccount->IdTenant > 0)
-		{
+		if ($oAccount->IdTenant > 0) {
+			
 			$oApiTenantsMan = \CApi::GetCoreManager('tenants');
 			$oTenant = $oApiTenantsMan ? $oApiTenantsMan->getTenantById($oAccount->IdTenant) : null;
-			if ($oTenant)
-			{
+			if ($oTenant) {
+				
 				$sEmail = $oTenant->Login . '_' . Constants::DAV_TENANT_PRINCIPAL;
 			}
 		}
@@ -43,9 +60,8 @@ class Utils
 	{
 		$sTenantPrincipalUri = null;
 		
-		$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(basename($principalUri));
-		if ($oAccount)
-		{
+		$oAccount = self::GetAccountByLogin(basename($principalUri));
+		if ($oAccount) {
 			$aTenantEmail = self::getTenantUser($oAccount);
 			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $aTenantEmail;
 		}
@@ -56,14 +72,11 @@ class Utils
 	public static function ValidateClient($sClient)
 	{
 		$bIsSync = false;
-		if (isset($GLOBALS['server']) && $GLOBALS['server'] instanceof \Sabre\DAV\Server)
-		{
+		if (isset($GLOBALS['server']) && $GLOBALS['server'] instanceof \Sabre\DAV\Server) {
 			$aHeaders = $GLOBALS['server']->httpRequest->getHeaders();
-			if (isset($aHeaders['user-agent']))
-			{
+			if (isset($aHeaders['user-agent'])) {
 				$sUserAgent = $aHeaders['user-agent'];
-				if (strpos(strtolower($sUserAgent), 'afterlogic ' . strtolower($sClient)) !== false)
-				{
+				if (strpos(strtolower($sUserAgent), 'afterlogic ' . strtolower($sClient)) !== false) {
 					$bIsSync = true;
 				}
 			}

@@ -2,9 +2,9 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\CardDAV;
+namespace Afterlogic\DAV\CardDAV\Shared;
 
-class SharedAddressBook extends AddressBook {
+class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     
 	protected $principalUri;
 	
@@ -18,8 +18,8 @@ class SharedAddressBook extends AddressBook {
 	
 	public function getUsersManager()
 	{
-		if (!isset($this->oApiUsersManager))
-		{
+		if (!isset($this->oApiUsersManager)) {
+			
 			$this->oApiUsersManager = \CApi::GetCoreManager('users');
 		}
 		return $this->oApiUsersManager;
@@ -29,9 +29,9 @@ class SharedAddressBook extends AddressBook {
 	{
 		if (!isset($this->oApiContactsManager))
 		{
-			$oContactsModule = \CApi::GetModuleManager()->GetModule('Contacts');
-			if ($oContactsModule instanceof \AApiModule)
-			{
+			$oContactsModule = \CApi::GetModule('Contacts');
+			if ($oContactsModule instanceof \AApiModule) {
+				
 				$this->oApiContactsManager = $oContactsModule->GetManager('main');
 			}
 		}
@@ -53,9 +53,11 @@ class SharedAddressBook extends AddressBook {
 
 	public function getAccount() {
 		
-		if (null === $this->oAccount)
-		{
-			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(basename($this->principalUri));
+		if (null === $this->oAccount) {
+			
+			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(
+					basename($this->principalUri)
+			);
 		}
 		return $this->oAccount;
 	}
@@ -75,24 +77,34 @@ class SharedAddressBook extends AddressBook {
 		$oApiUsersManager = $this->getUsersManager();
 
 		/* @var $oAccount \CAccount */
-		$oAccount = $oApiUsersManager->getAccountById($oApiUsersManager->getDefaultAccountId($iUserId));
+		$oAccount = $oApiUsersManager->getAccountById(
+				$oApiUsersManager->getDefaultAccountId($iUserId)
+		);
 		
-		if ($oAccount)
-		{
-			$aAddressBook = $this->carddavBackend->getAddressBookForUser(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email, 
-					\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME);
-			if ($aAddressBook)
-			{
-				$obj = $this->carddavBackend->getCard($aAddressBook['id'], $sContactId);
-				if (is_array($obj))
-				{
-					$oResult = new SharedCard($this->carddavBackend, $aAddressBook, $obj, $this->principalUri);
+		if ($oAccount) {
+			$aAddressBook = $this->carddavBackend->getAddressBookForUser(
+					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email, 
+					\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
+			);
+			if ($aAddressBook) {
+				
+				$obj = $this->carddavBackend->getCard(
+						$aAddressBook['id'], 
+						$sContactId
+				);
+				if (is_array($obj)) {
+					
+					$oResult = new Card(
+							$this->carddavBackend, 
+							$aAddressBook, 
+							$obj, 
+							$this->principalUri
+					);
 				}
 			}
 		}
 		
 		return $oResult;
-
 	}
 	
 	/**
@@ -110,19 +122,22 @@ class SharedAddressBook extends AddressBook {
 		$oAccount = $this->getAccount();
 
 		/* @var $oContact \CContact */
-		$oContact = $oApiContactsManager->getContactByStrId($oAccount->IdUser, $name, $oAccount->IdTenant);
-		if ($oContact)
-		{
+		$oContact = $oApiContactsManager->getContactByStrId(
+				$oAccount->IdUser, 
+				$name, 
+				$oAccount->IdTenant
+		);
+		if ($oContact) {
+			
 			$bResult = $this->getChildObj($oContact->IdUser, $name);
 		}			
 		
-		if (!isset($bResult))
-		{
+		if (!isset($bResult)) {
+			
 			throw new \Sabre\DAV\Exception\NotFound('Card not found');
 		}
 		
         return $bResult;
-
     }
 
     /**
@@ -135,30 +150,42 @@ class SharedAddressBook extends AddressBook {
         $children = array();
 
 		$oAccount = $this->getAccount();
-		if ($oAccount)
-		{
+		if ($oAccount) {
 			/* @var $oApiContactsManager \CApiContactsMainManager */
 			$oApiContactsManager = $this->getContactsManager();
 
-			$aContactListItems = $oApiContactsManager->getContactItems($oAccount->IdUser, \EContactSortField::EMail, \ESortOrder::ASC, 0, 999, '', '', '', $oAccount->IdTenant);
-			foreach ($aContactListItems as $oContactListItem)
-			{
-				$child = $this->getChildObj($oContactListItem->IdUser, $oContactListItem->IdStr);
-				if ($child)
-				{
+			$aContactListItems = $oApiContactsManager->getContactItems(
+					$oAccount->IdUser, 
+					\EContactSortField::EMail, 
+					\ESortOrder::ASC, 
+					0, 
+					999, 
+					'', 
+					'', 
+					'', 
+					$oAccount->IdTenant
+			);
+			foreach ($aContactListItems as $oContactListItem) {
+				
+				$child = $this->getChildObj(
+						$oContactListItem->IdUser, 
+						$oContactListItem->IdStr
+				);
+				if ($child) {
+					
 					$children[] = $child;
 				}
 			}
 
 		}
         return $children;
-
     }
 	
     public function createFile($name,$vcardData = null) {
 
-        throw new \Sabre\DAV\Exception\Forbidden('Permission denied to create file (filename ' . $name . ')');
-
+        throw new \Sabre\DAV\Exception\Forbidden(
+				'Permission denied to create file (filename ' . $name . ')'
+		);
     }
 
     public function delete() {

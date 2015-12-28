@@ -23,9 +23,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-		$oContactsModule = \CApi::GetModuleManager()->GetModule('Contacts');
-		if ($oContactsModule instanceof \AApiModule)
-		{
+		$oContactsModule = \CApi::GetModule('Contacts');
+		if ($oContactsModule instanceof \AApiModule) {
 			$this->oApiContactsManager = $oContactsModule->GetManager('main');
 		}
 	}
@@ -59,15 +58,6 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function beforeUnbind($path)
     {
-		if ('sabredav' !== \CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			$sAddressBookName = basename(dirname($path));
-
-			if (basename(dirname($path)) === \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
-			{
-//				return false;	
-			}
-		}		
 		return true;
 	}    
 	
@@ -78,93 +68,92 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterUnbind($path)
     {
-		if ('sabredav' !== \CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			if (true)//(basename(dirname($path)) !== \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
-			{
-				$oAccount = $this->server->getAccount();
-				if (isset($oAccount))
-				{
-					$oContact = $this->oApiContactsManager->getContactByStrId($oAccount->IdUser, basename($path));
+		$oAccount = $this->server->getAccount();
+		if (isset($oAccount)) {
+			
+			$oContact = $this->oApiContactsManager->getContactByStrId(
+					$oAccount->IdUser, 
+					basename($path)
+			);
 
-					if ($oContact)
-					{
-						if (true)//($sAddressBookName !== \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
-						{
-							$this->oApiContactsManager->deleteContacts($oAccount->IdUser, array($oContact->IdContact));
-						}
-					}
-				}
+			if ($oContact) {
+				$this->oApiContactsManager->deleteContacts(
+						$oAccount->IdUser, 
+						array($oContact->IdContact)
+				);
 			}
-		}		
+		}
 		return true;
 	}
 	
 	function afterCreateFile($path, \Sabre\DAV\ICollection $parent)
 	{
-		if ('sabredav' !== \CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			$sFileName = basename($path);
-			$node = $parent->getChild($sFileName);
-			if ($node instanceof \Sabre\CardDAV\ICard)
-			{
-				$oAccount = $this->server->getAccount();
-				if (isset($oAccount))
-				{
-					$oContact = new \CContact();
-					$oContact->InitFromVCardStr($oAccount->IdUser, $node->get());
-					$oContact->IdContactStr = $sFileName;
-					$this->oApiContactsManager->createContact($oContact);
-				}
+		$sFileName = basename($path);
+		$node = $parent->getChild($sFileName);
+		if ($node instanceof \Sabre\CardDAV\ICard) {
+			
+			$oAccount = $this->server->getAccount();
+			if (isset($oAccount)) {
+				
+				$oContact = new \CContact();
+				$oContact->InitFromVCardStr($oAccount->IdUser, $node->get());
+				$oContact->IdContactStr = $sFileName;
+				$this->oApiContactsManager->createContact($oContact);
 			}
 		}
 	}
 
 	function afterWriteContent($path, \Sabre\DAV\IFile $node)
 	{
-		if ('sabredav' !== \CApi::GetManager()->GetStorageByType('contacts'))
-		{
-			if ($node instanceof \Sabre\CardDAV\ICard)
-			{
-				$oAccount = $this->server->getAccount();
-				if (isset($oAccount))
-				{
-					$iUserId = $oAccount->IdUser;
-					$iTenantId = ($node instanceof \Afterlogic\DAV\CardDAV\SharedCard) ? $oAccount->IdTenant : null;
+		if ($node instanceof \Sabre\CardDAV\ICard) {
+			
+			$oAccount = $this->server->getAccount();
+			if (isset($oAccount)) {
+				
+				$iUserId = $oAccount->IdUser;
+				$iTenantId = ($node instanceof \Afterlogic\DAV\CardDAV\SharedCard) ? $oAccount->IdTenant : null;
 
-					$sContactFileName = $node->getName();
-					$oContactDb = $this->oApiContactsManager->getContactByStrId($iUserId, $sContactFileName, $iTenantId);
-					if (!isset($oContactDb))
-					{
-						$oDavManager = \CApi::Manager('dav');
-						$oVCard = $oDavManager ? $oDavManager->getVCardObject($node->get()) : null;
-						if ($oVCard && $oVCard->UID)
-						{
-							$oContactDb = $this->oApiContactsManager->getContactByStrId($iUserId, (string)$oVCard->UID . '.vcf', $iTenantId);
-						}
-					}
+				$sContactFileName = $node->getName();
+				$oContactDb = $this->oApiContactsManager->getContactByStrId(
+						$iUserId, 
+						$sContactFileName, 
+						$iTenantId
+				);
+				if (!isset($oContactDb)) {
 					
-					$oContact = new \CContact();
-					$oContact->InitFromVCardStr($iUserId, $node->get());
-					$oContact->IdContactStr = $sContactFileName;
-					$oContact->IdTenant = $iTenantId;
-					
-					if (isset($oContactDb))
-					{
-						$oContact->IdContact = $oContactDb->IdContact;
-						$oContact->IdDomain = $oContactDb->IdDomain;
-						$oContact->SharedToAll = !!$oContactDb->SharedToAll;
+					$oVCard = \Sabre\VObject\Reader::read(
+							$node->get(), 
+							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+					);
+
+					if ($oVCard && $oVCard->UID) {
 						
-						$this->oApiContactsManager->updateContact($oContact);
+						$oContactDb = $this->oApiContactsManager->getContactByStrId(
+								$iUserId, 
+								(string)$oVCard->UID . '.vcf', 
+								$iTenantId
+						);
 					}
-					else
-					{
-						$this->oApiContactsManager->createContact($oContact);
-					}
+				}
+
+				$oContact = new \CContact();
+				$oContact->InitFromVCardStr($iUserId, $node->get());
+				$oContact->IdContactStr = $sContactFileName;
+				$oContact->IdTenant = $iTenantId;
+
+				if (isset($oContactDb)) {
+					
+					$oContact->IdContact = $oContactDb->IdContact;
+					$oContact->IdDomain = $oContactDb->IdDomain;
+					$oContact->SharedToAll = !!$oContactDb->SharedToAll;
+
+					$this->oApiContactsManager->updateContact($oContact);
+				} else {
+					
+					$this->oApiContactsManager->createContact($oContact);
 				}
 			}
 		}
 	}
 
 }
-

@@ -2,9 +2,9 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS;
+namespace Afterlogic\DAV\FS\Shared;
 
-class SharedFile extends File{
+class File extends Afterlogic\DAV\FS\Shared\File{
 	
 	protected $linkPath;
 
@@ -36,12 +36,9 @@ class SharedFile extends File{
 	
 	public function getName() {
 
-        if ($this->isLink)
-		{
+        if ($this->isLink) {
 			return $this->sharedItem->getName();
-		}
-		else 
-		{
+		} else {
 	        list(, $name)  = \Sabre\HTTP\URLUtil::splitPath($this->linkPath);
 		    return $name;
 		}
@@ -85,7 +82,6 @@ class SharedFile extends File{
      */
     public function get() {
 
-        \CApi::Log($this->path, \ELogLevel::Full, 'file-');
 		return fopen($this->path,'r');
 
     }	
@@ -94,8 +90,7 @@ class SharedFile extends File{
 
         parent::delete();
 		
-		$oDirectory = $this->getDirectory();
-		$oDirectory->updateQuota();
+		$this->getDirectory()->updateQuota();
 
     }
 }

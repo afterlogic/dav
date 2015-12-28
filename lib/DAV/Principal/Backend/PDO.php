@@ -4,7 +4,6 @@
 
 namespace Afterlogic\DAV\Principal\Backend;
 
-use Afterlogic\DAV\Constants;
 use Sabre\DAV\MkCol;
 
 class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO 
@@ -12,14 +11,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
     /**
      * Sets up the backend.
      */
-    public function __construct()
-	{
-		parent::__construct(\CApi::GetPDO());
-		
-		$dbPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
-		$this->tableName = $dbPrefix.Constants::T_PRINCIPALS;
-		$this->groupMembersTableName = $dbPrefix.Constants::T_GROUPMEMBERS;
-    } 
+    public function __construct() { } 
 
     /**
      * Returns a list of principals based on a prefix.
@@ -74,8 +66,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 		list(, $sUsername) = \Sabre\Uri\split($path);
 		$oUsersManager = \CApi::GetCoreManager('users');
 		$oAccount = $oUsersManager->getAccountByEmail($sUsername);
-		if ($oAccount instanceof \CAccount)
-		{
+		if ($oAccount instanceof \CAccount) {
 			$principal = array(
 				'id' => $oAccount->IdAccount,
 				'uri' => 'principals/'.$oAccount->Email,
@@ -139,19 +130,21 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      */
     function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof') {
 
-        $principals = [];
+        $aPrincipals = [];
 
-		if (isset($searchProperties['{http://sabredav.org/ns}email-address']))
-		{
+		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
+			
 			$oUsersManager = \CApi::GetCoreManager('users');
-			$oAccount = $oUsersManager->getAccountByEmail($searchProperties['{http://sabredav.org/ns}email-address']);
-			if ($oAccount instanceof \CAccount)
-			{
-	            $principals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email;
+			$oAccount = $oUsersManager->getAccountByEmail(
+					$searchProperties['{http://sabredav.org/ns}email-address']
+			);
+			if ($oAccount instanceof \CAccount) {
+				
+	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email;
 			}
 		}
 		
-        return $principals;
+        return $aPrincipals;
 
     }
 

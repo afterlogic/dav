@@ -80,17 +80,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function beforeMethod($method, $uri) 
 	{
-		if (Backend\PDO::isCalendar($uri))
-		{
-			if (strtoupper($method) == 'DELETE')
-			{
-				if (Backend\PDO::isEvent($uri))
-				{
+		if (Backend\PDO::isCalendar($uri)) {
+			if (strtoupper($method) == 'DELETE') {
+				if (Backend\PDO::isEvent($uri)) {
 					$eventId = Backend\PDO::getEventId($uri);
 					$this->deleteReminder($eventId);
-				}
-				else
-				{
+				} else {
 					$this->deleteReminderByCalendar($uri);
 				}
 			}

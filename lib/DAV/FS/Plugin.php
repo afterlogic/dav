@@ -53,37 +53,19 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
     }	
 	
-	public function getTenantsMan()
-	{
-		if ($this->oApiTenants === null)
-		{
-			$this->oApiTenants = \CApi::GetCoreManager('tenants');
-		}
-		
-		return $this->oApiTenants;
-	}
-
-	public function getUsersMan()
-	{
-		if ($this->oApiUsers == null)
-		{
-			$this->oApiUsers = \CApi::GetCoreManager('users');
-		}
-		return $this->oApiUsers;
-	}
-
 	public function getMinMan()
 	{
-		if ($this->oApiMin == null)
-		{
+		if ($this->oApiMin == null) {
+			
 			$this->oApiMin = \CApi::Manager('min');
 		}
 		return $this->oApiMin;
 	}
 	
-    public function getAccount() {
-		if (!isset($this->oAccount) && isset($this->server))
-		{
+    public function getAccount()
+	{	
+		if (!isset($this->oAccount) && isset($this->server)) {
+			
 			$this->oAccount = $this->server->getAccount();
 		}
 		return $this->oAccount; 
@@ -117,61 +99,58 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
     }
 	
-	public static function getPersonalPath()
-	{
-		return ltrim(\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL, '/');		
+	public static function getPersonalPath() {
+		
+		return ltrim(
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL, '/'
+		);		
 	}	
 	
-	public static function getCorporatePath()
-	{
-		return ltrim(\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE, '/');		
+	public static function getCorporatePath() {
+		
+		return ltrim(
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE, '/'
+		);		
 	}	
 
-	public static function getSharedPath()
-	{
-		return ltrim(\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED, '/');		
+	public static function getSharedPath() {
+		
+		return ltrim(
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED, '/'
+		);		
 	}	
 
 	public static function isFilestoragePrivate($path)
 	{
-		if (strpos($path, self::getPersonalPath()) !== false)
-		{
-			return true;
-		}
-		return false;
+		return (strpos($path, self::getPersonalPath()) !== false);
 	}
 	
 	public static function isFilestorageCorporate($path)
 	{
-		if (strpos($path, self::getCorporatePath()) !== false)
-		{
-			return true;
-		}
-		return false;
+		return (strpos($path, self::getCorporatePath()) !== false);
 	}
 	
 	public static function isFilestorageShared($path)
 	{
-		if (strpos($path, self::getSharedPath()) !== false)
-		{
-			return true;
-		}
-		return false;
+		return (strpos($path, self::getSharedPath()) !== false);
 	}
 
 	public static function getTypeFromPath($path)
 	{
 		$sResult = \EFileStorageTypeStr::Personal;
-		if (self::isFilestoragePrivate($path))
-		{
+		if (self::isFilestoragePrivate($path)) {
+			
 			$sResult = \EFileStorageTypeStr::Personal;
 		}
-		if (self::isFilestorageCorporate($path))
-		{
+		if (self::isFilestorageCorporate($path)) {
+			
 			$sResult = \EFileStorageTypeStr::Corporate;
 		}
-		if (self::isFilestorageShared($path))
-		{
+		if (self::isFilestorageShared($path)) {
+			
 			$sResult = \EFileStorageTypeStr::Shared;
 		}
 		return $sResult;
@@ -180,16 +159,16 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	public static function getFilePathFromPath($path)
 	{
 		$sPath = '';
-		if (self::isFilestoragePrivate($path))
-		{
+		if (self::isFilestoragePrivate($path)) {
+			
 			$sPath = self::getPersonalPath();
 		}
-		if (self::isFilestorageCorporate($path))
-		{
+		if (self::isFilestorageCorporate($path)) {
+			
 			$sPath = self::getCorporatePath();
 		}
-		if (self::isFilestorageShared($path))
-		{
+		if (self::isFilestorageShared($path)) {
+			
 			$sPath = self::getSharedPath();
 		}
 		
@@ -198,8 +177,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	function beforeMethod($methodName, $uri) {
 
-	  if ($methodName === 'MOVE')
-	  {
+	  if ($methodName === 'MOVE') {
+		  
 		  $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
 	  }
 	  return true;
@@ -213,11 +192,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function beforeBind($path)
     {
-		if (self::isFilestoragePrivate($path) || self::isFilestorageCorporate($path))
-		{
+		if (self::isFilestoragePrivate($path) || 
+				self::isFilestorageCorporate($path)) {
+			
 			$oAccount = $this->getAccount();
-			if ($oAccount)
-			{
+			if ($oAccount) {
+				
 				$iType = self::getTypeFromPath($path);
 				$sFilePath = self::getFilePathFromPath(dirname($path));
 				$sFileName = basename($path);
@@ -236,12 +216,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function afterUnbind($path)
     {
-		if (self::isFilestoragePrivate($path) || self::isFilestorageCorporate($path))
-		{
+		if (self::isFilestoragePrivate($path) || self::isFilestorageCorporate($path)) {
+			
 			$oAccount = $this->getAccount();
 
-			if ($oAccount)
-			{
+			if ($oAccount) {
+				
  				$iType = self::getTypeFromPath($path);
 				$sFilePath = self::getFilePathFromPath(dirname($path));
 				$sFileName = basename($path);
@@ -251,14 +231,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 				$this->sOldID = implode('|', array($oAccount->IdAccount, $iType, $sFilePath, $sFileName));
 				$aData = $oMin->getMinByID($this->sOldID);
 				
-				if (isset($this->sNewPath))
-				{
+				if (isset($this->sNewPath)) {
+					
 //					$node = $this->server->tree->getNodeForPath($this->sNewPath);
 //					\CApi::LogObject($node, \ELogLevel::Full, 'fs-');
 				}
 				
-				if (isset($this->sNewID) && !empty($aData['__hash__']))
-				{
+				if (isset($this->sNewID) && !empty($aData['__hash__'])) {
+					
 					$aNewData = explode('|', $this->sNewID);
 					$aParams = array(
 						'Type' => $aNewData[1],
@@ -267,9 +247,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 						'Size' => $aData['Size']
 					);
 					$oMin->updateMinByID($this->sOldID, $aParams, $this->sNewID);
-				}
-				else
-				{
+				} else {
+					
 					$oMin->deleteMinByID($this->sOldID);
 				}
 			}

@@ -26,16 +26,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	 */
 	protected $oTenant = null;
 	
-	/**
-     * Constructor
-     *
-     * @param string $path
-     */
-    public function __construct($path) {
-
-		$this->path = $path;
-    }
-	
 	public function getTenantsMan()
 	{
 		if ($this->oApiTenants === null)
@@ -46,36 +36,30 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $this->oApiTenants;
 	}
 
-	public function getUsersMan()
-	{
-		if ($this->oApiUsers == null)
-		{
-			$this->oApiUsers = \CApi::GetCoreManager('users');
-		}
-		return $this->oApiUsers;
-	}
-	
 	public function getAccount()
 	{
-		if ($this->oAccount == null)
-		{
-			$sUser = \Afterlogic\DAV\Auth\Backend::getInstance()->getCurrentUser();
-			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUser);
+		if ($this->oAccount === null) {
+			
+			$this->oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
 		}
-		
 		return $this->oAccount;
+	}
+	
+	public function setAccount($oAccount)
+	{
+		$this->oAccount = $oAccount;
 	}
 	
 	public function getTenant()
 	{
-		if ($this->oTenant == null)
-		{
+		if ($this->oTenant == null) {
+			
 			$oAccount = $this->getAccount();
-			if ($oAccount !== null)
-			{
+			if ($oAccount !== null) {
+				
 				$oApiTenants = $this->getTenantsMan();
-				if ($oApiTenants)
-				{
+				if ($oApiTenants) {
+					
 					$this->oTenant = $oApiTenants->getTenantById($oAccount->IdTenant);
 				}
 			}
@@ -98,11 +82,14 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 		$this->initPath();
 		
-        if ($name=='.' || $name=='..') throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        if ($name=='.' || $name=='..') {
+			
+			throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+		}
         $newPath = $this->path . '/' . $name;
 		
-		if (!is_dir($newPath))
-		{
+		if (!is_dir($newPath)) {
+			
 			mkdir($newPath, 0777, true);
 		}
     }
@@ -116,19 +103,19 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$oFile = $this->getChild($name);
 		$aProps = $oFile->getProperties(array('Owner'));
 		
-		if (!isset($aProps['Owner']))
-		{
+		if (!isset($aProps['Owner'])) {
+			
 			$oAccount = $this->getAccount();
-			if ($oAccount)
-			{
+			if ($oAccount) {
+				
 				$aProps['Owner'] = $oAccount->Email;
 			}
 		}
 		
 		$oFile->updateProperties($aProps);
 
-		if (!$this->updateQuota())
-		{
+		if (!$this->updateQuota()) {
+			
 			$oFile->delete();
 			throw new \Sabre\DAV\Exception\InsufficientStorage();
 		}
@@ -140,7 +127,12 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
         $path = $this->path . '/' . trim($name, '/');
 
-        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located');
+        if (!file_exists($path)) {
+			
+			throw new \Sabre\DAV\Exception\NotFound(
+					'File with name ' . $path . ' could not be located'
+			);
+		}
 
 		return is_dir($path) ? new Directory($path) : new File($path);
     }	
@@ -151,15 +143,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		$nodes = array();
 		
-		if(!file_exists($this->path))
-		{
+		if(!file_exists($this->path)) {
+			
 			mkdir($this->path);
 		}
 		
-        foreach(scandir($this->path) as $node)
-		{
-			if($node!='.' && $node!='..' && $node!== '.sabredav' && $node!== API_HELPDESK_PUBLIC_NAME) 
-			{
+        foreach(scandir($this->path) as $node) {
+			
+			if($node!='.' && $node!='..' && $node!== '.sabredav' && 
+					$node!== API_HELPDESK_PUBLIC_NAME)  {
+				
 				$nodes[] = $this->getChild($node);
 			}
 		}
@@ -192,10 +185,10 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		$path = ($path === null) ? $this->path : $path;
 		$aItems = \api_Utils::SearchFiles($path, $pattern);
-		if ($aItems)
-		{
-			foreach ($aItems as $sItem)
-			{
+		if ($aItems) {
+			
+			foreach ($aItems as $sItem) {
+				
 				$aResult[] = is_dir($sItem) ? new Directory($sItem) : new File($sItem);
 			}
 		}
@@ -207,20 +200,18 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		$sRootPath = '';
 		$oAccount = $this->getAccount();
-		if ($oAccount)
-		{
-			if ($sType === \EFileStorageTypeStr::Corporate)
-			{
+		if ($oAccount) {
+			
+			if ($sType === \EFileStorageTypeStr::Corporate) {
+				
 				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . $oAccount->IdTenant;
-			}		
-			else if ($sType === \EFileStorageTypeStr::Shared)
-			{
+			} else if ($sType === \EFileStorageTypeStr::Shared) {
+				
 				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 						\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $oAccount->Email;
-			}
-			else 
-			{
+			} else {
+				
 				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 						\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $oAccount->Email;
 			}
@@ -242,11 +233,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$iUsageSize += (int) $aSize['size'];
 
 		$oAccount = $this->getAccount();
-		if ($oAccount)
-		{
+		if ($oAccount) {
+			
 			$oTenant = $this->getTenant();
-			if ($oTenant)
-			{
+			if ($oTenant) {
+				
 				$iFreeSize = ($oTenant->FilesUsageDynamicQuotaInMB * 1024 * 1024) - $iUsageSize;
 			}
 		}
@@ -256,23 +247,30 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	
 	public function updateQuota()
 	{
-		if (isset($GLOBALS['__FILESTORAGE_MOVE_ACTION__']) && $GLOBALS['__FILESTORAGE_MOVE_ACTION__']) return true;
+		if (isset($GLOBALS['__FILESTORAGE_MOVE_ACTION__']) && 
+				$GLOBALS['__FILESTORAGE_MOVE_ACTION__']) {
+			
+			return true;
+		}
 		
 		$iSizeUsage = 0;
 		$aQuota = $this->getFullQuotaInfo();
-		if (isset($aQuota[0]))
-		{
+		if (isset($aQuota[0])) {
+			
 			$iSizeUsage = $aQuota[0];
 		}
 		$oTenant = $this->getTenant();
-		if (!isset($oTenant))
-		{
+		if (!isset($oTenant)) {
+			
 			return true;
-		}
-		else
-		{
+		} else {
+			
 			$oTenantsMan = $this->getTenantsMan();
-			return $oTenantsMan->allocateFileUsage($oTenant, $iSizeUsage);
+			if ($oTenantsMan) {
+				
+				return $oTenantsMan->allocateFileUsage($oTenant, $iSizeUsage);
+				
+			}
 		}
 	}
 	
@@ -298,7 +296,10 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 		$aResult = array();
 		$path = $this->getResourceInfoPath();
-        if (!file_exists($path)) return array('properties' => array());
+        if (!file_exists($path)) {
+			
+			return array('properties' => array());
+		}
 
         // opening up the file, and creating a shared lock
         $handle = fopen($path,'r');
@@ -315,11 +316,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
         // Unserializing and checking if the resource file contains data for this file
         $aData = unserialize($sData);
-		foreach ($aData as $sName => $aValue) 
-		{
+		foreach ($aData as $sName => $aValue) {
+			
 			$aResultItem = array('@Name' => $sName);
-			if (isset($aValue['properties']) && is_array($aValue['properties']))
-			{
+			if (isset($aValue['properties']) && is_array($aValue['properties'])) {
+				
 				$aResultItem = array_merge($aResultItem, $aValue['properties']);
 			}
 			$aResult[] = $aResultItem;
@@ -334,5 +335,4 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $this->getResourceData();
 	}
 	
-
 }

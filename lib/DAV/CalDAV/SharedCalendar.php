@@ -58,8 +58,7 @@ class SharedCalendar extends \Sabre\CalDAV\SharedCalendar{
                 'protected' => true,
             );
         }
-		if ($sTenantPrincipalUri === $this->calendarInfo['principaluri'])
-		{
+		if ($sTenantPrincipalUri === $this->calendarInfo['principaluri']) {
 			$acl[] = array(
 				'privilege' => '{DAV:}read',
 				'principal' => $this->principalInfo['uri'],
@@ -86,13 +85,16 @@ class SharedCalendar extends \Sabre\CalDAV\SharedCalendar{
      */
     public function updateProperties($mutations) {
 
-        if (isset($mutations['href']))
-		{
-			return $this->caldavBackend->updateShares($this->calendarInfo['id'], array($mutations));
-		}
-		else
-		{
-			return $this->caldavBackend->updateCalendar($this->calendarInfo['id'], $mutations);
+        if (isset($mutations['href'])) {
+			return $this->caldavBackend->updateShares(
+					$this->calendarInfo['id'], 
+					array($mutations)
+			);
+		} else {
+			return $this->caldavBackend->updateCalendar(
+					$this->calendarInfo['id'], 
+					$mutations
+			);
 		}
 
     }	
@@ -104,11 +106,15 @@ class SharedCalendar extends \Sabre\CalDAV\SharedCalendar{
      */
     public function delete() {
 
-		$sTenantPrincipalUri = \Afterlogic\DAV\Utils::getTenantPrincipalUri($this->principalInfo['uri']);
-		if ($sTenantPrincipalUri !== $this->calendarInfo['principaluri'])
-		{
-			$sEmail = basename($this->principalInfo['uri']);
-			$this->caldavBackend->updateShares($this->calendarInfo['id'], array(), array($sEmail));
+		$sTenantPrincipalUri = \Afterlogic\DAV\Utils::getTenantPrincipalUri(
+				$this->principalInfo['uri']
+		);
+		if ($sTenantPrincipalUri !== $this->calendarInfo['principaluri']) {
+			$this->caldavBackend->updateShares(
+					$this->calendarInfo['id'], 
+					array(), 
+					array(basename($this->principalInfo['uri']))
+			);
 		}
 
     }	

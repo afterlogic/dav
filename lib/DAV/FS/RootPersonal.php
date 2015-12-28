@@ -10,12 +10,12 @@ class RootPersonal extends Directory{
 
 	public function initPath() {
 		
-		$oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
-		if ($this->rootPath === null && $oAccount instanceof \CAccount)
-		{
+		$oAccount = $this->getAccount();
+		if ($this->rootPath === null && $oAccount instanceof \CAccount) {
+			
 			$this->rootPath = $this->path . '/' . $oAccount->IncomingMailLogin;
-			if (!file_exists($this->rootPath))
-			{
+			if (!file_exists($this->rootPath)) {
+				
 				mkdir($this->rootPath, 0777, true);
 			}
 		}
@@ -42,13 +42,14 @@ class RootPersonal extends Directory{
 	
     public function getQuotaInfo() {
 
-        $Size = 0;
+        $iSize = 0;
 		$aResult = \api_Utils::GetDirectorySize($this->path);
 		if ($aResult && $aResult['size']) {
-			$Size = (int) $aResult['size'];
+			
+			$iSize = (int) $aResult['size'];
 		}
 		return array(
-            $Size,
+            $iSize,
             0
         );
 

@@ -10,20 +10,20 @@ class RootPublic extends Directory {
 
     public function initPath() {
 		
-		if ($this->rootPath === null)
-		{
-			$oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
-			if ($oAccount instanceof \CAccount)
-			{
+		if ($this->rootPath === null) {
+			
+			$oAccount = $this->getAccount();
+			if ($oAccount instanceof \CAccount) {
+				
 				$this->rootPath = $this->path . '/' . $oAccount->IdTenant;
-				if (!file_exists($this->rootPath))
-				{
+				if (!file_exists($this->rootPath)) {
+					
 					mkdir($this->rootPath, 0777, true);
 				}
 			}
 		}
-		if ($this->rootPath !== null)
-		{
+		if ($this->rootPath !== null) {
+			
 			$this->path = $this->rootPath;
 		}
 	}	
@@ -50,8 +50,8 @@ class RootPublic extends Directory {
 
         $Size = 0;
 		$aResult = \api_Utils::GetDirectorySize($this->path);
-		if ($aResult && $aResult['size'])
-		{
+		if ($aResult && $aResult['size']) {
+			
 			$Size = (int) $aResult['size'];
 		}
 		return array(

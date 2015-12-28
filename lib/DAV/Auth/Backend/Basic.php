@@ -6,16 +6,8 @@ namespace Afterlogic\DAV\Auth\Backend;
 
 class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 {
-    /**
-     * Creates the backend object.
-     *
-     * @return void
-     */
-    public function __construct()
-	{
-    }
-	
-    /**
+
+	/**
      * Validates a username and password
      *
      * This method should return true or false depending on if login
@@ -25,16 +17,15 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
      */
     protected function validateUserPass($sUserName, $sPassword)
 	{
-		if (class_exists('CApi') && \CApi::IsValid())
-		{
+		if (class_exists('CApi') && \CApi::IsValid()) {
+			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
 			$oApiCapabilityManager = \CApi::GetCoreManager('capability');
 
-			if ($oApiCapabilityManager)
-			{
+			if ($oApiCapabilityManager) {
+				
 				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
-				if ($oAccount && $oAccount->IsDisabled)
-				{
+				if ($oAccount && $oAccount->IsDisabled) {
 					return false;
 				}
 
@@ -44,17 +35,21 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 				$bIsOutlookSync = false;
 				$bIsDemo = false;
 
-				if ($oAccount)
-				{
+				if ($oAccount) {
+					
 					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($oAccount);
 					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($oAccount);
 					
-					\CApi::Plugin()->RunHook('plugin-is-demo-account', array(&$oAccount, &$bIsDemo));
+					\CApi::Plugin()->RunHook(
+							'plugin-is-demo-account', 
+							array(&$oAccount, &$bIsDemo)
+					);
 				}
 
 				if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
-						(($bIsMobileSync && !$bIsOutlookSyncClient) || ($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-					$bIsDemo || ($sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
+						(($bIsMobileSync && !$bIsOutlookSyncClient) || 
+						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
+						$bIsDemo || ($sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
 					return true;
 				}
 			}
