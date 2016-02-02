@@ -4,7 +4,14 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
-class UserAddressBooks extends \Sabre\CardDAV\AddressBookHome {
+class AddressBookHome extends \Sabre\CardDAV\AddressBookHome {
+
+	protected $isEmpty = false;
+	
+	public function setEmpty($isEmpty)
+	{
+		$this->isEmpty = $isEmpty;
+	}
 
 	/**
      * Returns a list of addressbooks
@@ -14,6 +21,13 @@ class UserAddressBooks extends \Sabre\CardDAV\AddressBookHome {
     public function getChildren() 
 	{
         $objs = array();
+		
+		if ($this->isEmpty) {
+			
+			return $objs;
+			
+		}
+		
 		/* @var $oApiCapaManager \CApiCapabilityManager */
 		$oApiCapaManager = \CApi::GetCoreManager('capability');
 		

@@ -111,7 +111,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 				$aFields[':calendarid'] = $mCalendarId; 
 
 				$aFieldNames[] = 'principaluri';
-				$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $aAddItem['href'];
+				$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . str_replace('mailto:', '', $aAddItem['href']);
 				$aFields[':principaluri'] = $sPrincipalUri;
 
 				$aFieldNames[] = 'status';
@@ -193,15 +193,22 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$stmt->execute(array($mCalendarId));
 
 		$aShares = array();
+		$oUsersManager = \CApi::GetCoreManager('users');
+		
 		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) { 
 			
+			$sCommonName = basename($aRow['principaluri']);
+			$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sCommonName);
+			if ($oAccount instanceof \CAccount) {
+				$sCommonName = $oAccount->FriendlyName;
+			}
 			$aShare = array(	
 				'calendarid' => $aRow['calendarid'],
 				'principalpath' => $aRow['principaluri'],
 				'readOnly' => $aRow['readonly'],
 				'summary' => $aRow['summary'],
 				'href' => basename($aRow['principaluri']),
-				'commonName' => basename($aRow['principaluri']),
+				'commonName' => $sCommonName,
 				'displayname' => $aRow['displayname'],
 				'status' => $aRow['status'],
 				'color' => $aRow['color']

@@ -18,7 +18,7 @@ class CalendarRoot extends \Sabre\CalDAV\CalendarRoot{
      */
     public function getChildForPrincipal(array $principal) {
 
-        return new UserCalendars($this->caldavBackend, $principal);
+        return new CalendarHome($this->caldavBackend, $principal);
 
     }
 

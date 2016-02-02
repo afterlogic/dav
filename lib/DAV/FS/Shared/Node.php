@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class Item{
+class Node{
 	
 	protected $path;
 	

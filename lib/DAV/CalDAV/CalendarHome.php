@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-class UserCalendars extends \Sabre\CalDAV\CalendarHome{
+class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 
     /**
      * Returns a list of calendars

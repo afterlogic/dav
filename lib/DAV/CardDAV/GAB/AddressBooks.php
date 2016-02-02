@@ -67,10 +67,10 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 			$oContactsModule = \CApi::GetModule('Contacts');
 			if ($oContactsModule instanceof \AApiModule) {
 				
-				$oGcontactManager = $oContactsModule->GetManager('global');
-				if ($oGcontactManager) {
+				$oGlobalContactManager = $oContactsModule->GetManager('global');
+				if ($oGlobalContactManager) {
 
-					$aContacts = $oGcontactManager->getContactItems(
+					$aContacts = $oGlobalContactManager->getContactItems(
 							$oAccount,
 							\EContactSortField::EMail, 
 							\ESortOrder::ASC, 
@@ -90,6 +90,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 						'FN' => $oContact->Name,
 					)
 				);
+				
 				$vCard->add(
 					'EMAIL',
 					$oContact->Email,
@@ -105,7 +106,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 					array(
 						'uri' => $sUID . '.vcf',
 						'carddata' => $vCard->serialize(),
-						'lastmodified' => strtotime('2001-01-01 00:00:00')
+						'lastmodified' => $oContact->DateModified
 					)
 				);
 			}

@@ -41,8 +41,7 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 				
 				if (($oAccount && (($bIsMobileSync && !$bIsOutlookSyncClient) || 
 						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-						$bIsDemo || ($oApiCalendarManager && 
-								$sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser'))) {
+						$bIsDemo || $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser')) {
 					
 					return md5($sUserName.':'.$sRealm.':'.($bIsDemo ? 'demo' : $oAccount->IncomingMailPassword));
 				}

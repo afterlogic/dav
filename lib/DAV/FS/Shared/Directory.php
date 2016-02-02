@@ -8,7 +8,7 @@ class Directory extends Afterlogic\DAV\FS\Directory {
     
 	protected $linkPath;
 	
-	protected $sharedItem;
+	protected $sharedNode;
 
 	protected $isLink;
 
@@ -17,12 +17,12 @@ class Directory extends Afterlogic\DAV\FS\Directory {
      *
      * @param string $path
      */
-    public function __construct($path, $sharedItem, $isLink = false) {
+    public function __construct($path, $sharedNode, $isLink = false) {
 
-		parent::__construct($sharedItem->getPath());
+		parent::__construct($sharedNode->getPath());
 
 		$this->linkPath = $path;
-		$this->sharedItem = $sharedItem;
+		$this->sharedNode = $sharedNode;
 		$this->isLink = $isLink;
 
     }
@@ -43,7 +43,7 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 
         if ($this->isLink) {
 			
-			return $this->sharedItem->getName();
+			return $this->sharedNode->getName();
 		} else {
 	        list(, $name)  = \Sabre\HTTP\URLUtil::splitPath($this->linkPath);
 		    return $name;
@@ -77,11 +77,11 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 
         if (is_dir($path)) {
 
-            return new Directory($path, $this->sharedItem);
+            return new Directory($path, $this->sharedNode);
 
         } else {
 
-            return new File($path, $this->sharedItem);
+            return new File($path, $this->sharedNode);
 
         }
 
@@ -97,11 +97,12 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 			mkdir($this->path);
 		}
 		
-        foreach(scandir($this->path) as $node) 
+        foreach(scandir($this->path) as $node) {
 			if($node!='.' && $node!='..' && $node!== '.sabredav' && 
 					$node!== API_HELPDESK_PUBLIC_NAME) {
 				$nodes[] = $this->getChild($node);
 			}
+		}
         return $nodes;
 
     }

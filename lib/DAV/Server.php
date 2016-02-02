@@ -86,67 +86,7 @@ class Server extends \Sabre\DAV\Server
 			/* Files folder */
 			if ($this->oApiCapaManager->isFilesSupported()) {
 				
-				$bErrorCreateDir = false;
-				
-				/* Public files folder */
-				$publicDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
-				if (!file_exists($publicDir)) {
-
-					if (!@mkdir($publicDir)) {
-						
-						$bErrorCreateDir = true;
-					}
-				}
-
-				$publicDir .= Constants::FILESTORAGE_PATH_CORPORATE;
-				if (!file_exists($publicDir)) {
-					
-					if (!@mkdir($publicDir)) {
-						
-						$bErrorCreateDir = true;
-					}
-				}
-
-				$personalDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
-						Constants::FILESTORAGE_PATH_PERSONAL;
-				if (!file_exists($personalDir)) {
-					
-					if (!@mkdir($personalDir)) {
-						
-						$bErrorCreateDir = true;
-					}
-				}
-				$sharedDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
-						Constants::FILESTORAGE_PATH_SHARED;
-				if (!file_exists($sharedDir)) {
-					
-					if (!@mkdir($sharedDir)) {
-						
-						$bErrorCreateDir = true;
-					}
-				}
-				
-				if ($bErrorCreateDir) {
-					
-					throw new \Sabre\DAV\Exception(
-							'Can\'t create directory in ' . \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT, 
-							500
-					);
-				}
-
-				$aFilesTree = array(
-					new FS\RootPersonal($personalDir)
-				);
-				if ($this->oApiCapaManager->isCollaborationSupported()) {
-					
-					array_push($aFilesTree, new FS\RootPublic($publicDir));
-				}
-				if (\CApi::GetConf('labs.files-sharing', false)) {
-					
-					array_push($aFilesTree, new FS\RootShared($sharedDir));
-				}
-				
-				array_push($aTree, new \Sabre\DAV\SimpleCollection('files', $aFilesTree));
+				array_push($aTree, new \Afterlogic\DAV\FS\FilesRoot());
 				
 				$this->addPlugin(new FS\Plugin());
 
@@ -196,7 +136,7 @@ class Server extends \Sabre\DAV\Server
 			/* HTML Frontend Plugin */
 			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false) {
 				
-				$this->addPlugin(new \Sabre\DAV\Browser\Plugin(false, false));
+				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
 			}
 
 			/* Locks Plugin */

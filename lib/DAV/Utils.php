@@ -111,9 +111,12 @@ class Utils
 			}
 		}
 		
-		$aPrincipals = array_filter($aPrincipalsPath, function ($sPrincipalPath) use ($sEmail) {
-			return ($sPrincipalPath === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sEmail);
-		});
+		$aPrincipals = array_filter(
+				$aPrincipalsPath, 
+				function ($sPrincipalPath) use ($sEmail) {
+					return ($sPrincipalPath === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sEmail);
+				}
+		);
 		
 		if (count($aPrincipals) === 0) {
 			throw new \Exception("Unknown email address");

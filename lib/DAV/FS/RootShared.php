@@ -26,11 +26,11 @@ class RootShared extends RootPersonal{
 
 		if (!is_dir($path)) {
 			
-			$item = new Shared\Item($this->authPlugin, $path);
+			$node = new Shared\Node($this->authPlugin, $path);
 			
-			if (!$item->exists()) {
+			if (!$node->exists()) {
 				
-				$item->delete();
+				$node->delete();
 			}
 /*
 			$item->updateProperties(array(
@@ -40,7 +40,7 @@ class RootShared extends RootPersonal{
 				'directory' => true
 			));
 */		
-			return $item->getItem();
+			return $node->getItem();
 		} else {
 			
 			return false;
@@ -60,7 +60,7 @@ class RootShared extends RootPersonal{
 		$nodes = array();
         foreach(scandir($this->path) as $node)  {
 			
-			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node!== API_HELPDESK_PUBLIC_NAME) {
+			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node !== API_HELPDESK_PUBLIC_NAME) {
 
 				$child = $this->getChild($node);
 				if ($child) {

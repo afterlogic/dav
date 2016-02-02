@@ -65,8 +65,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	{
 		$user = null;
 		$authPlugin = $this->server->getPlugin('auth');
-		if ($authPlugin !== null)
-		{
+		if ($authPlugin !== null) {
+			
 			 $user = $authPlugin->getCurrentUser();
 		}
 		
@@ -81,11 +81,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     public function beforeMethod($method, $uri) 
 	{
 		if (Backend\PDO::isCalendar($uri)) {
+			
 			if (strtoupper($method) == 'DELETE') {
+				
 				if (Backend\PDO::isEvent($uri)) {
-					$eventId = Backend\PDO::getEventId($uri);
-					$this->deleteReminder($eventId);
+					
+					$this->deleteReminder(Backend\PDO::getEventId($uri));
 				} else {
+					
 					$this->deleteReminderByCalendar($uri);
 				}
 			}

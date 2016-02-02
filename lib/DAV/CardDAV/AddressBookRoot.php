@@ -25,20 +25,16 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 		$oApiCapabilityManager = \CApi::GetCoreManager('capability');
 		
 		$oAccount = $this->getAccount($aPrincipal['uri']);
-		if ($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isPersonalContactsSupported($oAccount)) {
-			
-			return new UserAddressBooks(
-					$this->carddavBackend, 
-					$aPrincipal['uri']
-			);
-		} else {
-			
-			return new EmptyAddressBooks(
-					$this->carddavBackend, 
-					$aPrincipal['uri']
-			);
-		}
+		$bEmpty = !($oAccount instanceof \CAccount &&
+			$oApiCapabilityManager->isPersonalContactsSupported($oAccount));
+		
+		$oAddressBookHome = new AddressBookHome(
+				$this->carddavBackend, 
+				$aPrincipal['uri']
+		);
+		$oAddressBookHome->setEmpty($bEmpty);
+		
+		return $oAddressBookHome;
     }
 
 }
