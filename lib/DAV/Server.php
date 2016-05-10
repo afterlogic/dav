@@ -18,7 +18,7 @@ class Server extends \Sabre\DAV\Server
 	/**
 	 * @var \CAccount
 	 */
-	public $oAccount = null;
+	public $iUserId = null;
 	
 	/**
 	 * @return \Afterlogic\DAV\Server
@@ -148,39 +148,35 @@ class Server extends \Sabre\DAV\Server
 		}
     }
 	
-	public function getAccount()
+	public function getUser()
 	{
-		if (null === $this->oAccount) {
+		if (null === $this->iUserId) {
 			
 			$oAuthPlugin = $this->getPlugin('auth');
 			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
 				
-				list(, $userName) = \Sabre\HTTP\URLUtil::splitPath( 
+				list(, $userId) = \Sabre\HTTP\URLUtil::splitPath( 
 						$oAuthPlugin->getCurrentPrincipal()
 				);
 
-				if (!empty($userName)) {
+				if (!empty($userId)) {
 					
-					$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($userName);
+					$this->iUserId = $userId;
 				}
 			}
 		}
-		return $this->oAccount;
+		return $this->iUserId;
 	}	
 	
-	public function setAccount($oAccount) 
+	public function setUser($iUserId) 
 	{
-		if ($oAccount instanceof \CAccount) {
-			
-			$oAuthPlugin = $this->getPlugin('auth');
-			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
-				
-				$oAuthPlugin->setCurrentPrincipal(
-						\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->IncomingMailLogin
-				);
-			}
+		$oAuthPlugin = $this->getPlugin('auth');
+		if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
+
+			$oAuthPlugin->setCurrentPrincipal(
+					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $iUserId
+			);
 		}
-		
 	}
 
 	/**

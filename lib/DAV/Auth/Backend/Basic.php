@@ -17,6 +17,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
      */
     protected function validateUserPass($sUserName, $sPassword)
 	{
+		$mResult = false;
 		if (class_exists('CApi') && \CApi::IsValid()) {
 			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
@@ -24,37 +25,99 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 
 			if ($oApiCapabilityManager) {
 				
+				$oDavDecorator = \CApi::GetModuleDecorator('Dav');
+				if ($oDavDecorator)
+				{
+					$mResult = $oDavDecorator->Login($sUserName, $sPassword);
+				}
+/*				
 				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
 				if ($oAccount && $oAccount->IsDisabled) {
 					return false;
 				}
-
+*/
 				$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
 
 				$bIsMobileSync = false;
 				$bIsOutlookSync = false;
 				$bIsDemo = false;
 
-				if ($oAccount) {
+//				if ($mResult !== false) {
 					
-					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($oAccount);
-					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($oAccount);
+//					$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
+					
+//					return true;
+/*					
+					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
+					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
 					
 					\CApi::Plugin()->RunHook(
 							'plugin-is-demo-account', 
 							array(&$oAccount, &$bIsDemo)
 					);
-				}
-
+ * 
+ */
+//				}
+/*
 				if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
 						(($bIsMobileSync && !$bIsOutlookSyncClient) || 
 						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
 						$bIsDemo || $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser')) {
 					return true;
 				}
+ * 
+ */
 			}
 		}
 
-		return false;
+		return $mResult;
 	}
+	
+    /**
+     * When this method is called, the backend must check if authentication was
+     * successful.
+     *
+     * The returned value must be one of the following
+     *
+     * [true, "principals/username"]
+     * [false, "reason for failure"]
+     *
+     * If authentication was successful, it's expected that the authentication
+     * backend returns a so-called principal url.
+     *
+     * Examples of a principal url:
+     *
+     * principals/admin
+     * principals/user1
+     * principals/users/joe
+     * principals/uid/123457
+     *
+     * If you don't use WebDAV ACL (RFC3744) we recommend that you simply
+     * return a string such as:
+     *
+     * principals/users/[username]
+     *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return array
+     */
+    public function check(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response) {
+
+        $auth = new \Sabre\HTTP\Auth\Basic(
+            $this->realm,
+            $request,
+            $response
+        );
+
+        $userpass = $auth->getCredentials($request);
+        if (!$userpass) {
+            return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is mis-configured"];
+        }
+        $mValidateResult = $this->validateUserPass($userpass[0], $userpass[1]);
+		if (!$mValidateResult) {
+            return [false, "Username or password was incorrect"];
+        }
+        return [true, $this->principalPrefix . $mValidateResult];
+
+    }	
 }

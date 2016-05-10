@@ -33,18 +33,17 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-		$oUsersManager = \CApi::GetCoreManager('users');
-		$aAccounts = $oUsersManager->getDefaultAccountList();
-		if (is_array($aAccounts)) {
-			foreach ($aAccounts as $oAccountInfo) {
-				if ($oAccountInfo instanceof \stdClass) {
-					$principals[] = array(
-						'id' => $oAccountInfo->id_acct,
-						'uri' => 'principals/'.$oAccountInfo->email,
-						'{http://sabredav.org/ns}email-address' => $oAccountInfo->email,
-						'{DAV:}displayname' => $oAccountInfo->friendly_nm,
-					);
-				}
+		$oCoreModuleDecorator = \CApi::GetModuleDecorator('Core');
+		$aUsers = $oCoreModuleDecorator->GetUserList(0, 0);
+		
+		if (is_array($aUsers)) {
+			foreach ($aUsers as $iKey => $oUser) {
+				$principals[] = array(
+					'id' => $iKey,
+					'uri' => 'principals/'.$iKey,
+					'{http://sabredav.org/ns}email-address' => $iKey,
+					'{DAV:}displayname' => $iKey,
+				);
 			}
 		}
 
@@ -62,19 +61,13 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      */
     function getPrincipalByPath($path) {
 
-        $principal = null;
-		list(, $sUsername) = \Sabre\Uri\split($path);
-		$oUsersManager = \CApi::GetCoreManager('users');
-		$oAccount = $oUsersManager->getAccountByEmail($sUsername);
-		if ($oAccount instanceof \CAccount) {
-			$principal = array(
-				'id' => $oAccount->IdAccount,
-				'uri' => 'principals/'.$oAccount->Email,
-				'{http://sabredav.org/ns}email-address' => $oAccount->Email,
-				'{DAV:}displayname' => $oAccount->FriendlyName,
-			);
-		}
-		return $principal;
+        list(, $sUsername) = \Sabre\Uri\split($path);
+		return array(
+			'id' => $sUsername,
+			'uri' => 'principals/'.$sUsername,
+			'{http://sabredav.org/ns}email-address' => $sUsername,
+			'{DAV:}displayname' => $sUsername,
+		);
 
     }
 

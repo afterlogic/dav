@@ -10,10 +10,10 @@ class RootPersonal extends Directory{
 
 	public function initPath() {
 		
-		$oAccount = $this->getAccount();
-		if ($this->rootPath === null && $oAccount instanceof \CAccount) {
+		$iUserId = $this->getAccount();
+		if ($this->rootPath === null) {
 			
-			$this->rootPath = $this->path . '/' . $oAccount->IncomingMailLogin;
+			$this->rootPath = $this->path . '/' . $iUserId;
 			if (!file_exists($this->rootPath)) {
 				
 				mkdir($this->rootPath, 0777, true);

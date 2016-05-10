@@ -6,17 +6,23 @@ namespace Afterlogic\DAV\CardDAV;
 
 class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 {
-	protected $oAccount = null;
+	protected $iUserId = null;
 	
-	protected function getAccount($principalUri)
+	protected function getUser($principalUri)
 	{
-		if (null === $this->oAccount)
+		if (null === $this->iUserId )
 		{
-			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(
-					basename($principalUri)
-			);
+			$oCoreModuleDecorador = \CApi::GetModuleDecorator('Core');
+			if ($oCoreModuleDecorador)
+			{
+				$oUser = $oCoreModuleDecorador->GetUser(basename($principalUri));
+				if ($oUser)
+				{
+					$this->iUserId = basename($principalUri);
+				}
+			}
 		}
-		return $this->oAccount;
+		return $this->iUserId;
 	}
 
 	public function getChildForPrincipal(array $aPrincipal)
@@ -24,9 +30,9 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 		/* @var \CApiCapabilityManager */
 		$oApiCapabilityManager = \CApi::GetCoreManager('capability');
 		
-		$oAccount = $this->getAccount($aPrincipal['uri']);
-		$bEmpty = !($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isPersonalContactsSupported($oAccount));
+//		$oAccount = $this->getAccount($aPrincipal['uri']);
+		$bEmpty = false;/*!($oAccount instanceof \CAccount &&
+			$oApiCapabilityManager->isPersonalContactsSupported($oAccount));*/
 		
 		$oAddressBookHome = new AddressBookHome(
 				$this->carddavBackend, 

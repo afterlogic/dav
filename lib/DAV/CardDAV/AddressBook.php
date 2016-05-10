@@ -57,6 +57,8 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 
 		$aContactIds = array();
 		
+		//TODO:
+/*		
 		$oAccount = \Afterlogic\DAV\Utils::getCurrentAccount();
 		if ($oAccount) {
 			
@@ -69,7 +71,7 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 				);
 			}
 		}
-		
+*/		
         return $aContactIds;
 
     }	

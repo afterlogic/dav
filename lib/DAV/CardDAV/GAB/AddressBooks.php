@@ -17,9 +17,9 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 	private $addressBookInfo;
 
     /**
-	 * @var CAccount
+	 * @var int
      */
-	private $account;
+	private $iUserId;
 	
 	/**
      * Constructor
@@ -27,19 +27,19 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
     public function __construct($name, $displayname = '')
 	{
 		$this->name = $name;
-		$this->account = null;
+		$this->iUserId = null;
 
 		$this->addressBookInfo['{DAV:}displayname'] = (empty($displayname)) ? $name : $displayname;
     }
 
 
-	public function getAccount()
+	public function getUser()
 	{
-		if ($this->account == null) {
+		if ($this->iUserId == null) {
 			
-			$this->account = \Afterlogic\DAV\Server::getInstance()->getAccount();
+			$this->iUserId = \Afterlogic\DAV\Server::getInstance()->getUser();
 		}
-		return $this->account;
+		return $this->iUserId;
 	}
 
 	/**
@@ -55,7 +55,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
      */
     public function getChildren()
 	{
-		$oAccount = $this->getAccount();
+		$oAccount = $this->getUser();
         $aCards = array();
 
 		$oApiCapabilityManager = /* @var \CApiCapabilityManager */ \CApi::GetCoreManager('capability');
@@ -185,11 +185,11 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
      */
     public function getACL() {
 
-		$oAccount = $this->getAccount();
+		$iUserId = $this->getUser();
         return array(
             array(
                 'privilege' => '{DAV:}read',
-                'principal' => ($oAccount) ? 'principals/' . $oAccount->Email : null,
+                'principal' => ($iUserId) ? 'principals/' . $iUserId : null,
                 'protected' => true,
             ),
         );

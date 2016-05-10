@@ -262,23 +262,18 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		
         if (count($aCalendars) === 0) {
 			
-			$oUsersManager = \CApi::GetCoreManager('users');
-			$oAccount = $oUsersManager->getAccountByEmail(basename($principalUri));
-			if ($oAccount) {
-				
-				$this->createCalendar(
-					$principalUri, 
-					\Sabre\DAV\UUIDUtil::getUUID(), 
-					[
-						'{DAV:}displayname' => \CApi::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', $oAccount),
-						'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
-						'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
-						'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,
-						'{http://apple.com/ns/ical/}calendar-order' => 0
-					]
-				);
-				$aCalendars = $this->getOwnCalendarsForUser($principalUri);
-			}
+			$this->createCalendar(
+				$principalUri, 
+				\Sabre\DAV\UUIDUtil::getUUID(), 
+				[
+					'{DAV:}displayname' => \CApi::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', basename($principalUri)),
+					'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
+					'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
+					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,
+					'{http://apple.com/ns/ical/}calendar-order' => 0
+				]
+			);
+			$aCalendars = $this->getOwnCalendarsForUser($principalUri);
 		}
 		
 		$aSharedCalendars = $this->getSharedCalendarsForUser($principalUri);
