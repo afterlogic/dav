@@ -38,7 +38,6 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 							array(&$oAccount, &$bIsDemo)
 					);
 				}
-				
 				if (($oAccount && (($bIsMobileSync && !$bIsOutlookSyncClient) || 
 						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
 						$bIsDemo || $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser')) {

@@ -14,9 +14,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     protected $server;
 
     /**
-     * @var \CAccount
+     * @var int $iUserId
      */
-    protected $oAccount = null;
+    protected $iUserId = null;
 	
 	/**
 	 * @var \CApiTenantsManager
@@ -62,13 +62,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		return $this->oApiMin;
 	}
 	
-    public function getAccount()
+    public function getUser()
 	{	
-		if (!isset($this->oAccount) && isset($this->server)) {
+		if (!isset($this->iUserId) && isset($this->server)) {
 			
-			$this->oAccount = $this->server->getAccount();
+			$this->iUserId = $this->server->getUser();
 		}
-		return $this->oAccount; 
+		return $this->iUserId; 
 	}
 	
 	/**
@@ -195,15 +195,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		if (self::isFilestoragePrivate($path) || 
 				self::isFilestorageCorporate($path)) {
 			
-			$oAccount = $this->getAccount();
-			if ($oAccount) {
+			$iUserId = $this->getUser();
+			if ($iUserId) {
 				
 				$iType = self::getTypeFromPath($path);
 				$sFilePath = self::getFilePathFromPath(dirname($path));
 				$sFileName = basename($path);
 
 				$this->sNewPath = $path;
-				$this->sNewID = implode('|', array($oAccount->IdAccount, $iType, $sFilePath, $sFileName));
+				$this->sNewID = implode('|', array($iUserId, $iType, $sFilePath, $sFileName));
 			}
 		}
 		return true;
@@ -218,9 +218,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     {
 		if (self::isFilestoragePrivate($path) || self::isFilestorageCorporate($path)) {
 			
-			$oAccount = $this->getAccount();
+			$iUserId = $this->getUser();
 
-			if ($oAccount) {
+			if ($iUserId) {
 				
  				$iType = self::getTypeFromPath($path);
 				$sFilePath = self::getFilePathFromPath(dirname($path));
@@ -228,7 +228,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 				$oMin = $this->getMinMan();
 				$this->sOldPath = $path;
-				$this->sOldID = implode('|', array($oAccount->IdAccount, $iType, $sFilePath, $sFileName));
+				$this->sOldID = implode('|', array($iUserId, $iType, $sFilePath, $sFileName));
 				$aData = $oMin->getMinByID($this->sOldID);
 				
 				if (isset($this->sNewPath)) {

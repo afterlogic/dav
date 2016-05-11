@@ -17,9 +17,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	protected $oApiUsers = null;	
 	
 	/**
-	 * @var \CAccount
+	 * @var int $iUserId
 	 */
-	protected $oAccount = null;	
+	protected $iUserId = null;	
 	
 	/**
 	 * @var \CTenant
@@ -36,18 +36,18 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $this->oApiTenants;
 	}
 
-	public function getAccount()
+	public function getUser()
 	{
-		if ($this->oAccount === null) {
+		if ($this->iUserId === null) {
 			
-			$this->oAccount = \Afterlogic\DAV\Server::getInstance()->getAccount();
+			$this->iUserId = \Afterlogic\DAV\Server::getInstance()->getUser();
 		}
-		return $this->oAccount;
+		return $this->iUserId;
 	}
 	
-	public function setAccount($oAccount)
+	public function setUser($iUserId)
 	{
-		$this->oAccount = $oAccount;
+		$this->iUserId = $iUserId;
 	}
 	
 	public function getTenant()
@@ -105,11 +105,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		if (!isset($aProps['Owner'])) {
 			
-			$oAccount = $this->getAccount();
-			if ($oAccount) {
-				
-				$aProps['Owner'] = $oAccount->Email;
-			}
+			$aProps['Owner'] = $this->getUser();
 		}
 		
 		$oFile->updateProperties($aProps);
@@ -199,22 +195,20 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	public function getRootPath($sType = \EFileStorageTypeStr::Personal)
 	{
 		$sRootPath = '';
-		$oAccount = $this->getAccount();
-		if ($oAccount) {
-			
-			if ($sType === \EFileStorageTypeStr::Corporate) {
-				
-				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . $oAccount->IdTenant;
-			} else if ($sType === \EFileStorageTypeStr::Shared) {
-				
-				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-						\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $oAccount->Email;
-			} else {
-				
-				$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-						\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $oAccount->Email;
-			}
+		$iUserId = $this->getUser();
+		
+		if ($sType === \EFileStorageTypeStr::Corporate) {
+
+			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . 0;
+		} else if ($sType === \EFileStorageTypeStr::Shared) {
+
+			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $iUserId;
+		} else {
+
+			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $iUserId;
 		}
 		
 		return $sRootPath;
@@ -232,8 +226,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$aSize = \api_Utils::GetDirectorySize($sRootPath);
 		$iUsageSize += (int) $aSize['size'];
 
-		$oAccount = $this->getAccount();
-		if ($oAccount) {
+		$iUserId = $this->getUser();
+		if ($iUserId) {
 			
 			$oTenant = $this->getTenant();
 			if ($oTenant) {

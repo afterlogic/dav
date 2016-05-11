@@ -12,10 +12,10 @@ class RootPublic extends Directory {
 		
 		if ($this->rootPath === null) {
 			
-			$oAccount = $this->getAccount();
-			if ($oAccount instanceof \CAccount) {
+			$iUserId = $this->getUser();
+			if ($iUserId) {
 				
-				$this->rootPath = $this->path . '/' . $oAccount->IdTenant;
+				$this->rootPath = $this->path . '/' . 0;
 				if (!file_exists($this->rootPath)) {
 					
 					mkdir($this->rootPath, 0777, true);

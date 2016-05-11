@@ -188,11 +188,11 @@ class Server extends \Sabre\DAV\Server
 	 */
 	public function beforeGetProperties($path, \Sabre\DAV\INode $node, &$requestedProperties, &$returnedProperties)
 	{
-		$oAccount = $this->getAccount();
-		if (isset($oAccount)/* && $node->getName() === 'root'*/)
+		$iUserId = $this->getUser();
+		if (isset($iUserId)/* && $node->getName() === 'root'*/)
 		{
 			$carddavPlugin = $this->getPlugin('carddav');
-			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($oAccount, false)) {
+			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($iUserId, false)) {
 				
 				$carddavPlugin->directories = array('gab');
 			}

@@ -8,8 +8,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     
 	protected $principalUri;
 	
-	/* @var $oAccount \CAccount */
-	protected $oAccount = null;
+	/* @var int $iUserId */
+	protected $iUserId = null;
 
 	/* @var $oApiUsersManager \CApiUsersManager */
 	protected $oApiUsersManager;
@@ -51,15 +51,15 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		
     }	
 
-	public function getAccount() {
+	public function getUser() {
 		
-		if (null === $this->oAccount) {
+		if (null === $this->iUserId) {
 			
-			$this->oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin(
+			$this->iUserId = \Afterlogic\DAV\Utils::GetAccountByLogin(
 					basename($this->principalUri)
 			);
 		}
-		return $this->oAccount;
+		return $this->iUserId;
 	}
 
 	/**
@@ -119,13 +119,13 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		/* @var $oApiContactsManager \CApiContactsMainManager */
 		$oApiContactsManager = $this->getContactsManager();
 		
-		$oAccount = $this->getAccount();
+		$iUserId = $this->getUser();
 
 		/* @var $oContact \CContact */
 		$oContact = $oApiContactsManager->getContactByStrId(
-				$oAccount->IdUser, 
+				$iUserId, 
 				$name, 
-				$oAccount->IdTenant
+				0 // TODO: IdTenant
 		);
 		if ($oContact) {
 			
@@ -149,13 +149,13 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 
         $children = array();
 
-		$oAccount = $this->getAccount();
-		if ($oAccount) {
+		$iUserId = $this->getUser();
+		if ($iUserId) {
 			/* @var $oApiContactsManager \CApiContactsMainManager */
 			$oApiContactsManager = $this->getContactsManager();
 
 			$aContactListItems = $oApiContactsManager->getContactItems(
-					$oAccount->IdUser, 
+					$iUserId, 
 					\EContactSortField::EMail, 
 					\ESortOrder::ASC, 
 					0, 
@@ -163,7 +163,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 					'', 
 					'', 
 					'', 
-					$oAccount->IdTenant
+					0 // TODO: IdTenent
 			);
 			foreach ($aContactListItems as $oContactListItem) {
 				

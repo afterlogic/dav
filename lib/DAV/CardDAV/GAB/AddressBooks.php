@@ -153,8 +153,8 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
      */
     public function getOwner() {
 
-		$oAccount = $this->getAccount();
-		return ($oAccount) ? 'principals/' . $oAccount->Email : null;
+		$iUserId = $this->getUser();
+		return ($iUserId) ? 'principals/' . $iUserId : null;
 
     }
 

@@ -68,17 +68,17 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterUnbind($path)
     {
-		$oAccount = $this->server->getAccount();
-		if (isset($oAccount)) {
+		$iUserId = $this->server->getUser();
+		if (isset($iUserId)) {
 			
 			$oContact = $this->oApiContactsManager->getContactByStrId(
-					$oAccount->IdUser, 
+					$iUserId, 
 					basename($path)
 			);
 
 			if ($oContact) {
 				$this->oApiContactsManager->deleteContacts(
-						$oAccount->IdUser, 
+						$iUserId, 
 						array($oContact->IdContact)
 				);
 			}
@@ -92,11 +92,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		$node = $parent->getChild($sFileName);
 		if ($node instanceof \Sabre\CardDAV\ICard) {
 			
-			$oAccount = $this->server->getAccount();
-			if (isset($oAccount)) {
+			$iUserId = $this->server->getUser();
+			if (isset($iUserId)) {
 				
 				$oContact = new \CContact();
-				$oContact->InitFromVCardStr($oAccount->IdUser, $node->get());
+				$oContact->InitFromVCardStr($iUserId, $node->get());
 				$oContact->IdContactStr = $sFileName;
 				$this->oApiContactsManager->createContact($oContact);
 			}
@@ -107,11 +107,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 	{
 		if ($node instanceof \Sabre\CardDAV\ICard) {
 			
-			$oAccount = $this->server->getAccount();
-			if (isset($oAccount)) {
+			$iUserId = $this->server->getUser();
+			if (isset($iUserId)) {
 				
-				$iUserId = $oAccount->IdUser;
-				$iTenantId = ($node instanceof \Afterlogic\DAV\CardDAV\SharedCard) ? $oAccount->IdTenant : null;
+				$iTenantId = ($node instanceof \Afterlogic\DAV\CardDAV\SharedCard) ? 0 /* TODO: IdTenant */ : null;
 
 				$sContactFileName = $node->getName();
 				$oContactDb = $this->oApiContactsManager->getContactByStrId(

@@ -10,7 +10,7 @@ class RootPersonal extends Directory{
 
 	public function initPath() {
 		
-		$iUserId = $this->getAccount();
+		$iUserId = $this->getUser();
 		if ($this->rootPath === null) {
 			
 			$this->rootPath = $this->path . '/' . $iUserId;

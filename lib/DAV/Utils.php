@@ -37,7 +37,7 @@ class Utils
 	
 	public static function getCurrentAccount()
 	{
-		return self::getServer()->getAccount();
+		return self::getServer()->getUser();
 	}
 	
 	public static function getTenantUser($oAccount)
