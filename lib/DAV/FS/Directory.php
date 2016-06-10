@@ -53,8 +53,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	public function getTenant()
 	{
 		if ($this->oTenant == null) {
-			
-			$oAccount = $this->getAccount();
+			// TODO: 
+/*			$oAccount = $this->getAccount();
 			if ($oAccount !== null) {
 				
 				$oApiTenants = $this->getTenantsMan();
@@ -63,6 +63,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 					$this->oTenant = $oApiTenants->getTenantById($oAccount->IdTenant);
 				}
 			}
+ * 
+ */
 		}
 		
 		return $this->oTenant;

@@ -181,8 +181,8 @@ class File extends \Sabre\DAV\FSExt\File{
      */
     public function setName($name) {
 
-        list($parentPath, ) = DAV\URLUtil::splitPath($this->path);
-        list(, $newName) = DAV\URLUtil::splitPath($name);
+        list($parentPath, ) = \Sabre\Uri\split($this->path);
+        list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
 
         // We're deleting the existing resourcedata, and recreating it
