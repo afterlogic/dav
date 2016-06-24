@@ -21,7 +21,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 		if (class_exists('CApi') && \CApi::IsValid()) {
 			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = \CApi::GetCoreManager('capability');
+			$oApiCapabilityManager = \CApi::GetSystemManager('capability');
 
 			if ($oApiCapabilityManager) {
 				

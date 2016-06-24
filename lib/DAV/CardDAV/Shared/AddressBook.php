@@ -20,7 +20,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 	{
 		if (!isset($this->oApiUsersManager)) {
 			
-			$this->oApiUsersManager = \CApi::GetCoreManager('users');
+			$this->oApiUsersManager = \CApi::GetSystemManager('users');
 		}
 		return $this->oApiUsersManager;
 	}

@@ -127,7 +127,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
 			
-			$oUsersManager = \CApi::GetCoreManager('users');
+			$oUsersManager = \CApi::GetSystemManager('users');
 			$oAccount = $oUsersManager->getAccountByEmail(
 					$searchProperties['{http://sabredav.org/ns}email-address']
 			);

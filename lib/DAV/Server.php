@@ -81,7 +81,7 @@ class Server extends \Sabre\DAV\Server
 				), /* Global Address Book */
 			);
 
-			$this->oApiCapaManager = \CApi::GetCoreManager('capability');
+			$this->oApiCapaManager = \CApi::GetSystemManager('capability');
 
 			/* Files folder */
 			if ($this->oApiCapaManager->isFilesSupported()) {

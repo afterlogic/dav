@@ -30,7 +30,7 @@ class Utils
 	{
 		if (null === self::$oUsersManager) {
 			
-			self::$oUsersManager = \CApi::GetCoreManager('users');
+			self::$oUsersManager = \CApi::GetSystemManager('users');
 		}
 		return self::$oUsersManager;
 	}
@@ -45,7 +45,7 @@ class Utils
 		$sEmail = 'default_' . Constants::DAV_TENANT_PRINCIPAL;
 		if ($oAccount->IdTenant > 0) {
 			
-			$oApiTenantsMan = \CApi::GetCoreManager('tenants');
+			$oApiTenantsMan = \CApi::GetSystemManager('tenants');
 			$oTenant = $oApiTenantsMan ? $oApiTenantsMan->getTenantById($oAccount->IdTenant) : null;
 			if ($oTenant) {
 				

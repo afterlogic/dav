@@ -12,7 +12,7 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 		if (class_exists('CApi') && \CApi::IsValid()) {
 			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = \CApi::GetCoreManager('capability');
+			$oApiCapabilityManager = \CApi::GetSystemManager('capability');
 
 			if ($oApiCapabilityManager) {
 				

@@ -62,7 +62,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			new RootPersonal($personalDir)
 		);
 		
-		$oApiCapaManager = \CApi::GetCoreManager('capability');
+		$oApiCapaManager = \CApi::GetSystemManager('capability');
 		if ($oApiCapaManager->isCollaborationSupported()) {
 
 			array_push($this->aTree, new RootPublic($publicDir));
