@@ -112,7 +112,7 @@ class Server extends \Sabre\DAV\Server
 			/* Contacts Plugin */
 			$this->addPlugin(new Contacts\Plugin());
 
-			if ($this->oApiCapaManager->isMobileSyncSupported()) {
+//			if ($this->oApiCapaManager->isMobileSyncSupported()) {
 				
 				/* CalDAV Plugin */
 				$this->addPlugin(new \Sabre\CalDAV\Plugin());
@@ -125,7 +125,7 @@ class Server extends \Sabre\DAV\Server
 
 				/* VCF Export Plugin */
 				$this->addPlugin(new \Sabre\CardDAV\VCFExportPlugin());
-			}
+//			}
 
 			/* Calendar Sharing Plugin */
 			$this->addPlugin(new \Sabre\CalDAV\SharingPlugin());

@@ -39,10 +39,10 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 		if (is_array($aUsers)) {
 			foreach ($aUsers as $iKey => $oUser) {
 				$principals[] = array(
-					'id' => $iKey,
-					'uri' => 'principals/'.$iKey,
-					'{http://sabredav.org/ns}email-address' => $iKey,
-					'{DAV:}displayname' => $iKey,
+					'id' => $oUser['id'],
+					'uri' => 'principals/'.$oUser['id'],
+					'{http://sabredav.org/ns}email-address' => $oUser['name'],
+					'{DAV:}displayname' => $oUser['name'],
 				);
 			}
 		}
