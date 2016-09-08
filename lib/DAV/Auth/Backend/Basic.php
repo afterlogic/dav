@@ -28,7 +28,11 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 				$oDavDecorator = \CApi::GetModuleDecorator('Dav');
 				if ($oDavDecorator)
 				{
-					$mResult = $oDavDecorator->Login($sUserName, $sPassword);
+					$mLoginResult = $oDavDecorator->Login($sUserName, $sPassword);
+					if (isset($mLoginResult['id']))
+					{
+						$mResult = $mLoginResult['id'];
+					}
 				}
 /*				
 				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
