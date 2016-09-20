@@ -86,13 +86,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
         if ($name=='.' || $name=='..') {
 			
-			throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+			throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
 		}
         $newPath = $this->path . '/' . $name;
 		
 		if (!is_dir($newPath)) {
 			
-			mkdir($newPath, 0777, true);
+			if (!@mkdir($newPath, 0777, true))
+			{
+				throw new \Sabre\DAV\Exception('Can\'t create a directory');
+			}
 		}
     }
 
