@@ -8,8 +8,6 @@ class_exists('CApi') || die();
 
 class Server extends \Sabre\DAV\Server
 {
-	private static $_instance = null;
-    
 	/**
 	 * @var \CApiCapabilityManager
 	 */
@@ -23,14 +21,16 @@ class Server extends \Sabre\DAV\Server
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
-	static public function getInstance($baseUri = '/') { 
-		
-		if(is_null(self::$_instance)) { 
+	static public function getInstance($baseUri = '/') 
+	{ 
+		static $oInstance = null;
+		if(is_null($oInstance)) 
+		{ 
 			
-			self::$_instance = new self($baseUri); 
+			$oInstance = new self($baseUri); 
 			
 		} 
-		return self::$_instance; 
+		return $oInstance; 
 	
 	}	
 
@@ -65,27 +65,27 @@ class Server extends \Sabre\DAV\Server
 			$aTree = array(
 				($bIsOwncloud) ? 
 					new CardDAV\AddressBookRoot(
-							Backend::Principal(), 
-							Backend::getBackend('carddav-owncloud')
+						Backend::Principal(), 
+						Backend::getBackend('carddav-owncloud')
 					) : 
 					new CardDAV\AddressBookRoot(
-							Backend::Principal(), 
-							Backend::Carddav()
+						Backend::Principal(), 
+						Backend::Carddav()
 					),
 				new CalDAV\CalendarRoot(
-						Backend::Principal(), 
-						Backend::Caldav()),
+					Backend::Principal(), 
+					Backend::Caldav()),
 				new CardDAV\GAB\AddressBooks(
-						'gab', 
-						Constants::GLOBAL_CONTACTS
+					'gab', 
+					Constants::GLOBAL_CONTACTS
 				), /* Global Address Book */
 			);
 
 			$this->oApiCapaManager = \CApi::GetSystemManager('capability');
 
 			/* Files folder */
-			if ($this->oApiCapaManager->isFilesSupported()) {
-				
+			if ($this->oApiCapaManager->isFilesSupported()) 
+			{
 				array_push($aTree, new \Afterlogic\DAV\FS\FilesRoot());
 				
 				$this->addPlugin(new FS\Plugin());
@@ -134,14 +134,13 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false) {
-				
+			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false) 
+			{
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
 			}
 
 			/* Locks Plugin */
 			$this->addPlugin(new \Sabre\DAV\Locks\Plugin(
-					new \Sabre\DAV\Locks\Backend\File(\CApi::DataPath() . '/locks.dat'))
 			);
 
 			$this->on('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
@@ -150,17 +149,17 @@ class Server extends \Sabre\DAV\Server
 	
 	public function getUser()
 	{
-		if (null === $this->iUserId) {
-			
+		if (null === $this->iUserId) 
+		{
 			$oAuthPlugin = $this->getPlugin('auth');
-			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
-				
+			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
+			{
 				list(, $userId) = \Sabre\HTTP\URLUtil::splitPath( 
 						$oAuthPlugin->getCurrentPrincipal()
 				);
 
-				if (!empty($userId)) {
-					
+				if (!empty($userId)) 
+				{
 					$this->iUserId = $userId;
 				}
 			}
@@ -171,8 +170,8 @@ class Server extends \Sabre\DAV\Server
 	public function setUser($iUserId) 
 	{
 		$oAuthPlugin = $this->getPlugin('auth');
-		if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) {
-
+		if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
+		{
 			$oAuthPlugin->setCurrentPrincipal(
 					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $iUserId
 			);
@@ -192,8 +191,8 @@ class Server extends \Sabre\DAV\Server
 		if (isset($iUserId)/* && $node->getName() === 'root'*/)
 		{
 			$carddavPlugin = $this->getPlugin('carddav');
-			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($iUserId, false)) {
-				
+			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($iUserId, false)) 
+			{
 				$carddavPlugin->directories = array('gab');
 			}
 		}
