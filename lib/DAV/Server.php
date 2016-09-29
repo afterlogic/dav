@@ -140,8 +140,7 @@ class Server extends \Sabre\DAV\Server
 			}
 
 			/* Locks Plugin */
-			$this->addPlugin(new \Sabre\DAV\Locks\Plugin(
-			);
+//			$this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
 			$this->on('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
 		}
