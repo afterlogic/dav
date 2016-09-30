@@ -33,14 +33,15 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-		$oCoreModuleDecorator = \CApi::GetModuleDecorator('Core');
-		$aUsers = $oCoreModuleDecorator->GetUserList(0, 0);
+		$aUsers = \CApi::GetModuleDecorator('Core')->GetUserList(0, 0);
 		
-		if (is_array($aUsers)) {
-			foreach ($aUsers as $iKey => $oUser) {
+		if (is_array($aUsers)) 
+		{
+			foreach ($aUsers as $oUser) 
+			{
 				$principals[] = array(
-					'id' => $oUser['Id'],
-					'uri' => 'principals/'.$oUser['Id'],
+					'id' => $oUser['UUID'],
+					'uri' => 'principals/'.$oUser['UUID'],
 					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
 					'{DAV:}displayname' => $oUser['Name'],
 				);

@@ -18,28 +18,19 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
     protected function validateUserPass($sUserName, $sPassword)
 	{
 		$mResult = false;
-		if (class_exists('CApi') && \CApi::IsValid()) {
-			
+		if (class_exists('CApi') && \CApi::IsValid()) 
+		{
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
 			$oApiCapabilityManager = \CApi::GetSystemManager('capability');
 
-			if ($oApiCapabilityManager) {
-				
+			if ($oApiCapabilityManager) 
+			{
 				$oDavDecorator = \CApi::GetModuleDecorator('Dav');
 				if ($oDavDecorator)
 				{
-					$mLoginResult = $oDavDecorator->Login($sUserName, $sPassword);
-					if (isset($mLoginResult['id']))
-					{
-						$mResult = $mLoginResult['id'];
-					}
+					$mResult = $oDavDecorator->Login($sUserName, $sPassword);
 				}
-/*				
-				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
-				if ($oAccount && $oAccount->IsDisabled) {
-					return false;
-				}
-*/
+
 				$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
 
 				$bIsMobileSync = false;
@@ -114,11 +105,13 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
         );
 
         $userpass = $auth->getCredentials($request);
-        if (!$userpass) {
+        if (!$userpass) 
+		{
             return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is mis-configured"];
         }
         $mValidateResult = $this->validateUserPass($userpass[0], $userpass[1]);
-		if (!$mValidateResult) {
+		if (!$mValidateResult) 
+		{
             return [false, "Username or password was incorrect"];
         }
         return [true, $this->principalPrefix . $mValidateResult];

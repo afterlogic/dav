@@ -14,9 +14,9 @@ class Server extends \Sabre\DAV\Server
 	private $oApiCapaManager;
 	
 	/**
-	 * @var \CAccount
+	 * @var string
 	 */
-	public $iUserId = null;
+	public $sUserUUID = null;
 	
 	/**
 	 * @return \Afterlogic\DAV\Server
@@ -148,7 +148,7 @@ class Server extends \Sabre\DAV\Server
 	
 	public function getUser()
 	{
-		if (null === $this->iUserId) 
+		if (null === $this->sUserUUID) 
 		{
 			$oAuthPlugin = $this->getPlugin('auth');
 			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
@@ -159,20 +159,20 @@ class Server extends \Sabre\DAV\Server
 
 				if (!empty($userId)) 
 				{
-					$this->iUserId = $userId;
+					$this->sUserUUID = $userId;
 				}
 			}
 		}
-		return $this->iUserId;
+		return $this->sUserUUID;
 	}	
 	
-	public function setUser($iUserId) 
+	public function setUser($sUserUUID) 
 	{
 		$oAuthPlugin = $this->getPlugin('auth');
 		if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
 		{
 			$oAuthPlugin->setCurrentPrincipal(
-					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $iUserId
+					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserUUID
 			);
 		}
 	}
