@@ -42,7 +42,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 				$principals[] = array(
 					'id' => $oUser['UUID'],
 					'uri' => 'principals/'.$oUser['UUID'],
-					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
+//					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
 					'{DAV:}displayname' => $oUser['Name'],
 				);
 			}
@@ -66,7 +66,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 		return array(
 			'id' => $sUsername,
 			'uri' => 'principals/'.$sUsername,
-			'{http://sabredav.org/ns}email-address' => $sUsername,
+//			'{http://sabredav.org/ns}email-address' => $sUsername,
 			'{DAV:}displayname' => $sUsername,
 		);
 

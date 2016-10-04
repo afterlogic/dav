@@ -276,6 +276,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			$aCalendars = $this->getOwnCalendarsForUser($principalUri);
 		}
 		
+/*		
 		$aSharedCalendars = $this->getSharedCalendarsForUser($principalUri);
 		$aSharedToAllCalendars = $this->getSharedCalendarsForUser(
 				\Afterlogic\DAV\Utils::getTenantPrincipalUri($principalUri)
@@ -297,7 +298,8 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			}
 			$aCalendars[$iKey] = $aSharedCalendar;
 		}
-		
+*/		
+		$aSharedCalendars = array();
 		return array_merge($aCalendars, $aSharedCalendars);
 	}
 	
