@@ -273,6 +273,72 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
 	}
 	
+	public function getProperty($sName)
+	{
+		$aData = $this->getResourceData();
+		return isset($aData[$sName]) ? $aData[$sName] : null;
+	}
+	
+	public function setProperty($sName, $mValue)
+	{
+		$aData = $this->getResourceData();
+		$aData[$sName] = $mValue;
+		$this->putResourceData($aData);
+	}	
+	
+    /**
+     * Updates properties on this node,
+     *
+     * @param array $properties
+     * @see Sabre\DAV\IProperties::updateProperties
+     * @return bool|array
+     */
+    public function updateProperties($properties) {
+
+        $resourceData = $this->getResourceData();
+
+        foreach($properties as $propertyName=>$propertyValue) {
+
+            // If it was null, we need to delete the property
+            if (is_null($propertyValue)) {
+                if (isset($resourceData['properties'][$propertyName])) {
+                    unset($resourceData['properties'][$propertyName]);
+                }
+            } else {
+                $resourceData['properties'][$propertyName] = $propertyValue;
+            }
+
+        }
+
+        $this->putResourceData($resourceData);
+        return true;
+    }
+
+    /**
+     * Returns a list of properties for this nodes.;
+     *
+     * The properties list is a list of propertynames the client requested, encoded as xmlnamespace#tagName, for example: http://www.example.org/namespace#author
+     * If the array is empty, all properties should be returned
+     *
+     * @param array $properties
+     * @return array
+     */
+    function getProperties($properties) {
+
+        $resourceData = $this->getResourceData();
+
+        // if the array was empty, we need to return everything
+        if (!$properties) return $resourceData['properties'];
+
+        $props = array();
+        foreach($properties as $property) {
+            if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
+        }
+
+        return $props;
+
+    }
+
     /**
      * Returns the path to the resource file
      *
@@ -280,9 +346,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
      */
     protected function getResourceInfoPath() {
 
-		$this->initPath();
-
-		return $this->path . '/.sabredav';
+        list($parentDir) = \Sabre\Uri\split($this->path);
+        return $parentDir . '/.sabredav';
 
     }
 
@@ -293,42 +358,66 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
      */
     protected function getResourceData() {
 
-		$aResult = array();
-		$path = $this->getResourceInfoPath();
-        if (!file_exists($path)) {
-			
-			return array('properties' => array());
-		}
+        $path = $this->getResourceInfoPath();
+        if (!file_exists($path)) return array('properties' => array());
 
         // opening up the file, and creating a shared lock
         $handle = fopen($path,'r');
         flock($handle,LOCK_SH);
-        $sData = '';
+        $data = '';
 
         // Reading data until the eof
         while(!feof($handle)) {
-            $sData.=fread($handle,8192);
+            $data.=fread($handle,8192);
         }
 
         // We're all good
         fclose($handle);
 
         // Unserializing and checking if the resource file contains data for this file
-        $aData = unserialize($sData);
-		foreach ($aData as $sName => $aValue) {
-			
-			$aResultItem = array('@Name' => $sName);
-			if (isset($aValue['properties']) && is_array($aValue['properties'])) {
-				
-				$aResultItem = array_merge($aResultItem, $aValue['properties']);
-			}
-			$aResult[] = $aResultItem;
-		}
+        $data = unserialize($data);
+        if (!isset($data[$this->getName()])) {
+            return array('properties' => array());
+        }
 
-        return $aResult;
+        $data = $data[$this->getName()];
+        if (!isset($data['properties'])) $data['properties'] = array();
+        return $data;
 
-    }	
-	
+    }
+
+    /**
+     * Updates the resource information
+     *
+     * @param array $newData
+     * @return void
+     */
+    protected function putResourceData(array $newData) {
+
+        $path = $this->getResourceInfoPath();
+
+        // opening up the file, and creating a shared lock
+        $handle = fopen($path,'a+');
+        flock($handle,LOCK_EX);
+        $data = '';
+
+        rewind($handle);
+
+        // Reading data until the eof
+        while(!feof($handle)) {
+            $data.=fread($handle,8192);
+        }
+
+        // Unserializing and checking if the resource file contains data for this file
+        $data = unserialize($data);
+        $data[$this->getName()] = $newData;
+        ftruncate($handle,0);
+        rewind($handle);
+
+        fwrite($handle,serialize($data));
+        fclose($handle);
+
+    }
 	public function getChildrenProperties()
 	{
 		return $this->getResourceData();
