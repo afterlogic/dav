@@ -25,11 +25,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 
 			if ($oApiCapabilityManager) 
 			{
-				$oDavDecorator = \CApi::GetModuleDecorator('Dav');
-				if ($oDavDecorator)
-				{
-					$mResult = $oDavDecorator->Login($sUserName, $sPassword);
-				}
+				$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
 
 				$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
 

@@ -17,4 +17,33 @@ class Backend
         }
         return self::$instance;		
 	}
+	
+	public static function Login($sUserName, $sPassword)
+	{
+		$mResult = false;
+		$aArguments = array(
+			'Login' => $sUserName,
+			'Password' => $sPassword,
+			'SignMe' => false
+
+		);		
+		\CApi::GetModuleManager()->broadcastEvent(
+			'Dav', 
+			'Login', 
+			$aArguments, 
+			$mResult
+		);
+		if (isset($mResult['id']))
+		{
+			$oManagerApi = \CApi::GetSystemManager('eav', 'db');
+			$oEntity = $oManagerApi->getEntityById((int) $mResult['id']);
+			$mResult = $oEntity->sUUID;
+		}
+		else 
+		{
+			$mResult = false;
+		}
+		
+		return $mResult;
+	}
 }
