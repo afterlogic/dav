@@ -12,9 +12,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      *
      * @var \Sabre\DAV\Server
      */
-    private $server;
+    private $oServer;
 	
-	private $oApiContactsManager;
+	private $oContactsDecorator;
 
     /**
      * __construct
@@ -23,19 +23,16 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-		$oContactsModule = \CApi::GetModule('Contacts');
-		if ($oContactsModule instanceof \AApiModule) {
-			$this->oApiContactsManager = $oContactsModule->GetManager('main');
-		}
+		$this->oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
 	}
 
-    public function initialize(\Sabre\DAV\Server $server)
+    public function initialize(\Sabre\DAV\Server $oServer)
     {
-        $this->server = $server;
-		$this->server->on('beforeUnbind', array($this, 'beforeUnbind'),30);
-        $this->server->on('afterUnbind', array($this, 'afterUnbind'),30);
-		$this->server->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
-		$this->server->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
+        $this->oServer = $oServer;
+		$this->oServer->on('beforeUnbind', array($this, 'beforeUnbind'),30);
+        $this->oServer->on('afterUnbind', array($this, 'afterUnbind'),30);
+		$this->oServer->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
+		$this->oServer->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
     }
 
     /**
@@ -52,104 +49,123 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     }
 
     /**
-     * @param string $path
+     * @param string $sPath
      * @throws \Sabre\DAV\Exception\NotAuthenticated
      * @return bool
      */
-    public function beforeUnbind($path)
+    public function beforeUnbind($sPath)
     {
 		return true;
 	}    
 	
 	/**
-     * @param string $path
+     * @param string $sPath
      * @throws \Sabre\DAV\Exception\NotAuthenticated
      * @return bool
      */
-    public function afterUnbind($path)
+    public function afterUnbind($sPath)
     {
-		$iUserId = $this->server->getUser();
-		if (isset($iUserId)) {
+		if ($this->oContactsDecorator) 
+		{
+			$iUserId = 0;
+			$sUserUUID = $this->oServer->getUser();
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				if ($oUser instanceof \CUser)
+				{
+					$iUserId = $oUser->iId;
+				}
+			}
 			
-			$oContact = $this->oApiContactsManager->getContactByStrId(
-					$iUserId, 
-					basename($path)
-			);
-
-			if ($oContact) {
-				$this->oApiContactsManager->deleteContacts(
-						$iUserId, 
-						array($oContact->IdContact)
+			if ($iUserId > 0) 
+			{
+				$aPathInfo = pathinfo($sPath);
+				\CApi::setUserId($iUserId);
+				$this->oContactsDecorator->DeleteContacts(
+					array($aPathInfo['filename'])
 				);
 			}
 		}
 		return true;
 	}
 	
-	function afterCreateFile($path, \Sabre\DAV\ICollection $parent)
+	function afterCreateFile($sPath, \Sabre\DAV\ICollection $oParent)
 	{
-		$sFileName = basename($path);
-		$node = $parent->getChild($sFileName);
-		if ($node instanceof \Sabre\CardDAV\ICard) {
+		$aPathInfo = pathinfo($sPath);
+		$sUUID = $aPathInfo['filename'];
+		$oNode = $oParent->getChild($aPathInfo['basename']);
+		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
+		{
+			$iUserId = 0;
+			$sUserUUID = $this->oServer->getUser();
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				if ($oUser instanceof \CUser)
+				{
+					$iUserId = $oUser->iId;
+				}
+			}
 			
-			$iUserId = $this->server->getUser();
-			if (isset($iUserId)) {
-				
-				$oContact = new \CContact();
-				$oContact->InitFromVCardStr($iUserId, $node->get());
-				$oContact->IdContactStr = $sFileName;
-				$this->oApiContactsManager->createContact($oContact);
+			if ($iUserId > 0) 
+			{
+				\CApi::setUserId($iUserId);
+				$this->oContactsDecorator->CreateContactFromVCard($iUserId, $oNode->get(), $sUUID);
 			}
 		}
 	}
 
-	function afterWriteContent($path, \Sabre\DAV\IFile $node)
+	function afterWriteContent($sPath, \Sabre\DAV\IFile $oNode)
 	{
-		if ($node instanceof \Sabre\CardDAV\ICard) {
+		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
+		{
+			$iUserId = 0;
+			$sUserUUID = $this->oServer->getUser();
+			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			if ($oCoreDecorator)
+			{
+				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				if ($oUser instanceof \CUser)
+				{
+					$iUserId = $oUser->iId;
+				}
+			}
 			
-			$iUserId = $this->server->getUser();
-			if (isset($iUserId)) {
-				
-				$iTenantId = ($node instanceof \Afterlogic\DAV\CardDAV\SharedCard) ? 0 /* TODO: IdTenant */ : null;
+			if ($iUserId > 0) 
+			{
+				\CApi::setUserId($iUserId);
 
-				$sContactFileName = $node->getName();
-				$oContactDb = $this->oApiContactsManager->getContactByStrId(
-						$iUserId, 
-						$sContactFileName, 
-						$iTenantId
+				$sPath = $oNode->getName();
+				$aPathInfo = pathinfo($sPath);
+				$sUUID = $aPathInfo['filename'];
+				$oContactDb = $this->oContactsDecorator->GetContact(
+					$sUUID
 				);
-				if (!isset($oContactDb)) {
-					
+				if (!isset($oContactDb)) 
+				{
 					$oVCard = \Sabre\VObject\Reader::read(
-							$node->get(), 
-							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+						$oNode->get(), 
+						\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
 					);
 
-					if ($oVCard && $oVCard->UID) {
-						
-						$oContactDb = $this->oApiContactsManager->getContactByStrId(
-								$iUserId, 
-								(string)$oVCard->UID . '.vcf', 
-								$iTenantId
+					if ($oVCard && $oVCard->UID)
+					{
+						$oContactDb = $this->oContactsDecorator->GetContact(
+							(string)$oVCard->UID
 						);
 					}
 				}
 
-				$oContact = new \CContact();
-				$oContact->InitFromVCardStr($iUserId, $node->get());
-				$oContact->IdContactStr = $sContactFileName;
-				$oContact->IdTenant = $iTenantId;
-
-				if (isset($oContactDb)) {
-					
-					$oContact->IdContact = $oContactDb->IdContact;
-					$oContact->IdDomain = $oContactDb->IdDomain;
-					$oContact->SharedToAll = !!$oContactDb->SharedToAll;
-
-					$this->oApiContactsManager->updateContact($oContact);
-				} else {
-					
-					$this->oApiContactsManager->createContact($oContact);
+				if (isset($oContactDb)) 
+				{
+					$this->oContactsDecorator->UpdateContactFromVCard($iUserId, $oNode->get(), $sUUID);
+				} 
+				else 
+				{
+					$this->oContactsDecorator->CreateContactFromVCard($iUserId, $oNode->get(), $sUUID);
 				}
 			}
 		}
