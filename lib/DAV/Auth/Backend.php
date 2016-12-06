@@ -36,7 +36,7 @@ class Backend
 		if (isset($mResult['id']))
 		{
 			$oManagerApi = \CApi::GetSystemManager('eav', 'db');
-			$oEntity = $oManagerApi->getEntityById((int) $mResult['id']);
+			$oEntity = $oManagerApi->getEntity((int) $mResult['id']);
 			$mResult = $oEntity->sUUID;
 		}
 		else 
