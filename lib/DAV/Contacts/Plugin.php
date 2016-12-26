@@ -15,6 +15,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     private $oServer;
 	
 	private $oContactsDecorator;
+	private $oDavContactsDecorator;
 
     /**
      * __construct
@@ -24,6 +25,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public function __construct()
     {
 		$this->oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
+		$this->oDavContactsDecorator = \CApi::GetModuleDecorator('DavContacts');
 	}
 
     public function initialize(\Sabre\DAV\Server $oServer)
@@ -113,7 +115,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($iUserId > 0) 
 			{
 				\CApi::setUserId($iUserId);
-				$this->oContactsDecorator->CreateContactFromVCard($iUserId, $oNode->get(), $sUUID);
+				$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
 			}
 		}
 	}
@@ -161,11 +163,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 				if (isset($oContactDb)) 
 				{
-					$this->oContactsDecorator->UpdateContactFromVCard($iUserId, $oNode->get(), $sUUID);
+					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID);
 				} 
 				else 
 				{
-					$this->oContactsDecorator->CreateContactFromVCard($iUserId, $oNode->get(), $sUUID);
+					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
 				}
 			}
 		}
