@@ -185,7 +185,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$this->initPath();
 		
 		$path = ($path === null) ? $this->path : $path;
-		$aItems = \api_Utils::SearchFiles($path, $pattern);
+		$aItems = \Aurora\System\Utils::SearchFiles($path, $pattern);
 		if ($aItems) {
 			
 			foreach ($aItems as $sItem) {
@@ -224,11 +224,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$iFreeSize = 0;
 
 		$sRootPath = $this->getRootPath(\EFileStorageTypeStr::Personal);
-		$aSize = \api_Utils::GetDirectorySize($sRootPath);
+		$aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
 		$iUsageSize = (int) $aSize['size'];
 
 		$sRootPath = $this->getRootPath(\EFileStorageTypeStr::Corporate);
-		$aSize = \api_Utils::GetDirectorySize($sRootPath);
+		$aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
 		$iUsageSize += (int) $aSize['size'];
 
 		$iUserId = $this->getUser();
