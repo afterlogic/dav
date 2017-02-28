@@ -53,17 +53,17 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     {
 		$aHeaders = $this->server->httpRequest->getHeaders();
 
-    	\CApi::Log($sMethod . ' ' . $path, \ELogLevel::Full, 'sabredav-');
-    	\CApi::LogObject($aHeaders, \ELogLevel::Full, 'sabredav-');
+    	\Aurora\System\Api::Log($sMethod . ' ' . $path, \ELogLevel::Full, 'sabredav-');
+    	\Aurora\System\Api::LogObject($aHeaders, \ELogLevel::Full, 'sabredav-');
 
-		$bLogBody = (bool) \CApi::GetConf('labs.dav.log-body', false);
+		$bLogBody = (bool) \Aurora\System\Api::GetConf('labs.dav.log-body', false);
 		if ($bLogBody) {
 			
 			$body = $this->server->httpRequest->getBodyAsString(); 		
 			$this->server->httpRequest->setBody($body);
-			\CApi::LogObject($body, \ELogLevel::Full, 'sabredav-');
+			\Aurora\System\Api::LogObject($body, \ELogLevel::Full, 'sabredav-');
 		}
-		\CApi::Log('', \ELogLevel::Full, 'sabredav-');
+		\Aurora\System\Api::Log('', \ELogLevel::Full, 'sabredav-');
 
     	return;
     }

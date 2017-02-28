@@ -12,7 +12,7 @@ class Backend
 	{
         if(null === self::$instance) {
 			
-            self::$instance = (\CApi::GetConf('labs.dav.use-digest-auth', false)) 
+            self::$instance = (\Aurora\System\Api::GetConf('labs.dav.use-digest-auth', false)) 
 					? new Backend\Digest() : new Backend\Basic();
         }
         return self::$instance;		
@@ -27,7 +27,7 @@ class Backend
 			'SignMe' => false
 
 		);		
-		\CApi::GetModuleManager()->broadcastEvent(
+		\Aurora\System\Api::GetModuleManager()->broadcastEvent(
 			'Dav', 
 			'Login', 
 			$aArguments, 
@@ -35,7 +35,7 @@ class Backend
 		);
 		if (isset($mResult['id']))
 		{
-			$oManagerApi = \CApi::GetSystemManager('eav', 'db');
+			$oManagerApi = \Aurora\System\Api::GetSystemManager('eav', 'db');
 			$oEntity = $oManagerApi->getEntity((int) $mResult['id']);
 			$mResult = $oEntity->sUUID;
 		}

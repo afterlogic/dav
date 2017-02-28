@@ -33,7 +33,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-		$aUsers = \CApi::GetModuleDecorator('Core')->GetUserList(0, 0);
+		$aUsers = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserList(0, 0);
 		
 		if (is_array($aUsers)) 
 		{
@@ -128,7 +128,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
 			
-			$oUsersManager = \CApi::GetSystemManager('users');
+			$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
 			$oAccount = $oUsersManager->getAccountByEmail(
 					$searchProperties['{http://sabredav.org/ns}email-address']
 			);

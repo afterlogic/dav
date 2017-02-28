@@ -13,8 +13,8 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      */
     public function __construct() {
 
-		parent::__construct(\CApi::GetPDO());
-		$sDbPrefix = \CApi::GetSettings()->GetConf('DBPrefix');
+		parent::__construct(\Aurora\System\Api::GetPDO());
+		$sDbPrefix = \Aurora\System\Api::GetSettings()->GetConf('DBPrefix');
 		$this->cardsTableName = $sDbPrefix.Constants::T_CARDS;
 		$this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
 		$this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;

@@ -13,7 +13,7 @@ class AddressBook extends \Sabre\CardDAV\AddressBook {
 	{
 		if (!isset($this->oApiContactsManager)) {
 			
-			$oContactsModule = \CApi::GetModule('Contacts');
+			$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
 			if ($oContactsModule instanceof \AApiModule) {
 				
 				$this->oApiContactsManager = $oContactsModule->GetManager('main');

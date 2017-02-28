@@ -20,7 +20,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 	{
 		if (!isset($this->oApiUsersManager)) {
 			
-			$this->oApiUsersManager = \CApi::GetSystemManager('users');
+			$this->oApiUsersManager = \Aurora\System\Api::GetSystemManager('users');
 		}
 		return $this->oApiUsersManager;
 	}
@@ -29,7 +29,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 	{
 		if (!isset($this->oApiContactsManager))
 		{
-			$oContactsModule = \CApi::GetModule('Contacts');
+			$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
 			if ($oContactsModule instanceof \AApiModule) {
 				
 				$this->oApiContactsManager = $oContactsModule->GetManager('main');

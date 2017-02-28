@@ -30,7 +30,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		if ($this->oApiTenants === null) {
 			
-			$this->oApiTenants = \CApi::GetSystemManager('tenants');
+			$this->oApiTenants = \Aurora\System\Api::GetSystemManager('tenants');
 		}
 		
 		return $this->oApiTenants;
@@ -204,15 +204,15 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		if ($sType === \EFileStorageTypeStr::Corporate) {
 
-			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . 0;
 		} else if ($sType === \EFileStorageTypeStr::Shared) {
 
-			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $iUserId;
 		} else {
 
-			$sRootPath = \CApi::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
+			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $iUserId;
 		}
 		

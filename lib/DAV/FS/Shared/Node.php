@@ -16,7 +16,7 @@ class Node{
 	
 	public function getRootPath(){
 		
-		return \CApi::DataPath() . '/' . Plugin::getPersonalPath() . '/' . $this->getOwner();
+		return \Aurora\System\Api::DataPath() . '/' . Plugin::getPersonalPath() . '/' . $this->getOwner();
 		
 	}		
 	

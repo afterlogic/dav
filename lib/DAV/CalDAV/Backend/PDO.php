@@ -39,9 +39,9 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	 */
 	public function __construct() 
 	{
-		parent::__construct(\CApi::GetPDO());
+		parent::__construct(\Aurora\System\Api::GetPDO());
 		
-		$this->dBPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
+		$this->dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('Common/DBPrefix');
 		
 		$this->calendarTableName = $this->dBPrefix.Constants::T_CALENDARS;
 		$this->calendarChangesTableName = $this->dBPrefix.Constants::T_CALENDARCHANGES;
@@ -193,7 +193,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$stmt->execute(array($mCalendarId));
 
 		$aShares = array();
-		$oUsersManager = \CApi::GetSystemManager('users');
+		$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
 		
 		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) { 
 			
@@ -266,7 +266,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 				$principalUri, 
 				\Sabre\DAV\UUIDUtil::getUUID(), 
 				[
-					'{DAV:}displayname' => \CApi::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', basename($principalUri)),
+					'{DAV:}displayname' => \Aurora\System\Api::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', basename($principalUri)),
 					'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
 					'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
 					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,

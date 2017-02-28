@@ -13,7 +13,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		$bErrorCreateDir = false;
 
 		/* Public files folder */
-		$publicDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
+		$publicDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 		if (!file_exists($publicDir)) {
 
 			if (!@mkdir($publicDir)) {
@@ -31,7 +31,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			}
 		}
 
-		$personalDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
+		$personalDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
 				Constants::FILESTORAGE_PATH_PERSONAL;
 		if (!file_exists($personalDir)) {
 
@@ -40,7 +40,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 				$bErrorCreateDir = true;
 			}
 		}
-		$sharedDir = \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
+		$sharedDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
 				Constants::FILESTORAGE_PATH_SHARED;
 		if (!file_exists($sharedDir)) {
 
@@ -53,7 +53,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		if ($bErrorCreateDir) {
 
 			throw new \Sabre\DAV\Exception(
-					'Can\'t create directory in ' . \CApi::DataPath() . Constants::FILESTORAGE_PATH_ROOT, 
+					'Can\'t create directory in ' . \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT, 
 					500
 			);
 		}
@@ -62,12 +62,12 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			new RootPersonal($personalDir)
 		);
 		
-		$oApiCapaManager = \CApi::GetSystemManager('capability');
+		$oApiCapaManager = \Aurora\System\Api::GetSystemManager('capability');
 		if ($oApiCapaManager->isCollaborationSupported()) {
 
 			array_push($this->aTree, new RootPublic($publicDir));
 		}
-		if (\CApi::GetConf('labs.files-sharing', false)) {
+		if (\Aurora\System\Api::GetConf('labs.files-sharing', false)) {
 
 			array_push($this->aTree, new RootShared($sharedDir));
 		}		

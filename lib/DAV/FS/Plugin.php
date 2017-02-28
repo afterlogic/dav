@@ -57,7 +57,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	{
 		if ($this->oApiMin == null) {
 			
-			$this->oApiMin = \CApi::Manager('min');
+			$this->oApiMin = \Aurora\System\Api::Manager('min');
 		}
 		return $this->oApiMin;
 	}
@@ -234,7 +234,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 				if (isset($this->sNewPath)) {
 					
 //					$node = $this->server->tree->getNodeForPath($this->sNewPath);
-//					\CApi::LogObject($node, \ELogLevel::Full, 'fs-');
+//					\Aurora\System\Api::LogObject($node, \ELogLevel::Full, 'fs-');
 				}
 				
 				if (isset($this->sNewID) && !empty($aData['__hash__'])) {

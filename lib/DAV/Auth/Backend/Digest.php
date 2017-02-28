@@ -9,10 +9,10 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 
 	public function getDigestHash($sRealm, $sUserName)
 	{
-		if (class_exists('CApi') && \CApi::IsValid()) {
+		if (class_exists('CApi') && \Aurora\System\Api::IsValid()) {
 			
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = \CApi::GetSystemManager('capability');
+			$oApiCapabilityManager = \Aurora\System\Api::GetSystemManager('capability');
 
 			if ($oApiCapabilityManager) {
 				
@@ -33,14 +33,14 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($oAccount);
 					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($oAccount);
 					
-					\CApi::Plugin()->RunHook(
+					\Aurora\System\Api::Plugin()->RunHook(
 							'plugin-is-demo-account', 
 							array(&$oAccount, &$bIsDemo)
 					);
 				}
 				if (($oAccount && (($bIsMobileSync && !$bIsOutlookSyncClient) || 
 						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-						$bIsDemo || $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser')) {
+						$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
 					
 					return md5($sUserName.':'.$sRealm.':'.($bIsDemo ? 'demo' : $oAccount->IncomingMailPassword));
 				}

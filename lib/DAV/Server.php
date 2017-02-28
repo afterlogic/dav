@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV;
 
-class_exists('CApi') || die();
+class_exists('\\Aurora\\System\\Api') || die();
 
 class Server extends \Sabre\DAV\Server
 {
@@ -42,7 +42,7 @@ class Server extends \Sabre\DAV\Server
 		$this->setBaseUri($baseUri);
 		date_default_timezone_set('GMT');
 
-		if (\CApi::GetPDO()) {
+		if (\Aurora\System\Api::GetPDO()) {
 
 			/* Authentication Plugin */
 			$this->addPlugin(new \Afterlogic\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
@@ -55,7 +55,7 @@ class Server extends \Sabre\DAV\Server
 			$aclPlugin->hideNodesFromListings = true;
 			$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
 			
-			$mAdminPrincipal = \CApi::GetConf('labs.dav.admin-principal', false);
+			$mAdminPrincipal = \Aurora\System\Api::GetConf('labs.dav.admin-principal', false);
 			$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
 					array(Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal) : array();
 			$this->addPlugin($aclPlugin);
@@ -81,7 +81,7 @@ class Server extends \Sabre\DAV\Server
 				), /* Global Address Book */
 			);
 
-			$this->oApiCapaManager = \CApi::GetSystemManager('capability');
+			$this->oApiCapaManager = \Aurora\System\Api::GetSystemManager('capability');
 
 			/* Files folder */
 			if ($this->oApiCapaManager->isFilesSupported()) 
@@ -134,7 +134,7 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			if (\CApi::GetConf('labs.dav.use-browser-plugin', false) !== false) 
+			if (\Aurora\System\Api::GetConf('labs.dav.use-browser-plugin', false) !== false) 
 			{
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
 			}

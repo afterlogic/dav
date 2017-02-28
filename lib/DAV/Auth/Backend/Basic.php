@@ -18,10 +18,10 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
     protected function validateUserPass($sUserName, $sPassword)
 	{
 		$mResult = false;
-		if (class_exists('CApi') && \CApi::IsValid()) 
+		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid()) 
 		{
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = \CApi::GetSystemManager('capability');
+			$oApiCapabilityManager = \Aurora\System\Api::GetSystemManager('capability');
 
 			if ($oApiCapabilityManager) 
 			{
@@ -42,7 +42,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
 					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
 					
-					\CApi::Plugin()->RunHook(
+					\Aurora\System\Api::Plugin()->RunHook(
 							'plugin-is-demo-account', 
 							array(&$oAccount, &$bIsDemo)
 					);
@@ -53,7 +53,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 				if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
 						(($bIsMobileSync && !$bIsOutlookSyncClient) || 
 						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-						$bIsDemo || $sUserName === \CApi::ExecuteMethod('Dav::GetPublicUser')) {
+						$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
 					return true;
 				}
  * 

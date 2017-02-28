@@ -71,8 +71,8 @@ class Client extends \Sabre\DAV\Client {
 		{
 			$sLog = $sLog."\r\nBody:\r\n".$body;
 		}
-		\CApi::Log($sLog, \ELogLevel::Full, 'dav-');
-		\CApi::LogObject($headers, \ELogLevel::Full, 'dav-');
+		\Aurora\System\Api::Log($sLog, \ELogLevel::Full, 'dav-');
+		\Aurora\System\Api::LogObject($headers, \ELogLevel::Full, 'dav-');
 
 		$response = array();
 		try
@@ -81,7 +81,7 @@ class Client extends \Sabre\DAV\Client {
 		}
 		catch (\Sabre\DAV\Exception $ex)
 		{
-			\CApi::LogObject($ex->getMessage(), \ELogLevel::Full, 'dav-');
+			\Aurora\System\Api::LogObject($ex->getMessage(), \ELogLevel::Full, 'dav-');
 			throw $ex;
 		}
 
@@ -90,10 +90,10 @@ class Client extends \Sabre\DAV\Client {
 		{
 			$sLog = $sLog."\r\nBody:\r\n".$response['body'];
 		}
-		\CApi::Log($sLog, \ELogLevel::Full, 'dav-');
+		\Aurora\System\Api::Log($sLog, \ELogLevel::Full, 'dav-');
 		if (!empty($response['headers']))
 		{
-			\CApi::LogObject($response['headers'], \ELogLevel::Full, 'dav-');
+			\Aurora\System\Api::LogObject($response['headers'], \ELogLevel::Full, 'dav-');
 		}
 
 		return $response;

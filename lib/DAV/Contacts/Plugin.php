@@ -24,8 +24,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-		$this->oContactsDecorator = \CApi::GetModuleDecorator('Contacts');
-		$this->oDavContactsDecorator = \CApi::GetModuleDecorator('DavContacts');
+		$this->oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
+		$this->oDavContactsDecorator = \Aurora\System\Api::GetModuleDecorator('DavContacts');
 	}
 
     public function initialize(\Sabre\DAV\Server $oServer)
@@ -71,7 +71,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
@@ -84,7 +84,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($iUserId > 0) 
 			{
 				$aPathInfo = pathinfo($sPath);
-				\CApi::setUserId($iUserId);
+				\Aurora\System\Api::setUserId($iUserId);
 				$this->oContactsDecorator->DeleteContacts(
 					array($aPathInfo['filename'])
 				);
@@ -102,7 +102,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
@@ -114,7 +114,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			
 			if ($iUserId > 0) 
 			{
-				\CApi::setUserId($iUserId);
+				\Aurora\System\Api::setUserId($iUserId);
 				$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
 			}
 		}
@@ -126,7 +126,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \CApi::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
@@ -138,7 +138,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			
 			if ($iUserId > 0) 
 			{
-				\CApi::setUserId($iUserId);
+				\Aurora\System\Api::setUserId($iUserId);
 
 				$sPath = $oNode->getName();
 				$aPathInfo = pathinfo($sPath);

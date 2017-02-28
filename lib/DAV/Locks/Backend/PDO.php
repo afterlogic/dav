@@ -13,9 +13,9 @@ class PDO extends \Sabre\DAV\Locks\Backend\PDO {
      */
     public function __construct() {
 
-		parent::__construct(\CApi::GetPDO());
+		parent::__construct(\Aurora\System\Api::GetPDO());
 		
-		$dbPrefix = \CApi::GetSettings()->GetConf('Common/DBPrefix');
+		$dbPrefix = \Aurora\System\Api::GetSettings()->GetConf('Common/DBPrefix');
 		$this->tableName = $dbPrefix.Constants::T_LOCKS;
     }
 }

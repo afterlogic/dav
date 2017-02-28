@@ -29,7 +29,7 @@ class AddressBookHome extends \Sabre\CardDAV\AddressBookHome {
 		}
 		
 		/* @var $oApiCapaManager \CApiCapabilityManager */
-		$oApiCapaManager = \CApi::GetSystemManager('capability');
+		$oApiCapaManager = \Aurora\System\Api::GetSystemManager('capability');
 		
 		$aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
 		if (count($aAddressbooks) === 0) {
