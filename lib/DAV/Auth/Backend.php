@@ -37,7 +37,7 @@ class Backend
 		{
 			$oManagerApi = \Aurora\System\Api::GetSystemManager('eav', 'db');
 			$oEntity = $oManagerApi->getEntity((int) $mResult['id']);
-			$mResult = $oEntity->sUUID;
+			$mResult = $oEntity->UUID;
 		}
 		else 
 		{

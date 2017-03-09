@@ -43,7 +43,7 @@ class RootPersonal extends Directory{
     public function getQuotaInfo() {
 
         $iSize = 0;
-		$aResult = \api_Utils::GetDirectorySize($this->path);
+		$aResult = \Aurora\System\Utils::GetDirectorySize($this->path);
 		if ($aResult && $aResult['size']) {
 			
 			$iSize = (int) $aResult['size'];

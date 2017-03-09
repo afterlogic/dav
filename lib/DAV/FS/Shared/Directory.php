@@ -133,7 +133,7 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 			
 			$path = $this->path;
 		}
-		$aItems = \api_Utils::SearchFiles($path, $pattern);
+		$aItems = \Aurora\System\Utils::SearchFiles($path, $pattern);
 		if ($aItems) {
 			
 			foreach ($aItems as $sItem) {

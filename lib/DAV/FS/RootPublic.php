@@ -49,7 +49,7 @@ class RootPublic extends Directory {
     public function getQuotaInfo() {
 
         $Size = 0;
-		$aResult = \api_Utils::GetDirectorySize($this->path);
+		$aResult = \Aurora\System\Utils::GetDirectorySize($this->path);
 		if ($aResult && $aResult['size']) {
 			
 			$Size = (int) $aResult['size'];
