@@ -4,8 +4,6 @@
 
 namespace Afterlogic\DAV;
 
-class_exists('\\Aurora\\System\\Api') || die();
-
 class Server extends \Sabre\DAV\Server
 {
 	/**
@@ -42,8 +40,8 @@ class Server extends \Sabre\DAV\Server
 		$this->setBaseUri($baseUri);
 		date_default_timezone_set('GMT');
 
-		if (\Aurora\System\Api::GetPDO()) {
-
+		if (\Aurora\System\Api::GetPDO()) 
+		{
 			/* Authentication Plugin */
 			$this->addPlugin(new \Afterlogic\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
 
