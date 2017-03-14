@@ -193,7 +193,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$stmt->execute(array($mCalendarId));
 
 		$aShares = array();
-		$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
+//		$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
 		
 		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) { 
 			
