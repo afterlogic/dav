@@ -65,8 +65,10 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
         }		
 
 		// We're adding a notifications node, if it's supported by the backend.
+		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
         if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport && 
-				\Aurora\System\Api::GetConf('labs.dav.caldav.notification', false)) {
+				$oDavModule->getConfig('CaldavNotification', false))
+		{
             $aObjs[] = new \Sabre\CalDAV\Notifications\Collection(
 					$this->caldavBackend, 
 					$this->principalInfo['uri']

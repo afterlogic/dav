@@ -53,7 +53,8 @@ class Server extends \Sabre\DAV\Server
 			$aclPlugin->hideNodesFromListings = true;
 			$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
 			
-			$mAdminPrincipal = \Aurora\System\Api::GetConf('labs.dav.admin-principal', false);
+			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+			$mAdminPrincipal = $oDavModule->getConfig('AdminPrincipal', false);
 			$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
 					array(Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal) : array();
 			$this->addPlugin($aclPlugin);
@@ -132,7 +133,8 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			if (\Aurora\System\Api::GetConf('labs.dav.use-browser-plugin', false) !== false) 
+			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+			if ($oDavModule->getConfig('UseBrowserPlugin', false) !== false) 
 			{
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
 			}

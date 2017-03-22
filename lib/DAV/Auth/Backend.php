@@ -10,9 +10,10 @@ class Backend
 	
 	public static function getInstance()
 	{
-        if(null === self::$instance) {
-			
-            self::$instance = (\Aurora\System\Api::GetConf('labs.dav.use-digest-auth', false)) 
+        if (null === self::$instance)
+		{
+			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+            self::$instance = ($oDavModule->getConfig('UseDigestAuth', false)) 
 					? new Backend\Digest() : new Backend\Basic();
         }
         return self::$instance;		

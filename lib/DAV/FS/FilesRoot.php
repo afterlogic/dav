@@ -67,7 +67,8 @@ class FilesRoot extends \Sabre\DAV\Collection {
 
 			array_push($this->aTree, new RootPublic($publicDir));
 		}
-		if (\Aurora\System\Api::GetConf('labs.files-sharing', false)) {
+		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+		if ($oDavModule->getConfig('FilesSharing', false)) {
 
 			array_push($this->aTree, new RootShared($sharedDir));
 		}		

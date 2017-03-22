@@ -56,9 +56,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     	\Aurora\System\Api::Log($sMethod . ' ' . $path, \ELogLevel::Full, 'sabredav-');
     	\Aurora\System\Api::LogObject($aHeaders, \ELogLevel::Full, 'sabredav-');
 
-		$bLogBody = (bool) \Aurora\System\Api::GetConf('labs.dav.log-body', false);
-		if ($bLogBody) {
-			
+		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+		$bLogBody = (bool) $oDavModule->getConfig('LogBody', false);
+		if ($bLogBody)
+		{
 			$body = $this->server->httpRequest->getBodyAsString(); 		
 			$this->server->httpRequest->setBody($body);
 			\Aurora\System\Api::LogObject($body, \ELogLevel::Full, 'sabredav-');
