@@ -99,20 +99,38 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
     }
 
-	public function createFile($name, $data = null) {
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0) {
 
 		$this->initPath();
 		
-		parent::createFile($name, $data);
-
-		$oFile = $this->getChild($name);
+		$bFileExists = $this->childExists($name);
+		if (!($bFileExists))
+		{
+			if ($rangeType === 0)
+			{
+				parent::createFile($name, $data);
+			}
+			else
+			{
+				parent::createFile($name);
+			}
+			$oFile = $this->getChild($name);
+			
+		}
+		if ($oFile instanceof \Afterlogic\DAV\FS\File)
+		{
+			if ($rangeType !== 0)
+			{
+				$oFile->patch($data, $rangeType, $offset);
+			}
+		}
+		
 		$aProps = $oFile->getProperties(array('Owner'));
 		
 		if (!isset($aProps['Owner'])) {
 			
 			$aProps['Owner'] = $this->getUser();
 		}
-		
 		$oFile->updateProperties($aProps);
 
 		if (!$this->updateQuota()) {
