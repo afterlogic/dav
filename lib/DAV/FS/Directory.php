@@ -114,9 +114,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 			{
 				parent::createFile($name);
 			}
-			$oFile = $this->getChild($name);
-			
 		}
+		$oFile = $this->getChild($name);
 		if ($oFile instanceof \Afterlogic\DAV\FS\File)
 		{
 			if ($rangeType !== 0)
