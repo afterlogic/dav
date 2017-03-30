@@ -99,7 +99,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
     }
 
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0) {
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) {
 
 		$this->initPath();
 		
@@ -130,6 +130,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 			
 			$aProps['Owner'] = $this->getUser();
 		}
+
+		$aProps['ExtendedProps'] = $extendedProps;
+
 		$oFile->updateProperties($aProps);
 
 		if (!$this->updateQuota()) {
