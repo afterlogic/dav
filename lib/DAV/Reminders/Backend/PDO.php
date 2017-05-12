@@ -34,7 +34,7 @@ class PDO
      */
     public function __construct() 
 	{
-        $dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('Common/DBPrefix');
+        $dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('DBPrefix');
 
 		$this->pdo = \Aurora\System\Api::GetPDO();
         $this->table = $dBPrefix.Constants::T_REMINDERS;
