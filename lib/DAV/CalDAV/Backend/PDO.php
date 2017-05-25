@@ -318,8 +318,8 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
                 'id' => $aRows['id'],
                 'uri' => $aRows['uri'],
                 'principaluri' => $aRows['principaluri'],
-                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($aRows['synctoken'] ? $aRows['synctoken'] : '0'),
-                '{http://sabredav.org/ns}sync-token' => $aRows['synctoken'] ? $aRows['synctoken'] : '0',
+                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag' => $aRows['synctoken'] ? $aRows['synctoken'] : '0',
+                '{http://sabredav.org/ns}sync-token' => 'http://sabre.io/ns/sync/' . ($aRows['synctoken'] ? $aRows['synctoken'] : '0'),
                 '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet($aComponents),
                 '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp' => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($aRows['transparent'] ? 'transparent' : 'opaque'),
 			);
