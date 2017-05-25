@@ -140,18 +140,18 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	public static function getTypeFromPath($path)
 	{
-		$sResult = \EFileStorageTypeStr::Personal;
+		$sResult = \Aurora\System\Enums\FileStorageType::Personal;
 		if (self::isFilestoragePrivate($path)) {
 			
-			$sResult = \EFileStorageTypeStr::Personal;
+			$sResult = \Aurora\System\Enums\FileStorageType::Personal;
 		}
 		if (self::isFilestorageCorporate($path)) {
 			
-			$sResult = \EFileStorageTypeStr::Corporate;
+			$sResult = \Aurora\System\Enums\FileStorageType::Corporate;
 		}
 		if (self::isFilestorageShared($path)) {
 			
-			$sResult = \EFileStorageTypeStr::Shared;
+			$sResult = \Aurora\System\Enums\FileStorageType::Shared;
 		}
 		return $sResult;
 	}

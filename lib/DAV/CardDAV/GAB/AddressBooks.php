@@ -64,7 +64,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 			$oApiCapabilityManager->isGlobalContactsSupported($oAccount)) {
 			
 			$aContacts = array();
-			$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
+			$oContactsModule = \Aurora\System\Api::GetModule('TeamContacts');
 			if ($oContactsModule instanceof \AApiModule) {
 				
 				$oGlobalContactManager = $oContactsModule->GetManager('global');

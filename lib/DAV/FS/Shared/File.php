@@ -22,7 +22,7 @@ class File extends Afterlogic\DAV\FS\Shared\File{
 		
     }
 	
-	public function getRootPath($sType = \EFileStorageTypeStr::Personal) {
+	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal) {
 
 		return $this->path;
 

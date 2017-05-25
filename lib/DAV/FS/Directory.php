@@ -217,16 +217,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $aResult;
 	}
 	
-	public function getRootPath($sType = \EFileStorageTypeStr::Personal)
+	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal)
 	{
 		$sRootPath = '';
 		$iUserId = $this->getUser();
 		
-		if ($sType === \EFileStorageTypeStr::Corporate) {
+		if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) {
 
 			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . 0;
-		} else if ($sType === \EFileStorageTypeStr::Shared) {
+		} else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) {
 
 			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
 					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $iUserId;
@@ -243,11 +243,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		$iFreeSize = 0;
 
-		$sRootPath = $this->getRootPath(\EFileStorageTypeStr::Personal);
+		$sRootPath = $this->getRootPath(\Aurora\System\Enums\FileStorageType::Personal);
 		$aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
 		$iUsageSize = (int) $aSize['size'];
 
-		$sRootPath = $this->getRootPath(\EFileStorageTypeStr::Corporate);
+		$sRootPath = $this->getRootPath(\Aurora\System\Enums\FileStorageType::Corporate);
 		$aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
 		$iUsageSize += (int) $aSize['size'];
 
