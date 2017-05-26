@@ -55,61 +55,50 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
      */
     public function getChildren()
 	{
-		$oAccount = $this->getUser();
         $aCards = array();
+		$aContacts = array();
 
-		$oApiCapabilityManager = /* @var \CApiCapabilityManager */ \Aurora\System\Api::GetSystemManager('capability');
+		$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+		if ($oContactsDecorator)
+		{
+			$aContacts = $oContactsDecorator->GetContacts(
+				'team', 
+				0, 
+				9999, 
+				\EContactSortField::Email, 
+				\Aurora\System\Enums\SortOrder::ASC
+			);
+		}
 
-		if ($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isGlobalContactsSupported($oAccount)) {
-			
-			$aContacts = array();
-			$oContactsModule = \Aurora\System\Api::GetModule('TeamContacts');
-			if ($oContactsModule instanceof \AApiModule) {
-				
-				$oGlobalContactManager = $oContactsModule->GetManager('global');
-				if ($oGlobalContactManager) {
+		foreach($aContacts['List'] as $oContact) {
 
-					$aContacts = $oGlobalContactManager->getContactItems(
-							$oAccount,
-							\EContactSortField::EMail, 
-							\ESortOrder::ASC, 
-							0, 
-							9999
-					);
-				}
-			}
+			$sUID = md5($oContact['ViewEmail'] .'-'. $oContact['UUID']);
+			$vCard = new \Sabre\VObject\Component\VCard(
+				array(
+					'VERSION' => '3.0',
+					'UID' => $sUID,
+					'FN' => $oContact['FullName'],
+				)
+			);
 
-			foreach($aContacts as $oContact) {
-				
-				$sUID = md5($oContact->Email .'-'. $oContact->Id);
-				$vCard = new \Sabre\VObject\Component\VCard(
-					array(
-						'VERSION' => '3.0',
-						'UID' => $sUID,
-						'FN' => $oContact->Name,
-					)
-				);
-				
-				$vCard->add(
-					'EMAIL',
-					$oContact->Email,
-					array(
-						'type' => array(
-							'work'
-						),
-						'pref' => 1,
-					)
-				);				
+			$vCard->add(
+				'EMAIL',
+				$oContact['ViewEmail'],
+				array(
+					'type' => array(
+						'work'
+					),
+					'pref' => 1,
+				)
+			);				
 
-				$aCards[] = new Card(
-					array(
-						'uri' => $sUID . '.vcf',
-						'carddata' => $vCard->serialize(),
-						'lastmodified' => $oContact->DateModified
-					)
-				);
-			}
+			$aCards[] = new Card(
+				array(
+					'uri' => $sUID . '.vcf',
+					'carddata' => $vCard->serialize(),
+					'lastmodified' => 0//$oContact->DateModified
+				)
+			);
 		}
         return $aCards;
     }

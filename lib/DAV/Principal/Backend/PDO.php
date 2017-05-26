@@ -33,7 +33,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-		$aUsers = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserList(0, 0);
+		$aUsers = \Aurora\Modules\Core\Module::Decorator()->GetUserList(0, 0);
 		
 		if (is_array($aUsers)) 
 		{

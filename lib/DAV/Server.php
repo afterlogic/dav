@@ -80,7 +80,7 @@ class Server extends \Sabre\DAV\Server
 				), /* Global Address Book */
 			);
 
-			$this->oApiCapaManager = \Aurora\System\Api::GetSystemManager('capability');
+			$this->oApiCapaManager = new \Aurora\System\Managers\Capability\Manager();
 
 			/* Files folder */
 			if ($this->oApiCapaManager->isFilesSupported()) 

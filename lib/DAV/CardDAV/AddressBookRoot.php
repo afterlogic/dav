@@ -12,7 +12,7 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 	{
 		if (null === $this->iUserId )
 		{
-			$oCoreModuleDecorador = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oCoreModuleDecorador = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreModuleDecorador)
 			{
 				$oUser = $oCoreModuleDecorador->GetUser(basename($principalUri));
@@ -28,7 +28,7 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 	public function getChildForPrincipal(array $aPrincipal)
 	{
 		/* @var \CApiCapabilityManager */
-		$oApiCapabilityManager = \Aurora\System\Api::GetSystemManager('capability');
+		$oApiCapabilityManager = new \Aurora\System\Managers\Capability\Manager();
 		
 //		$oAccount = $this->getAccount($aPrincipal['uri']);
 		$bEmpty = false;/*!($oAccount instanceof \CAccount &&

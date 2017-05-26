@@ -24,8 +24,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-		$this->oContactsDecorator = \Aurora\System\Api::GetModuleDecorator('Contacts');
-		$this->oDavContactsDecorator = \Aurora\System\Api::GetModuleDecorator('DavContacts');
+		$this->oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+		$this->oDavContactsDecorator = \Aurora\Modules\DavContacts\Module::Decorator();
 	}
 
     public function initialize(\Sabre\DAV\Server $oServer)
@@ -71,7 +71,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
@@ -102,7 +102,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
@@ -126,7 +126,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
-			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);

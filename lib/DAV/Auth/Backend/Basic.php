@@ -21,7 +21,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid()) 
 		{
 			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = \Aurora\System\Api::GetSystemManager('capability');
+			$oApiCapabilityManager = new \Aurora\System\Managers\Capability\Manager();
 
 			if ($oApiCapabilityManager) 
 			{
