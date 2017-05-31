@@ -80,10 +80,8 @@ class Server extends \Sabre\DAV\Server
 				), /* Global Address Book */
 			);
 
-			$this->oApiCapaManager = new \Aurora\System\Managers\Capability\Manager();
-
 			/* Files folder */
-			if ($this->oApiCapaManager->isFilesSupported()) 
+			if (/*$this->oApiCapaManager->isFilesSupported()*/ true) // todo
 			{
 				array_push($aTree, new \Afterlogic\DAV\FS\FilesRoot());
 				
@@ -190,7 +188,7 @@ class Server extends \Sabre\DAV\Server
 		if (isset($iUserId)/* && $node->getName() === 'root'*/)
 		{
 			$carddavPlugin = $this->getPlugin('carddav');
-			if (isset($carddavPlugin) && $this->oApiCapaManager->isGlobalContactsSupported($iUserId, false)) 
+			if (isset($carddavPlugin)/* && $this->oApiCapaManager->isGlobalContactsSupported($iUserId, false)*/) // todo
 			{
 				$carddavPlugin->directories = array('gab');
 			}

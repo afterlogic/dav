@@ -11,10 +11,7 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 	{
 		if (class_exists('CApi') && \Aurora\System\Api::IsValid()) {
 			
-			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = new \Aurora\System\Managers\Capability\Manager();
-
-			if ($oApiCapabilityManager) {
+			if (true) {
 				
 				$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sUserName);
 				if ($oAccount && $oAccount->IsDisabled) {
@@ -30,8 +27,8 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 
 				if ($oAccount) {
 					
-					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($oAccount);
-					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($oAccount);
+					$bIsMobileSync = /*$oApiCapabilityManager->isMobileSyncSupported($oAccount)*/ true; // TODO
+					$bIsOutlookSync = /*$oApiCapabilityManager->isOutlookSyncSupported($oAccount)*/ true; // TODO
 					
 					\Aurora\System\Api::Plugin()->RunHook(
 							'plugin-is-demo-account', 

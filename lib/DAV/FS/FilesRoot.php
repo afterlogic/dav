@@ -62,8 +62,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			new RootPersonal($personalDir)
 		);
 		
-		$oApiCapaManager = new \Aurora\System\Managers\Capability\Manager();
-		if ($oApiCapaManager->isCollaborationSupported()) {
+		if (/*$oApiCapaManager->isCollaborationSupported()*/ true) { // TODO
 
 			array_push($this->aTree, new RootPublic($publicDir));
 		}

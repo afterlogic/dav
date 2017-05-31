@@ -28,9 +28,6 @@ class AddressBookHome extends \Sabre\CardDAV\AddressBookHome {
 			
 		}
 		
-		/* @var $oApiCapaManager \CApiCapabilityManager */
-		$oApiCapaManager = new \Aurora\System\Managers\Capability\Manager();
-		
 		$aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
 		if (count($aAddressbooks) === 0) {
 			
@@ -57,7 +54,7 @@ class AddressBookHome extends \Sabre\CardDAV\AddressBookHome {
 					$addressbook
 			);
 		}
-		if ($oApiCapaManager->isCollaborationSupported()) {
+		if (/*$oApiCapaManager->isCollaborationSupported()*/ true) { // TODO
 			
 			$sharedAddressbook = $this->carddavBackend->getSharedAddressBook($this->principalUri);
 			$objs[] = new Shared\AddressBook(

@@ -27,12 +27,7 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookRoot
 
 	public function getChildForPrincipal(array $aPrincipal)
 	{
-		/* @var \CApiCapabilityManager */
-		$oApiCapabilityManager = new \Aurora\System\Managers\Capability\Manager();
-		
-//		$oAccount = $this->getAccount($aPrincipal['uri']);
-		$bEmpty = false;/*!($oAccount instanceof \CAccount &&
-			$oApiCapabilityManager->isPersonalContactsSupported($oAccount));*/
+		$bEmpty = false;
 		
 		$oAddressBookHome = new AddressBookHome(
 				$this->carddavBackend, 

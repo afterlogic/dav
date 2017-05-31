@@ -20,45 +20,39 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 		$mResult = false;
 		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid()) 
 		{
-			/* @var $oApiCapabilityManager \CApiCapabilityManager */
-			$oApiCapabilityManager = new \Aurora\System\Managers\Capability\Manager();
+			$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
 
-			if ($oApiCapabilityManager) 
-			{
-				$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
+			$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
 
-				$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
-
-				$bIsMobileSync = false;
-				$bIsOutlookSync = false;
-				$bIsDemo = false;
+			$bIsMobileSync = false;
+			$bIsOutlookSync = false;
+			$bIsDemo = false;
 
 //				if ($mResult !== false) {
-					
+
 //					$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
-					
+
 //					return true;
 /*					
-					$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
-					$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
-					
-					\Aurora\System\Api::Plugin()->RunHook(
-							'plugin-is-demo-account', 
-							array(&$oAccount, &$bIsDemo)
-					);
- * 
- */
+				$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
+				$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
+
+				\Aurora\System\Api::Plugin()->RunHook(
+						'plugin-is-demo-account', 
+						array(&$oAccount, &$bIsDemo)
+				);
+* 
+*/
 //				}
 /*
-				if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
-						(($bIsMobileSync && !$bIsOutlookSyncClient) || 
-						($bIsOutlookSync && $bIsOutlookSyncClient))) ||
-						$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
-					return true;
-				}
+			if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
+					(($bIsMobileSync && !$bIsOutlookSyncClient) || 
+					($bIsOutlookSync && $bIsOutlookSyncClient))) ||
+					$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
+				return true;
+			}
  * 
  */
-			}
 		}
 
 		return $mResult;
