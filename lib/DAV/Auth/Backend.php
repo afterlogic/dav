@@ -36,7 +36,7 @@ class Backend
 		);
 		if (isset($mResult['id']))
 		{
-			$oEavManager = new \Aurora\System\Managers\Eav\Manager();
+			$oEavManager = new \Aurora\System\Managers\Eav();
 			$oEntity = $oEavManager->getEntity((int) $mResult['id']);
 			$mResult = $oEntity->UUID;
 		}
