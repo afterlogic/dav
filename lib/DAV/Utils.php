@@ -86,7 +86,11 @@ class Utils
 
 	public static function GetAccountByLogin($sUserName)
 	{
-		return self::getUsersManager()->getAccountByEmail($sUserName);
+		\Aurora\System\Api::$__SKIP_CHECK_USER_ROLE__ = true;
+		$mResult = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserName);
+		\Aurora\System\Api::$__SKIP_CHECK_USER_ROLE__ = false;
+		
+		return $mResult;
 	}	
 
 	public static function getPrincipalByEmail($sEmail) 
