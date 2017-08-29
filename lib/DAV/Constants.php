@@ -26,7 +26,7 @@ class Constants
 	const T_CACHE = 'adav_cache';
 	
 	const GLOBAL_CONTACTS = 'Global Contacts';
-	const CALENDAR_DEFAULT_NAME = 'Default';
+	const CALENDAR_DEFAULT_NAME = 'My calendar';
 	const CALENDAR_DEFAULT_COLOR = '#f09650';
 
 	const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';

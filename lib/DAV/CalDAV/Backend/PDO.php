@@ -259,13 +259,14 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	
 		$aCalendars = $this->getOwnCalendarsForUser($principalUri);
 		
-        if (count($aCalendars) === 0) {
-			
+		if (count($aCalendars) === 0) {
+			$oCalendarDecorator = \Aurora\System\Api::GetModuleDecorator('Calendar');
+
 			$this->createCalendar(
 				$principalUri, 
 				\Sabre\DAV\UUIDUtil::getUUID(), 
 				[
-					'{DAV:}displayname' => \Aurora\System\Api::ClientI18N('CALENDAR/CALENDAR_DEFAULT_NAME', basename($principalUri)),
+					'{DAV:}displayname' => $oCalendarDecorator ? $oCalendarDecorator->I18N('CALENDAR_DEFAULT_NAME', null, null, basename($principalUri)) : \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_NAME,
 					'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
 					'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
 					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,
