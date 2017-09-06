@@ -75,7 +75,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
-				if ($oUser instanceof \CUser)
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->iId;
 				}
@@ -106,7 +106,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
-				if ($oUser instanceof \CUser)
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->iId;
 				}
@@ -130,7 +130,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
-				if ($oUser instanceof \CUser)
+				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->iId;
 				}
