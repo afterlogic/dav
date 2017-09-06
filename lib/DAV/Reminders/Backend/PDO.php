@@ -206,10 +206,10 @@ class PDO
 
 				$oInterval = $oStartDT->diff($oEndDT);
 
-				$oStartDT = \CCalendarHelper::getNextRepeat($oNowDT, $oBaseEvent);
+				$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oNowDT, $oBaseEvent);
 				if ($oStartDT)
 				{
-					$iReminderTime = \CCalendarHelper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
+					$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
 
 					if ($iReminderTime === false && isset($oBaseEvent->RRULE))
 					{
@@ -217,10 +217,10 @@ class PDO
 						if ($iStartTS == $iReminderStartTS)
 						{
 							$oStartDT->add($oInterval);
-							$oStartDT = \CCalendarHelper::getNextRepeat($oStartDT, $oBaseEvent);
+							$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oStartDT, $oBaseEvent);
 						}
 
-						$iReminderTime = \CCalendarHelper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
+						$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
 					}
 
 					if ($iReminderTime !== false)
