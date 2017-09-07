@@ -172,7 +172,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
         foreach(scandir($this->path) as $node) {
 			
 			if($node!='.' && $node!='..' && $node!== '.sabredav' && 
-					$node!== API_HELPDESK_PUBLIC_NAME)  {
+					$node!== AU_API_HELPDESK_PUBLIC_NAME)  {
 				
 				$nodes[] = $this->getChild($node);
 			}

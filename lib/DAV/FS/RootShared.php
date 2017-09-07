@@ -60,7 +60,7 @@ class RootShared extends RootPersonal{
 		$nodes = array();
         foreach(scandir($this->path) as $node)  {
 			
-			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node !== API_HELPDESK_PUBLIC_NAME) {
+			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node !== AU_API_HELPDESK_PUBLIC_NAME) {
 
 				$child = $this->getChild($node);
 				if ($child) {

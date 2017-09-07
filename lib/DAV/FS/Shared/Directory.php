@@ -99,7 +99,7 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 		
         foreach(scandir($this->path) as $node) {
 			if($node!='.' && $node!='..' && $node!== '.sabredav' && 
-					$node!== API_HELPDESK_PUBLIC_NAME) {
+					$node!== AU_API_HELPDESK_PUBLIC_NAME) {
 				$nodes[] = $this->getChild($node);
 			}
 		}
