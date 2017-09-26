@@ -6,71 +6,54 @@ use Afterlogic\DAV\Constants;
 
 class FilesRoot extends \Sabre\DAV\Collection {
 
-	protected $aTree;
+	protected $aTree = array();
 	
 	public function __construct() 
 	{
 		$bErrorCreateDir = false;
 
-		/* Public files folder */
-		$publicDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
-		if (!file_exists($publicDir)) {
+		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
-			if (!@mkdir($publicDir)) {
-
-				$bErrorCreateDir = true;
-			}
-		}
-
-		$publicDir .= Constants::FILESTORAGE_PATH_CORPORATE;
-		if (!file_exists($publicDir)) {
-
-			if (!@mkdir($publicDir)) {
-
-				$bErrorCreateDir = true;
-			}
-		}
-
-		$personalDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
-				Constants::FILESTORAGE_PATH_PERSONAL;
-		if (!file_exists($personalDir)) {
-
-			if (!@mkdir($personalDir)) {
-
-				$bErrorCreateDir = true;
-			}
-		}
-		$sharedDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT . 
-				Constants::FILESTORAGE_PATH_SHARED;
-		if (!file_exists($sharedDir)) {
-
-			if (!@mkdir($sharedDir)) {
-
-				$bErrorCreateDir = true;
-			}
-		}
-
-		if ($bErrorCreateDir) {
-
-			throw new \Sabre\DAV\Exception(
-					'Can\'t create directory in ' . \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT, 
-					500
-			);
-		}
-
-		$this->aTree = array(
-			new RootPersonal($personalDir)
-		);
-		
-		if (/*$oApiCapaManager->isCollaborationSupported()*/ true) { // TODO
-
-			array_push($this->aTree, new RootPublic($publicDir));
+		$aPaths = [['root', $sRootDir]];
+		$aPaths[] = ['personal', $sRootDir .= Constants::FILESTORAGE_PATH_PERSONAL];
+		$oCorpFiles = \Aurora\System\Api::GetModule('CorporateFiles'); 
+		if ($oCorpFiles && !$oCorpFiles->getConfig('Disabled', false)) {
+			$aPaths[] = ['corporate', $sRootDir .= Constants::FILESTORAGE_PATH_CORPORATE];
 		}
 		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
-		if ($oDavModule->getConfig('FilesSharing', false)) {
-
-			array_push($this->aTree, new RootShared($sharedDir));
-		}		
+		if ($oDavModule && $oDavModule->getConfig('FilesSharing', false)) {
+			$aPaths[] = ['shared', $sRootDir .= Constants::FILESTORAGE_PATH_SHARED];
+		}
+		 
+		foreach ($aPaths as $aPath)
+		{
+			$sType = $aPath[0];
+			$sPath = $aPath[1];
+			
+			if (!file_exists($sPath)) {
+				if (!@mkdir($sPath)) {
+					$bErrorCreateDir = true;
+				}
+			}
+			if ($bErrorCreateDir) {
+				throw new \Sabre\DAV\Exception(
+						'Can\'t create directory in ' . $sRootDir, 
+						500
+				);
+			}
+			switch ($sType)
+			{
+				case 'personal':
+					array_push($this->aTree, new RootPersonal($sPath));
+					break;
+				case 'corporate':
+					array_push($this->aTree, new RootCorporate($sPath));
+					break;
+				case 'shared':
+					array_push($this->aTree, new RootShared($sPath));
+					break;
+			}
+		}
 	}	
 	
 	

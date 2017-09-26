@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS;
 
-class RootPublic extends Directory {
+class RootCorporate extends Directory {
 	
 	private $rootPath = null;
 
