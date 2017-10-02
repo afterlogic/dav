@@ -231,7 +231,7 @@ class PDO
 							$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($user);
 							if ($oAccount)
 							{
-								$oClientTZ = new \DateTimeZone($oAccount->User->ClientTimeZone);
+								$oClientTZ = new \DateTimeZone($oAccount->DefaultTimeZone);
 								$oNowDTClientTZ = new \DateTime("now", $oClientTZ);
 								$iOffset = $oNowDTClientTZ->getOffset();
 							}
