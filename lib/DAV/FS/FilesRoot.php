@@ -15,14 +15,14 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
 		$aPaths = [['root', $sRootDir]];
-		$aPaths[] = ['personal', $sRootDir .= Constants::FILESTORAGE_PATH_PERSONAL];
+		$aPaths[] = ['personal', $sRootDir . Constants::FILESTORAGE_PATH_PERSONAL];
 		$oCorpFiles = \Aurora\System\Api::GetModule('CorporateFiles'); 
 		if ($oCorpFiles && !$oCorpFiles->getConfig('Disabled', false)) {
-			$aPaths[] = ['corporate', $sRootDir .= Constants::FILESTORAGE_PATH_CORPORATE];
+			$aPaths[] = ['corporate', $sRootDir . Constants::FILESTORAGE_PATH_CORPORATE];
 		}
 		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
-		if ($oDavModule && $oDavModule->getConfig('FilesSharing', false)) {
-			$aPaths[] = ['shared', $sRootDir .= Constants::FILESTORAGE_PATH_SHARED];
+		if ($oDavModule && $oDavModule->getConfig('FilesSharing', true)) {
+			$aPaths[] = ['shared', $sRootDir . Constants::FILESTORAGE_PATH_SHARED];
 		}
 		 
 		foreach ($aPaths as $aPath)
