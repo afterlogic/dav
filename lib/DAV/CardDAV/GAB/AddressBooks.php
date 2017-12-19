@@ -65,7 +65,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 				'team', 
 				0, 
 				9999, 
-				\EContactSortField::Email, 
+				\Aurora\Modules\Contacts\Enums\SortField::Email, 
 				\Aurora\System\Enums\SortOrder::ASC
 			);
 		}
