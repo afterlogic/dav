@@ -442,5 +442,26 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		return $this->getResourceData();
 	}
+
+    /**
+     * Returns array of SplFileInfo
+     *
+     * @return array
+     */
+    public function getFileListRecursive()
+    {
+        $files = [];
+        $items = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->path), \RecursiveIteratorIterator::SELF_FIRST);
+        $excludedFiles = ['.sabredav'];
+
+        foreach($items as $item) {
+            /* @var $item \SplFileInfo */
+            if ($item->isFile() && $item->isReadable() && !in_array($item->getFilename(), $excludedFiles)) {
+                $files[] = $item;
+            }
+        }
+
+        return $files;
+    }
 	
 }
