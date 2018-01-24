@@ -58,7 +58,8 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
         $aCards = array();
 		$aContacts = array();
 
-		$oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
+		$oContactsDecorator = /* @var $oContactsDecorator \Aurora\Modules\Contacts\Module */ \Aurora\Modules\Contacts\Module::Decorator();
+		
 		if ($oContactsDecorator)
 		{
 			$aContacts = $oContactsDecorator->GetContacts(
@@ -96,7 +97,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 				array(
 					'uri' => $sUID . '.vcf',
 					'carddata' => $vCard->serialize(),
-					'lastmodified' => 0//$oContact->DateModified
+					'lastmodified' => $oContact->DateModified
 				)
 			);
 		}

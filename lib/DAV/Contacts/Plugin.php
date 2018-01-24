@@ -108,7 +108,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
-					$iUserId = $oUser->iId;
+					$iUserId = $oUser->EntityId;
 				}
 			}
 			
@@ -126,13 +126,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserUUID = $this->oServer->getUser();
+			
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
 				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
-					$iUserId = $oUser->iId;
+					$iUserId = $oUser->EntityId;
 				}
 			}
 			
@@ -161,12 +162,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					}
 				}
 
+				\Aurora\System\Api::LogObject($iUserId, \Aurora\System\Enums\LogLevel::Full, 'dav-');
 				if (isset($oContactDb)) 
 				{
-					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID);
+					\Aurora\System\Api::Log('UpdateContact', \Aurora\System\Enums\LogLevel::Full, 'dav-');
+					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID);
 				} 
 				else 
 				{
+					\Aurora\System\Api::Log('CreateContact', \Aurora\System\Enums\LogLevel::Full, 'dav-');
 					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
 				}
 			}

@@ -53,7 +53,7 @@ class Server extends \Sabre\DAV\Server
 			$aclPlugin->hideNodesFromListings = true;
 			$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
 			
-			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+			$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 			$mAdminPrincipal = $oDavModule->getConfig('AdminPrincipal', false);
 			$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
 					array(Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal) : array();
@@ -103,8 +103,8 @@ class Server extends \Sabre\DAV\Server
 			/* Reminders Plugin */
 			$this->addPlugin(new Reminders\Plugin(Backend::Reminders()));
 			
-			$this->addPlugin(new \Sabre\CalDAV\Schedule\Plugin());
-			$this->addPlugin(new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host'));
+//			$this->addPlugin(new \Sabre\CalDAV\Schedule\Plugin());
+//			$this->addPlugin(new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host'));
 			
 			/* Contacts Plugin */
 			$this->addPlugin(new Contacts\Plugin());
@@ -131,7 +131,7 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
+			$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 			if ($oDavModule->getConfig('UseBrowserPlugin', false) !== false) 
 			{
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());

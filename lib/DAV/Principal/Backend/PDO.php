@@ -33,7 +33,9 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
+		\Aurora\System\Api::skipCheckUserRole(true);
 		$aUsers = \Aurora\Modules\Core\Module::Decorator()->GetUserList(0, 0);
+		\Aurora\System\Api::skipCheckUserRole(false);
 		
 		if (is_array($aUsers)) 
 		{
