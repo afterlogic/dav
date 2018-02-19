@@ -86,9 +86,9 @@ class Utils
 
 	public static function GetAccountByLogin($sUserName)
 	{
-		\Aurora\System\Api::$__SKIP_CHECK_USER_ROLE__ = true;
+		$bPrevState =  \Aurora\System\Api::skipCheckUserRole(true);
 		$mResult = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserName);
-		\Aurora\System\Api::$__SKIP_CHECK_USER_ROLE__ = false;
+		\Aurora\System\Api::skipCheckUserRole($bPrevState);
 		
 		return $mResult;
 	}	
