@@ -69,6 +69,8 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 				\Aurora\Modules\Contacts\Enums\SortField::Email, 
 				\Aurora\System\Enums\SortOrder::ASC
 			);
+			
+			print_r($aContacts); exit;
 		}
 
 		foreach($aContacts['List'] as $oContact) {

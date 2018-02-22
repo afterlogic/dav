@@ -35,6 +35,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		$bPrevState = \Aurora\System\Api::skipCheckUserRole(true);
 		$aUsers = \Aurora\Modules\Core\Module::Decorator()->GetUserList(0, 0);
+		
 		\Aurora\System\Api::skipCheckUserRole($bPrevState);
 		
 		if (is_array($aUsers)) 
@@ -43,7 +44,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 			{
 				$principals[] = array(
 					'id' => $oUser['UUID'],
-					'uri' => 'principals/'.$oUser['UUID'],
+					'uri' => 'principals/'.$oUser['PublicId'],
 //					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
 					'{DAV:}displayname' => $oUser['Name'],
 				);

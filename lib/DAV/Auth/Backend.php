@@ -39,8 +39,8 @@ class Backend
 			\Aurora\System\Api::setUserId((int) $mResult['id']);
 
 			$oEavManager = new \Aurora\System\Managers\Eav();
-			$oEntity = $oEavManager->getEntity((int) $mResult['id']);
-			$mResult = $oEntity->UUID;
+			$oEntity = $oEavManager->getEntity((int) $mResult['id'], '\Aurora\Modules\Core\Classes\User');
+			$mResult = $oEntity->PublicId;
 		}
 		else 
 		{
