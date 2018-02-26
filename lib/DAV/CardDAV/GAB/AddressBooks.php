@@ -69,24 +69,21 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 				\Aurora\Modules\Contacts\Enums\SortField::Email, 
 				\Aurora\System\Enums\SortOrder::ASC
 			);
-			
-			print_r($aContacts); exit;
 		}
 
-		foreach($aContacts['List'] as $oContact) {
+		foreach($aContacts['List'] as $aContact) {
 
-			$sUID = md5($oContact['ViewEmail'] .'-'. $oContact['UUID']);
 			$vCard = new \Sabre\VObject\Component\VCard(
 				array(
 					'VERSION' => '3.0',
-					'UID' => $sUID,
-					'FN' => $oContact['FullName'],
+					'UID' => $aContact['UUID'],
+					'FN' => $aContact['FullName'],
 				)
 			);
 
 			$vCard->add(
 				'EMAIL',
-				$oContact['ViewEmail'],
+				$aContact['ViewEmail'],
 				array(
 					'type' => array(
 						'work'
@@ -97,9 +94,9 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 
 			$aCards[] = new Card(
 				array(
-					'uri' => $sUID . '.vcf',
+					'uri' => $aContact['UUID'] . '.vcf',
 					'carddata' => $vCard->serialize(),
-					'lastmodified' => $oContact->DateModified
+					'lastmodified' => strtotime($aContact['DateModified'])
 				)
 			);
 		}
