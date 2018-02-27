@@ -70,11 +70,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserUUID = $this->oServer->getUser();
+			$sUserPublicId = $this->oServer->getUser();
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				$oUser = $oCoreDecorator->GetUserByUUID($sUserPublicId);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->iId;
@@ -101,11 +101,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserUUID = $this->oServer->getUser();
+			$sUserPublicId = $this->oServer->getUser();
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->EntityId;
@@ -125,12 +125,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserUUID = $this->oServer->getUser();
+			$sUserPublicId = $this->oServer->getUser();
 			
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUserByUUID($sUserUUID);
+				$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
 					$iUserId = $oUser->EntityId;

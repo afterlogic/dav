@@ -148,6 +148,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     public function getChildren() {
 
         $children = array();
+        return $children; // todo
 
 		$iUserId = $this->getUser();
 		if ($iUserId) {
