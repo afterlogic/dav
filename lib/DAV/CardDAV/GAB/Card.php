@@ -42,7 +42,7 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      */
     public function getContentType() {
 
-        return 'text/x-vcard';
+        return 'text/x-vcard; charset=utf-8';
 
     }	
 
@@ -78,5 +78,20 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
         return strlen($this->_cardInfo['carddata']);
 
     }
+	
+    function getETag() {
 
+        if (isset($this->cardData['etag'])) {
+            return $this->cardData['etag'];
+        } else {
+            $data = $this->get();
+            if (is_string($data)) {
+                return '"' . md5($data) . '"';
+            } else {
+                // We refuse to calculate the md5 if it's a stream.
+                return null;
+            }
+        }
+
+    }
 }

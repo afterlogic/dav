@@ -17,9 +17,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	protected $oApiUsers = null;	
 	
 	/**
-	 * @var int $iUserId
+	 * @var string $UserPublicId
 	 */
-	protected $iUserId = null;	
+	protected $UserPublicId = null;	
 	
 	/**
 	 * @var \CTenant
@@ -38,16 +38,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 	public function getUser()
 	{
-		if ($this->iUserId === null) {
+		if ($this->UserPublicId === null) {
 			
-			$this->iUserId = \Afterlogic\DAV\Server::getInstance()->getUser();
+			$this->UserPublicId = \Afterlogic\DAV\Server::getInstance()->getUser();
 		}
-		return $this->iUserId;
+		return $this->UserPublicId;
 	}
 	
-	public function setUser($iUserId)
+	public function setUser($UserPublicId)
 	{
-		$this->iUserId = $iUserId;
+		$this->UserPublicId = $UserPublicId;
 	}
 	
 	public function getTenant()
@@ -220,7 +220,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal)
 	{
 		$sRootPath = '';
-		$iUserId = $this->getUser();
+		$UserPublicId = $this->getUser();
 		
 		if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) {
 
@@ -229,11 +229,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		} else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) {
 
 			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $iUserId;
+					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $UserPublicId;
 		} else {
 
 			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $iUserId;
+					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $UserPublicId;
 		}
 		
 		return $sRootPath;
@@ -251,8 +251,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
 		$iUsageSize += (int) $aSize['size'];
 
-		$iUserId = $this->getUser();
-		if ($iUserId) {
+		$UserPublicId = $this->getUser();
+		if ($UserPublicId) {
 			
 			$oTenant = $this->getTenant();
 			if ($oTenant) {

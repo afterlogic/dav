@@ -10,10 +10,13 @@ class RootPersonal extends Directory{
 
 	public function initPath() {
 		
-		$iUserId = $this->getUser();
-		if ($this->rootPath === null) {
+		$sUserPublicId = $this->getUser();
+		$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
+		$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
+		
+		if ($this->rootPath === null && $oUser) {
 			
-			$this->rootPath = $this->path . '/' . $iUserId;
+			$this->rootPath = $this->path . '/' . $oUser->UUID;
 			if (!file_exists($this->rootPath)) {
 				
 				mkdir($this->rootPath, 0777, true);

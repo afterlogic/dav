@@ -73,11 +73,13 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 
 		foreach($aContacts['List'] as $aContact) {
 
+			$aName = [$aContact['LastName'], $aContact['FirstName']];
 			$vCard = new \Sabre\VObject\Component\VCard(
 				array(
 					'VERSION' => '3.0',
 					'UID' => $aContact['UUID'],
 					'FN' => $aContact['FullName'],
+					'N' => (empty($aContact['LastName']) && empty($aContact['FirstName'])) ? explode(' ', $aContact['FullName']) : $aName
 				)
 			);
 
