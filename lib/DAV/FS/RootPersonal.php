@@ -53,7 +53,7 @@ class RootPersonal extends Directory{
 		}
 		return array(
             $iSize,
-            0
+            disk_free_space($this->path)
         );
 
     }	

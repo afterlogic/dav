@@ -7,13 +7,6 @@ namespace Afterlogic\DAV\FS;
 class Plugin extends \Sabre\DAV\ServerPlugin {
 
     /**
-     * Server class
-     *
-     * @var \Sabre\DAV\Server
-     */
-    protected $server;
-
-    /**
      * @var int $iUserId
      */
     protected $iUserId = null;
@@ -64,9 +57,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	
     public function getUser()
 	{	
-		if (!isset($this->iUserId) && isset($this->server)) {
+		if (!isset($this->iUserId)) {
 			
-			$this->iUserId = $this->server->getUser();
+			$this->iUserId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->iUserId; 
 	}
@@ -79,10 +72,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function initialize(\Sabre\DAV\Server $server) {
 
-        $this->server = $server;
-		$this->server->on('beforeMethod', array($this, 'beforeMethod'));   
-		$this->server->on('beforeBind', array($this, 'beforeBind'), 30);
-		$this->server->on('afterUnbind', array($this, 'afterUnbind'), 30);
+		$server->on('beforeMethod', array($this, 'beforeMethod'));   
+		$server->on('beforeBind', array($this, 'beforeBind'), 30);
+		$server->on('afterUnbind', array($this, 'afterUnbind'), 30);
 		
 	}
 

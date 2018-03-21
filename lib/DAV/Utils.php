@@ -10,21 +10,6 @@ class Utils
 	 * @var $oUsersManager \CApiUsersManager 
 	 */
 	public static $oUsersManager = null;
-	
-	public static function getServer()
-	{
-		return \Afterlogic\DAV\Server::getInstance();
-	}
-
-	public static function getPlugins()
-	{
-		return self::getServer()->getPlugins();
-	}	
-	
-	public static function getPlugin($sName)
-	{
-		return self::getServer()->getPlugin($sName);
-	}	
 
 	public static function getUsersManager()
 	{
@@ -37,7 +22,7 @@ class Utils
 	
 	public static function getCurrentAccount()
 	{
-		return self::getServer()->getUser();
+		return \Afterlogic\DAV\Server::getUser();
 	}
 	
 	public static function getTenantUser($oAccount)

@@ -14,7 +14,7 @@ class Server extends \Sabre\DAV\Server
 	/**
 	 * @var string
 	 */
-	public $sUserUUID = null;
+	public $sUserPublicId = null;
 	
 	/**
 	 * @return \Afterlogic\DAV\Server
@@ -24,12 +24,9 @@ class Server extends \Sabre\DAV\Server
 		static $oInstance = null;
 		if(is_null($oInstance)) 
 		{ 
-			
 			$oInstance = new self($baseUri); 
-			
 		} 
 		return $oInstance; 
-	
 	}	
 
 	public function __construct($baseUri = '/')
@@ -44,9 +41,6 @@ class Server extends \Sabre\DAV\Server
 		{
 			/* Authentication Plugin */
 			$this->addPlugin(new \Afterlogic\DAV\Auth\Plugin(Backend::Auth(), 'SabreDAV'));
-
-			/* Logs Plugin */
-//			$this->addPlugin(new Logs\Plugin());
 
 			/* DAV ACL Plugin */
 			$aclPlugin = new \Sabre\DAVACL\Plugin();
@@ -92,7 +86,7 @@ class Server extends \Sabre\DAV\Server
 			}
 			
 			$oPrincipalColl = new \Sabre\DAVACL\PrincipalCollection(Backend::Principal());
-//			$oPrincipalColl->disableListing = true;
+			$oPrincipalColl->disableListing = true;
 
 			array_push($aTree, $oPrincipalColl);
 
@@ -137,43 +131,36 @@ class Server extends \Sabre\DAV\Server
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
 			}
 
+			/* Property Storage Plugin */
+			$this->addPlugin(
+				new \Sabre\DAV\PropertyStorage\Plugin(
+					new \Afterlogic\DAV\PropertyStorage\Backend\PDO()
+				)
+			);			
+
 			/* Locks Plugin */
 //			$this->addPlugin(new \Sabre\DAV\Locks\Plugin());
+
+			/* Logs Plugin */
+//			$this->addPlugin(new Logs\Plugin());
 
 			$this->on('beforeGetProperties', array($this, 'beforeGetProperties'), 90);
 		}
     }
 	
-	public function getUser()
+	public static function getUser()
 	{
-		if (null === $this->sUserUUID) 
+		static $sUserPublicId = null;
+		if (null === $sUserPublicId) 
 		{
-			$oAuthPlugin = $this->getPlugin('auth');
-			if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
+			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
-				list(, $userId) = \Sabre\HTTP\URLUtil::splitPath( 
-						$oAuthPlugin->getCurrentPrincipal()
-				);
-
-				if (!empty($userId)) 
-				{
-					$this->sUserUUID = $userId;
-				}
+				$sUserPublicId = $oUser->PublicId;
 			}
 		}
-		return $this->sUserUUID;
+		return $sUserPublicId;
 	}	
-	
-	public function setUser($sUserUUID) 
-	{
-		$oAuthPlugin = $this->getPlugin('auth');
-		if ($oAuthPlugin instanceof \Sabre\DAV\ServerPlugin) 
-		{
-			$oAuthPlugin->setCurrentPrincipal(
-					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserUUID
-			);
-		}
-	}
 
 	/**
 	 * @param string $path
@@ -184,7 +171,7 @@ class Server extends \Sabre\DAV\Server
 	 */
 	public function beforeGetProperties($path, \Sabre\DAV\INode $node, &$requestedProperties, &$returnedProperties)
 	{
-		$iUserId = $this->getUser();
+		$iUserId = self::getUser();
 		if (isset($iUserId)/* && $node->getName() === 'root'*/)
 		{
 			$carddavPlugin = $this->getPlugin('carddav');

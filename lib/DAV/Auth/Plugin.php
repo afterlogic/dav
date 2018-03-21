@@ -6,8 +6,12 @@ namespace Afterlogic\DAV\Auth;
 
 class Plugin extends \Sabre\DAV\Auth\Plugin {
 	
-	public function setCurrentPrincipal($path)
+	public function getCurrentPrincipal()
 	{
-		$this->currentPrincipal = $path;
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		{
+			return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oUser->PublicId;
+		}
 	}
 }

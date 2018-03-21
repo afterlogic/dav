@@ -37,7 +37,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 	{
 		if ($this->iUserId == null) {
 			
-			$this->iUserId = \Afterlogic\DAV\Server::getInstance()->getUser();
+			$this->iUserId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->iUserId;
 	}

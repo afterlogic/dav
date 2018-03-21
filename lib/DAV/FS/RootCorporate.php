@@ -56,7 +56,7 @@ class RootCorporate extends Directory {
 		}
 		return array(
             $Size,
-            0
+            disk_free_space($this->path)
         );	
 	}
 	
