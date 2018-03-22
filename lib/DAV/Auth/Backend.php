@@ -22,18 +22,13 @@ class Backend
 	public static function Login($sUserName, $sPassword)
 	{
 		$mResult = false;
-		$aArguments = array(
-			'Login' => $sUserName,
-			'Password' => $sPassword,
-			'SignMe' => false
-
-		);		
-		\Aurora\System\Api::GetModuleManager()->broadcastEvent(
-			'Dav', 
-			'Login', 
-			$aArguments, 
-			$mResult
-		);
+		
+		$oCoreModule = \Aurora\System\Api::GetModuleDecorator('Core');
+		if ($oCoreModule)
+		{
+			$mResult = $oCoreModule->Login($sUserName, $sPassword);
+		}
+		
 		if (isset($mResult['id']))
 		{
 			\Aurora\System\Api::setUserId((int) $mResult['id']);
