@@ -27,7 +27,7 @@ class Backend
 		if ($oCoreModule)
 		{
 			$mResult = $oCoreModule->Login($sUserName, $sPassword, true);
-		
+			
 			if (isset($mResult['AuthToken']))
 			{
 				$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);

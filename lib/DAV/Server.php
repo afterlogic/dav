@@ -7,11 +7,6 @@ namespace Afterlogic\DAV;
 class Server extends \Sabre\DAV\Server
 {
 	/**
-	 * @var \CApiCapabilityManager
-	 */
-	private $oApiCapaManager;
-	
-	/**
 	 * @var string
 	 */
 	public $sUserPublicId = null;
@@ -125,7 +120,6 @@ class Server extends \Sabre\DAV\Server
 			$this->addPlugin(new \Sabre\DAV\Sync\Plugin());			
 
 			/* HTML Frontend Plugin */
-			$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 			if ($oDavModule->getConfig('UseBrowserPlugin', false) !== false) 
 			{
 				$this->addPlugin(new \Sabre\DAV\Browser\Plugin());
