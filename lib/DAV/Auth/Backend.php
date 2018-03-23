@@ -26,20 +26,20 @@ class Backend
 		$oCoreModule = \Aurora\System\Api::GetModuleDecorator('Core');
 		if ($oCoreModule)
 		{
-			$mResult = $oCoreModule->Login($sUserName, $sPassword);
-		}
+			$mResult = $oCoreModule->Login($sUserName, $sPassword, true);
 		
-		if (isset($mResult['id']))
-		{
-			\Aurora\System\Api::setUserId((int) $mResult['id']);
-
-			$oEavManager = new \Aurora\System\Managers\Eav();
-			$oEntity = $oEavManager->getEntity((int) $mResult['id'], '\Aurora\Modules\Core\Classes\User');
-			$mResult = $oEntity->PublicId;
-		}
-		else 
-		{
-			$mResult = false;
+			if (isset($mResult['AuthToken']))
+			{
+				$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
+				if ($oUser)
+				{
+					$mResult = $oUser->PublicId;
+				}
+			}
+			else 
+			{
+				$mResult = false;
+			}
 		}
 		
 		return $mResult;
