@@ -26,20 +26,27 @@ class Backend
 		$oCoreModule = \Aurora\System\Api::GetModuleDecorator('Core');
 		if ($oCoreModule)
 		{
-			$mResult = $oCoreModule->Login($sUserName, $sPassword, true);
-			
-			if (isset($mResult['AuthToken']))
-			{
-				$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
-				if ($oUser)
-				{
-					$mResult = $oUser->PublicId;
-				}
-			}
-			else 
-			{
-				$mResult = false;
-			}
+			try
+                        {
+                            $mResult = $oCoreModule->Login($sUserName, $sPassword, true);
+
+                            if (isset($mResult['AuthToken']))
+                            {
+                                    $oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
+                                    if ($oUser)
+                                    {
+                                            $mResult = $oUser->PublicId;
+                                    }
+                            }
+                            else 
+                            {
+                                    $mResult = false;
+                            }
+                        } 
+                        catch (\Exception $ex) 
+                        {
+                                $mResult = false;
+                        }
 		}
 		
 		return $mResult;
