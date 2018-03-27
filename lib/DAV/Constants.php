@@ -29,6 +29,9 @@ class Constants
 	const CALENDAR_DEFAULT_NAME = 'My calendar';
 	const CALENDAR_DEFAULT_COLOR = '#f09650';
 
+	const TASKS_DEFAULT_NAME = 'My tasks';
+	const TASKS_DEFAULT_COLOR = '#f68987';
+
 	const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';
 	const ADDRESSBOOK_DEFAULT_NAME_OLD = 'Default';
 	const ADDRESSBOOK_DEFAULT_DISPLAY_NAME = 'Address Book';

@@ -260,13 +260,24 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$aCalendars = $this->getOwnCalendarsForUser($principalUri);
 		
 		if (count($aCalendars) === 0) {
+			$sDisplayname = \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_NAME;
 			$oCalendarDecorator = \Aurora\System\Api::GetModuleDecorator('Calendar');
+			
+			if ($oCalendarDecorator)
+			{
+				$sPublicId = basename($principalUri);
+				$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sPublicId);
+				if ($oUser)
+				{
+					$sDisplayname = $oCalendarDecorator->i18N('CALENDAR_DEFAULT_NAME', null, null, $oUser->UUID);
+				}
+			}
 
 			$this->createCalendar(
 				$principalUri, 
 				\Sabre\DAV\UUIDUtil::getUUID(), 
 				[
-					'{DAV:}displayname' => $oCalendarDecorator ? $oCalendarDecorator->I18N('CALENDAR_DEFAULT_NAME', null, null, basename($principalUri)) : \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_NAME,
+					'{DAV:}displayname' => $sDisplayname,
 					'{'.\Sabre\CalDAV\Plugin::NS_CALENDARSERVER.'}getctag' => 1,
 					'{'.\Sabre\CalDAV\Plugin::NS_CALDAV.'}calendar-description' => '',
 					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR,
