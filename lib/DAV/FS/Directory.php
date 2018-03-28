@@ -129,8 +129,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
         $path = $this->path . '/' . trim($name, '/');
 
-        if (!file_exists($path)) throw new DAV\Exception\NotFound('File could not be located');
-        if ($name == '.' || $name == '..') throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
+        if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
 
 		return is_dir($path) ? new self($path) : new File($path);
     }	
