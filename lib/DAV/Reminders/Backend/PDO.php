@@ -183,7 +183,18 @@ class PDO
 			$this->deleteReminder($eventId, $user);
 
 			$vCal = \Sabre\VObject\Reader::read($data);
-			$aBaseEvents = $vCal->getBaseComponents('VEVENT');
+			
+			$sComponent = 'VEVENT';
+			if (!isset($vCal->{$sComponent}))
+			{
+				$sComponent = 'VTODO';
+				if (!isset($vCal->{$sComponent}))
+				{
+					return;
+				}
+			}
+			
+			$aBaseEvents = $vCal->getBaseComponents($sComponent);
 			$bAllDay = false;
 			if (isset($aBaseEvents[0]))
 			{
