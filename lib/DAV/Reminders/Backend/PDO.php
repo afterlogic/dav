@@ -181,20 +181,11 @@ class PDO
 			
 			$aReminder = $this->getReminder($eventId, $user);
 			$this->deleteReminder($eventId, $user);
-
+			
+			$data = str_replace('VTODO', 'VEVENT', $data);
 			$vCal = \Sabre\VObject\Reader::read($data);
 			
-			$sComponent = 'VEVENT';
-			if (!isset($vCal->{$sComponent}))
-			{
-				$sComponent = 'VTODO';
-				if (!isset($vCal->{$sComponent}))
-				{
-					return;
-				}
-			}
-			
-			$aBaseEvents = $vCal->getBaseComponents($sComponent);
+			$aBaseEvents = $vCal->getBaseComponents('VEVENT');
 			$bAllDay = false;
 			if (isset($aBaseEvents[0]))
 			{
@@ -217,7 +208,7 @@ class PDO
 
 				$oInterval = $oStartDT->diff($oEndDT);
 
-				$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oNowDT, $oBaseEvent);
+				$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oNowDT, $oBaseEvent, (string) $oBaseEvent->UID);
 				if ($oStartDT)
 				{
 					$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
