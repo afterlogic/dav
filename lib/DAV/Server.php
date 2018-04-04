@@ -6,6 +6,8 @@ namespace Afterlogic\DAV;
 
 class Server extends \Sabre\DAV\Server
 {
+	public static $sUserPublicId = null;
+	
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
@@ -88,7 +90,7 @@ class Server extends \Sabre\DAV\Server
                             }
 
                             $oPrincipalColl = new \Sabre\DAVACL\PrincipalCollection(Backend::Principal());
-                            $oPrincipalColl->disableListing = true;
+                            $oPrincipalColl->disableListing = false;
 
                             array_push($aTree, $oPrincipalColl);
 
@@ -157,18 +159,25 @@ class Server extends \Sabre\DAV\Server
 		}
     }
 	
+	/*
+	 * 
+	 */
+	public static function setUser($sUserPublicId)
+	{
+		self::$sUserPublicId = $sUserPublicId;
+	}	
+
 	public static function getUser()
 	{
-		static $sUserPublicId = null;
-		if (null === $sUserPublicId) 
+		if (null === self::$sUserPublicId) 
 		{
 			$oUser = \Aurora\System\Api::getAuthenticatedUser();
 			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
-				$sUserPublicId = $oUser->PublicId;
+				self::$sUserPublicId = $oUser->PublicId;
 			}
 		}
-		return $sUserPublicId;
+		return self::$sUserPublicId;
 	}	
 
 	/**
