@@ -174,74 +174,95 @@ class PDO
 
 	public function updateReminder($uri, $data, $user)
 	{
+		$oApiCalendarDecorator =  \Aurora\System\Api::GetModuleDecorator('calendar');
 		if (self::isCalendar($uri) && self::isEvent($uri))
 		{
 			$calendarUri = trim($this->getCalendarUri($uri), '/');
 			$eventId = $this->getEventId($uri);
-			
-			$aReminder = $this->getReminder($eventId, $user);
 			$this->deleteReminder($eventId, $user);
-			
 			$data = str_replace('VTODO', 'VEVENT', $data);
 			$vCal = \Sabre\VObject\Reader::read($data);
-			
+
 			$aBaseEvents = $vCal->getBaseComponents('VEVENT');
 			$bAllDay = false;
 			if (isset($aBaseEvents[0]))
 			{
+				$iOffset = 0;
+				$iWorkDayStartsOffset = 0;
+				$oUser = \Afterlogic\DAV\Utils::GetUserByPublicId($user);
 				$oBaseEvent = $aBaseEvents[0];
-
-				$oNowDT = new \DateTime('now', new \DateTimeZone('UTC'));
-				$iReminderStartTS = $oNowDT->getTimestamp();
-				if ($aReminder)
-				{
-					$iReminderStartTS = $aReminder['starttime'];
-				}
+				$oNowDT = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
 				$bAllDay = !$oBaseEvent->DTSTART->hasTime();
 				$oStartDT = $oBaseEvent->DTSTART->getDateTime();
-				
-				$oStartDT->setTimezone(new \DateTimeZone('UTC'));
+				$oStartDT = $oStartDT->setTimezone(new \DateTimeZone('UTC'));
 
-				$oEndDT = $oBaseEvent->DTEND->getDateTime();
-				$oEndDT->setTimezone(new \DateTimeZone('UTC'));
-
-				$oInterval = $oStartDT->diff($oEndDT);
-
-				$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oNowDT, $oBaseEvent, (string) $oBaseEvent->UID);
-				if ($oStartDT)
+				$iReminderTime = false;
+				if ($bAllDay && $oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
-					$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
-
-					if ($iReminderTime === false && isset($oBaseEvent->RRULE))
+					$oClientTZ = isset($oClientTZ) ? $oClientTZ : new \DateTimeZone($oUser->DefaultTimeZone);
+					$oNowDTClientTZ = isset($oNowDTClientTZ) ? $oNowDTClientTZ : new \DateTime("now", $oClientTZ);
+					$iOffset = $oNowDTClientTZ->getOffset(); //difference between UTC and time zone in allDay Event
+					//send reminder at WorkDayStarts time
+					$iWorkDayStartsOffset = $oUser->{'Calendar::WorkdayStarts'} * 3600;
+				}
+				//NextRepeat
+				if (isset($oBaseEvent->RRULE))
+				{
+					$oCalendar = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oApiCalendarDecorator->getCalendar($user, $calendarUri) : false;
+					$oEndDT = \Aurora\Modules\Calendar\Classes\Helper::getRRuleIteratorNextRepeat($oNowDT, $oBaseEvent);
+					$aEvents = null;
+					if ($oCalendar && $user && $oEndDT)
 					{
-						$iStartTS = $oStartDT->getTimestamp();
-						if ($iStartTS == $iReminderStartTS)
-						{
-							$oStartDT->add($oInterval);
-							$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oStartDT, $oBaseEvent);
-						}
-
-						$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT);
-					}
-
-					if ($iReminderTime !== false)
-					{
-						$iOffset = 0;
+						$oEndDT = $oEndDT->setTimezone(new \DateTimeZone('UTC'));
 						if ($bAllDay)
 						{
-							$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($user);
-							if ($oAccount)
+							//add 1 day to EndDate in allDayEvent case
+							$oEndDT = $oEndDT->add(new \DateInterval('P1D'));
+						}
+						$vCalExpanded = $vCal->expand(
+							\Sabre\VObject\DateTimeParser::parse($oNowDT->format("Ymd\THis\Z")),
+							\Sabre\VObject\DateTimeParser::parse($oEndDT->format("Ymd\T235959\Z"))
+						);
+						$aEvents = \Aurora\Modules\Calendar\Classes\Parser::parseEvent($user, $oCalendar,  $vCalExpanded, $vCal);
+					}
+
+					if (is_array($aEvents))
+					{
+						foreach ($aEvents as $key => $value)
+						{  //ignore events with triggered reminders
+							if (!($value['alarms']) || (($value['startTS'] + $iWorkDayStartsOffset)  - min($value['alarms']) * 60) < $oNowDT->getTimestamp() + $iOffset)
 							{
-								$oClientTZ = new \DateTimeZone($oAccount->DefaultTimeZone);
-								$oNowDTClientTZ = new \DateTime("now", $oClientTZ);
-								$iOffset = $oNowDTClientTZ->getOffset();
+								unset($aEvents[$key]);
 							}
 						}
-
-						$iStartTS = $oStartDT->getTimestamp();
-						$this->addReminder($user, $calendarUri, $eventId, $iReminderTime - $iOffset, $iStartTS - $iOffset, $bAllDay);
+						$aEvent = reset($aEvents);
+						if ($aEvent !== false && is_array($aEvent) && isset($aEvent['alarms']) && isset($aEvent['startTS']))
+						{
+							$aAlarms = $aEvent['alarms'];
+							sort($aAlarms);
+							//search nearest alarm
+							$i = 0;
+							do {
+								$iReminderTime = $aEvent['startTS'] - $aAlarms[$i] * 60;
+								$i++;
+							} while($i < count($aAlarms) && (($aEvent['startTS'] + $iWorkDayStartsOffset) - $aAlarms[$i] * 60) > $oNowDT->getTimestamp() + $iOffset);
+							$iReminderTime = $iReminderTime + $iWorkDayStartsOffset;
+						}
 					}
+				}
+				if ($iReminderTime == false)
+				{
+					$oStartDT = \Aurora\Modules\Calendar\Classes\Helper::getNextRepeat($oNowDT, $oBaseEvent, (string) $oBaseEvent->UID);
+					if ($oStartDT)
+					{
+						$iReminderTime = \Aurora\Modules\Calendar\Classes\Helper::getActualReminderTime($oBaseEvent, $oNowDT, $oStartDT, $iWorkDayStartsOffset, $iOffset);
+					}
+				}
+				if ($iReminderTime !== false)
+				{
+					$iStartTS = $oStartDT->getTimestamp();
+					$this->addReminder($user, $calendarUri, $eventId, $iReminderTime - $iOffset, $iStartTS - $iOffset, $bAllDay);
 				}
 			}
 		}

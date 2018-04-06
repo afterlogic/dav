@@ -68,8 +68,8 @@ class Utils
 		}
 		return $bIsSync;
 	}
-
-	public static function GetAccountByLogin($sUserName)
+	//GetAccountByLogin
+	public static function GetUserByPublicId($sUserName)
 	{
 		$bPrevState =  \Aurora\System\Api::skipCheckUserRole(true);
 		$mResult = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserName);
