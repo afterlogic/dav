@@ -104,6 +104,11 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 		{
             return [false, "Username or password was incorrect"];
         }
+		else
+		{
+			$mValidateResult = $userpass[0];
+		}
+		
         return [true, $this->principalPrefix . $mValidateResult];
 
     }	

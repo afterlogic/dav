@@ -27,26 +27,26 @@ class Backend
 		if ($oCoreModule)
 		{
 			try
-                        {
-                            $mResult = $oCoreModule->Login($sUserName, $sPassword, true);
+			{
+				$mResult = $oCoreModule->Login($sUserName, $sPassword, true);
 
-                            if (isset($mResult['AuthToken']))
-                            {
-                                    $oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
-                                    if ($oUser)
-                                    {
-                                            $mResult = $oUser->PublicId;
-                                    }
-                            }
-                            else 
-                            {
-                                    $mResult = false;
-                            }
-                        } 
-                        catch (\Exception $ex) 
-                        {
-                                $mResult = false;
-                        }
+				if (isset($mResult['AuthToken']))
+				{
+						$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
+						if ($oUser)
+						{
+								$mResult = $oUser->PublicId;
+						}
+				}
+				else 
+				{
+						$mResult = false;
+				}
+			} 
+			catch (\Exception $ex) 
+			{
+					$mResult = false;
+			}
 		}
 		
 		return $mResult;
