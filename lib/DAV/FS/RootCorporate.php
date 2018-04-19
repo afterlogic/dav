@@ -12,13 +12,13 @@ class RootCorporate extends Directory {
 		
 		if ($this->rootPath === null) {
 			
-			$iUserId = $this->getUser();
-			if ($iUserId) {
+			$oTenant = $this->getTenant();
+			if ($oTenant) {
 				
-				$this->rootPath = $this->path . '/' . 0;
-				if (!file_exists($this->rootPath)) {
+				$this->rootPath = $this->path . '/' . $oTenant->EntityId;
+				if (!\file_exists($this->rootPath)) {
 					
-					mkdir($this->rootPath, 0777, true);
+					\mkdir($this->rootPath, 0777, true);
 				}
 			}
 		}

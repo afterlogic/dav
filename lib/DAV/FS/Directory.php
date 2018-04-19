@@ -5,16 +5,6 @@
 namespace Afterlogic\DAV\FS;
 
 class Directory extends \Sabre\DAV\FSExt\Directory {
-    
-	/**
-	 * @var \CApiTenantsManager
-	 */
-	protected $oApiTenants = null;	
-	
-	/**
-	 * @var \CApiUsersManager
-	 */
-	protected $oApiUsers = null;	
 	
 	/**
 	 * @var string $UserPublicId
@@ -22,20 +12,15 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	protected $UserPublicId = null;	
 	
 	/**
+	 * @var object $UserObject
+	 */
+	protected $UserObject = null;
+
+	/**
 	 * @var \CTenant
 	 */
 	protected $oTenant = null;
 	
-	public function getTenantsMan()
-	{
-		if ($this->oApiTenants === null) {
-			
-			$this->oApiTenants = \Aurora\System\Api::GetSystemManager('tenants');
-		}
-		
-		return $this->oApiTenants;
-	}
-
 	public function getUser()
 	{
 		if ($this->UserPublicId === null) {
@@ -45,21 +30,30 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $this->UserPublicId;
 	}
 	
+	public function getUserObject()
+	{
+		if ($this->UserObject === null) {
+			
+			$sUserPublicId = $this->getUser();
+			if ($sUserPublicId !== null) {
+				
+				$oCore = \Aurora\System\Api::GetModule('Core');
+				$this->UserObject = $oCore->GetUserByPublicId($sUserPublicId);
+			}
+		}
+		return $this->UserObject;
+	}
+	
 	public function getTenant()
 	{
-		if ($this->oTenant == null) {
-			// TODO: 
-/*			$oAccount = $this->getAccount();
-			if ($oAccount !== null) {
-				
-				$oApiTenants = $this->getTenantsMan();
-				if ($oApiTenants) {
-					
-					$this->oTenant = $oApiTenants->getTenantById($oAccount->IdTenant);
-				}
+		if ($this->oTenant == null) 
+		{
+			$oCore = \Aurora\System\Api::GetModule('Core');
+			$oUser = $this->getUserObject();
+			if ($oUser)
+			{
+				$this->oTenant = $oCore->GetTenantById($oUser->IdTenant);
 			}
- * 
- */
 		}
 		
 		return $this->oTenant;
@@ -184,8 +178,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) 
 		{
+			$oTenant = $this->getTenant();
+			$iIdTenant = $oTenant ? $oTenant->EntityId : 0;
+			
 			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . 0;
+				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . $iIdTenant;
 		} 
 		else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) 
 		{
@@ -246,11 +243,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		} 
 		else 
 		{
+			return true;
+			// TODO:
+/*
 			$oTenantsMan = $this->getTenantsMan();
 			if ($oTenantsMan) 
 			{
 				return $oTenantsMan->allocateFileUsage($oTenant, $iSizeUsage);
 			}
+ * 
+ */
 		}
 	}
 	

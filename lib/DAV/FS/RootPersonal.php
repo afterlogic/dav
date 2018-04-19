@@ -17,9 +17,9 @@ class RootPersonal extends Directory{
 		if ($this->rootPath === null && $oUser) {
 			
 			$this->rootPath = $this->path . '/' . $oUser->UUID;
-			if (!file_exists($this->rootPath)) {
+			if (!\file_exists($this->rootPath)) {
 				
-				mkdir($this->rootPath, 0777, true);
+				\mkdir($this->rootPath, 0777, true);
 			}
 		}
 		$this->path = $this->rootPath;
