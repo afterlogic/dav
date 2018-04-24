@@ -29,7 +29,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      */
     public function getAddressBookForUser($principalUri, $addressbookUri) {
 
-        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
+        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);

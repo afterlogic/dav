@@ -11,28 +11,17 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 	/* @var int $iUserId */
 	protected $iUserId = null;
 
-	/* @var $oApiUsersManager \CApiUsersManager */
-	protected $oApiUsersManager;
-
 	protected $oApiContactsManager;
-	
-	public function getUsersManager()
-	{
-		if (!isset($this->oApiUsersManager)) {
-			
-			$this->oApiUsersManager = \Aurora\System\Api::GetSystemManager('users');
-		}
-		return $this->oApiUsersManager;
-	}
 	
 	public function getContactsManager()
 	{
 		if (!isset($this->oApiContactsManager))
 		{
 			$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
-			if ($oContactsModule instanceof \AApiModule) {
+			if ($oContactsModule instanceof \Aurora\System\Module\AbstractModule) 
+			{
 				
-				$this->oApiContactsManager = $oContactsModule->GetManager('main');
+				$this->oApiContactsManager = $oContactsModule->oApiContactsManager;
 			}
 		}
 		return $this->oApiContactsManager;
@@ -73,17 +62,11 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		
 		$oResult = null;
 
-		/* @var $oApiUsersManager \CApiUsersManager */
-		$oApiUsersManager = $this->getUsersManager();
-
-		/* @var $oAccount \CAccount */
-		$oAccount = $oApiUsersManager->getAccountById(
-				$oApiUsersManager->getDefaultAccountId($iUserId)
-		);
+		$sUserPublicId = \Aurora\System\Api::getUserPublicIdById($iUserId);
 		
-		if ($oAccount) {
+		if ($sUserPublicId) {
 			$aAddressBook = $this->carddavBackend->getAddressBookForUser(
-					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email, 
+					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId, 
 					\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
 			);
 			if ($aAddressBook) {
@@ -148,30 +131,17 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     public function getChildren() {
 
         $children = array();
-        return $children; // todo
 
 		$iUserId = $this->getUser();
 		if ($iUserId) {
 			/* @var $oApiContactsManager \CApiContactsMainManager */
-			$oApiContactsManager = $this->getContactsManager();
+			$oContacts = \Aurora\System\Api::GetModule('Contacts');
+			
+			$aContacts = $oContacts->GetContacts('shared', 0, 0);
 
-			$aContactListItems = $oApiContactsManager->getContactItems(
-					$iUserId, 
-					\EContactSortField::EMail, 
-					\ESortOrder::ASC, 
-					0, 
-					999, 
-					'', 
-					'', 
-					'', 
-					0 // TODO: IdTenent
-			);
-			foreach ($aContactListItems as $oContactListItem) {
+			foreach ($aContacts['List'] as $aContact) {
 				
-				$child = $this->getChildObj(
-						$oContactListItem->IdUser, 
-						$oContactListItem->IdStr
-				);
+				$child = $this->getChildObj($aContact['IdUser'], $aContact['UUID'] . '.vcf');
 				if ($child) {
 					
 					$children[] = $child;
