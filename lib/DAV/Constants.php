@@ -15,8 +15,8 @@ class Constants
 	const T_CALENDAROBJECTS = 'adav_calendarobjects';
 	const T_SCHEDULINGOBJECTS = 'adav_schedulingobjects';
 	const T_CALENDARSUBSCRIPTIONS = 'adav_calendarsubscriptions';
-	const T_CALENDARSHARES = 'adav_calendarshares';
 	const T_REMINDERS = 'adav_reminders';
+	const T_CALENDARINSTANCES = 'adav_calendarinstances';
 
 	const T_ADDRESSBOOKS = 'adav_addressbooks';
 	const T_ADDRESSBOOKCHANGES = 'adav_addressbookchanges';

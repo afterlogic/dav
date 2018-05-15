@@ -8,8 +8,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     
 	protected $principalUri;
 	
-	/* @var int $iUserId */
-	protected $iUserId = null;
+	protected $oUser = null;
 
 	protected $oApiContactsManager;
 	
@@ -42,13 +41,13 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 
 	public function getUser() {
 		
-		if (null === $this->iUserId) {
+		if (null === $this->oUser) {
 			
-			$this->iUserId = \Afterlogic\DAV\Utils::GetAccountByLogin(
+			$this->oUser = \Aurora\System\Api::GetModule('Core')->getUserByPublicId(
 					basename($this->principalUri)
 			);
 		}
-		return $this->iUserId;
+		return $this->oUser;
 	}
 
 	/**
@@ -97,23 +96,10 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      * @return \Sabre\CardDAV\\ICard
      */
     public function getChild($name) {
-
-		$bResult = null;
-		/* @var $oApiContactsManager \CApiContactsMainManager */
-		$oApiContactsManager = $this->getContactsManager();
 		
-		$iUserId = $this->getUser();
+		$oUser = $this->getUser();
 
-		/* @var $oContact \CContact */
-		$oContact = $oApiContactsManager->getContactByStrId(
-				$iUserId, 
-				$name, 
-				0 // TODO: IdTenant
-		);
-		if ($oContact) {
-			
-			$bResult = $this->getChildObj($oContact->IdUser, $name);
-		}			
+		$bResult = $this->getChildObj($oUser->EntityId, $name);
 		
 		if (!isset($bResult)) {
 			

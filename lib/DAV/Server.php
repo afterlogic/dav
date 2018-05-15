@@ -26,7 +26,7 @@ class Server extends \Sabre\DAV\Server
 		$this->debugExceptions = true;
 		self::$exposeVersion = false;
 
-		$this->setBaseUri($baseUri);
+//		$this->setBaseUri($baseUri);
 		date_default_timezone_set('GMT');
 
 		if (\Aurora\System\Api::GetPDO()) 
@@ -125,6 +125,9 @@ class Server extends \Sabre\DAV\Server
                             }
 
                             /* Calendar Sharing Plugin */
+                            $this->addPlugin(new \Sabre\DAV\Sharing\Plugin());
+
+							/* Calendar Sharing Plugin */
                             $this->addPlugin(new \Sabre\CalDAV\SharingPlugin());
 
                             /* DAV Sync Plugin */
