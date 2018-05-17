@@ -111,6 +111,12 @@ class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
         $acl = [];
 
 		$sPrincipalUri = $this->calendarInfo['principaluri'];
+		
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if ($oUser)
+		{
+			$sPrincipalUri = 'principals/' . $oUser->PublicId;
+		}
 
 		switch ($this->getShareAccess()) {
             case \Sabre\DAV\Sharing\Plugin::ACCESS_NOTSHARED :
@@ -151,5 +157,13 @@ class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
         return $acl;
 
     }
+	
+	public function getChildren() {
+		$aChildren = parent::getChildren();
+		
+//		print_r($aChildren);
+		
+		return $aChildren;
+	}
 
 }

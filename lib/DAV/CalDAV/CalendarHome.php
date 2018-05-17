@@ -17,7 +17,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 		$aPrincipal = array();
 
 		$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(
-			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserUUID
+			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId
 		);
 		if (isset($aPrincipalProperties['uri'])) 
 		{
@@ -26,7 +26,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 		} 
 		else 
 		{
-			$aPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserUUID;
+			$aPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId;
 			$aPrincipal['id'] = -1;
 		}
 		return $aPrincipal;
@@ -51,10 +51,9 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
      */
     public function getChildren() {
 
-		$aOwnChildren = parent::getChildren();
+		$aChildren = parent::getChildren();
 		$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
 
-		$aChildrenSharedWithAll = [];
 		foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar) 
 		{
 			if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
@@ -67,14 +66,11 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 					$calendar['uri'] = $parentCalendar['uri'];
 				}
 			
-				$aChildrenSharedWithAll[] = new SharedWithAllCalendar($this->caldavBackend, $calendar);
+				$aChildren[] = new SharedWithAllCalendar($this->caldavBackend, $calendar);
 			} 
 		}
-
-		return array_merge(
-			$aChildrenSharedWithAll,
-			$aOwnChildren
-		);
+		
+		return $aChildren;
     }
 	
     /**
@@ -85,6 +81,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
      */
     function getChild($name) {
 		
+		$oChild = null;
 		try
 		{
 			$oChild = parent::getChild($name);

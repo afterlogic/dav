@@ -103,22 +103,6 @@ SQL
         return $calendar;
     }
 
-	public function getCalendarsForUser($principalUri)	
-	{
-		$calendars = parent::getCalendarsForUser($principalUri);
-		
-		$sharedWithAll = parent::getCalendarsForUser($this->getTenantPrincipal(basename($principalUri)));
-		
-		$calendars = array_merge(
-			$calendars,
-			$sharedWithAll
-		);
-		
-//		print_r($calendars);
-		
-		return $calendars;
-	}
-
 	/**
 	 * This method is called when a user replied to a request to share.
 	 *
