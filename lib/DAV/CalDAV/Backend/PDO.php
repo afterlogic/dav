@@ -43,6 +43,70 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		return 'principals/' . $sTenantPrincipal;
 	}	
 	
+    public function getPublicCalendar($calendarId) {
+
+		$calendar = false;
+		
+        $fields = array_values($this->propertyMap);
+        $fields[] = 'calendarid';
+        $fields[] = 'uri';
+        $fields[] = 'synctoken';
+        $fields[] = 'components';
+        $fields[] = 'principaluri';
+        $fields[] = 'transparent';
+        $fields[] = 'access';
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT {$this->calendarInstancesTableName}.id as id, $fields FROM {$this->calendarInstancesTableName}
+    LEFT JOIN {$this->calendarTableName} ON
+        {$this->calendarInstancesTableName}.calendarid = {$this->calendarTableName}.id
+WHERE access = 1 AND {$this->calendarInstancesTableName}.uri = ? AND public = 1 ORDER BY calendarorder ASC
+SQL
+        );
+
+		$stmt->execute([$calendarId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+		if ($row)
+		{
+			$components = [];
+			if ($row['components']) {
+				$components = explode(',', $row['components']);
+			}
+
+			$calendar = [
+				'id'                                                                 => [(int)$row['calendarid'], (int)$row['id']],
+				'uri'                                                                => $row['uri'],
+				'principaluri'                                                       => $row['principaluri'],
+				'{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag'                  => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
+				'{http://sabredav.org/ns}sync-token'                                 => $row['synctoken'] ? $row['synctoken'] : '0',
+				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
+				'{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp'         => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
+				'share-resource-uri'                                                 => '/ns/share/' . $row['calendarid'],
+			];
+
+			$row['access'] = \Sabre\DAV\Sharing\Plugin::ACCESS_READ;
+			$calendar['share-access'] = (int)$row['access'];
+			// 1 = owner, 2 = readonly, 3 = readwrite
+			if ($row['access'] > 1) {
+				// We need to find more information about the original owner.
+				//$stmt2 = $this->pdo->prepare('SELECT principaluri FROM ' . $this->calendarInstancesTableName . ' WHERE access = 1 AND id = ?');
+				//$stmt2->execute([$row['id']]);
+
+				// read-only is for backwards compatbility. Might go away in
+				// the future.
+				$calendar['read-only'] = (int)$row['access'] === \Sabre\DAV\Sharing\Plugin::ACCESS_READ;
+			}
+
+			foreach ($this->propertyMap as $xmlName => $dbName) {
+				$calendar[$xmlName] = $row[$dbName];
+			}
+		}
+
+        return $calendar;
+    }
+	
     public function getParentCalendar($calendarId) {
 
         $fields = array_values($this->propertyMap);
@@ -127,7 +191,44 @@ SQL
 	 * @param bool $value
 	 * @return void
 	 */
-	public function setPublishStatus($calendarId, $value) {}
+	public function setPublishStatus($calendarUri, $value) 
+	{
+        $bResult = false;
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if ($oUser)
+		{
+			$stmt = $this->pdo->prepare('UPDATE ' . $this->calendarInstancesTableName . ' SET `public` = ? WHERE principaluri = ? AND uri = ?');
+			$bResult =  $stmt->execute([(int)$value, 'principals/' . $oUser->PublicId, $calendarUri]);
+		}
+		
+		return $bResult;
+	}
+	
+	/**
+	 * Marks this calendar as published.
+	 *
+	 * Publishing a calendar should automatically create a read-only, public,
+	 * subscribable calendar.
+	 *
+	 * @return void
+	 */
+	public function getPublishStatus($calendarUri) 
+	{
+        $bResult = false;
+		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if ($oUser)
+		{
+			$stmt = $this->pdo->prepare('SELECT public FROM ' . $this->calendarInstancesTableName . ' WHERE principaluri = ? AND uri = ?');
+			$stmt->execute(['principals/' . $oUser->PublicId, $calendarUri]);
+			$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+			if ($row)
+			{
+				$bResult = (bool) $row['public'];
+			}
+		}
+		
+		return $bResult;
+	}	
 	
 	/**
 	 * Returns a list of notifications for a given principal url.

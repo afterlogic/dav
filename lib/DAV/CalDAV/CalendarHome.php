@@ -110,5 +110,20 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 		
 		return $oChild;
 	}
+	
+	public function getPublicChild($name)
+	{
+		$oChild = false;
+		$calendar = $this->caldavBackend->getPublicCalendar($name);
+		if ($calendar)
+		{
+			if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
+			{
+				$oChild = new PublicCalendar($this->caldavBackend, $calendar);
+			} 
+		}
+		
+		return $oChild;
+	}
 
 }
