@@ -31,7 +31,7 @@ php {$argv[0]} [pdo-dsn] [prefix] [username] [password]
 
 For example:
 
-php {$argv[0]} "mysql:host=localhost;dbname=sabredav" au_ root password
+php {$argv[0]} "mysql:host=localhost;dbname=sabredav" au_adav_ root password
 php {$argv[0]} sqlite:data/sabredav.db
 
 HELLO;
@@ -86,7 +86,7 @@ switch ($driver) {
 echo "Creating 'calendarinstances'\n";
 $addValueType = false;
 try {
-    $result = $pdo->query("SELECT * FROM ".$prefix."adav_calendarinstances LIMIT 1");
+    $result = $pdo->query("SELECT * FROM ".$prefix."calendarinstances LIMIT 1");
     $result->fetch(\PDO::FETCH_ASSOC);
     echo "calendarinstances exists. Assuming this part of the migration has already been done.\n";
 } catch (Exception $e) {
@@ -95,7 +95,7 @@ try {
     switch ($driver) {
         case 'mysql' :
             $pdo->exec("
-CREATE TABLE ".$prefix."adav_calendarinstances (
+CREATE TABLE ".$prefix."calendarinstances (
     id INTEGER UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     calendarid INTEGER UNSIGNED NOT NULL,
     principaluri VARBINARY(100),
@@ -110,6 +110,7 @@ CREATE TABLE ".$prefix."adav_calendarinstances (
     share_href VARBINARY(100),
     share_displayname VARCHAR(100),
     share_invitestatus TINYINT(1) NOT NULL DEFAULT '2' COMMENT '1 = noresponse, 2 = accepted, 3 = declined, 4 = invalid',
+    public TINYINT(1) NOT NULL DEFAULT '0',
     UNIQUE(principaluri, uri),
     UNIQUE(calendarid, principaluri),
     UNIQUE(calendarid, share_href)
@@ -117,7 +118,7 @@ CREATE TABLE ".$prefix."adav_calendarinstances (
 "
         );
             $pdo->exec("
-INSERT INTO ".$prefix."adav_calendarinstances
+INSERT INTO ".$prefix."calendarinstances
     (
         calendarid,
         principaluri,
@@ -139,12 +140,12 @@ SELECT
     calendarorder,
     calendarcolor,
     transparent
-FROM ".$prefix."adav_calendars
+FROM ".$prefix."calendars
 ");
             break;
         case 'sqlite' :
             $pdo->exec("
-CREATE TABLE ".$prefix."adav_calendarinstances (
+CREATE TABLE ".$prefix."calendarinstances (
     id integer primary key asc NOT NULL,
     calendarid integer,
     principaluri text,
@@ -166,7 +167,7 @@ CREATE TABLE ".$prefix."adav_calendarinstances (
 "
         );
             $pdo->exec("
-INSERT INTO ".$prefix."adav_calendarinstances
+INSERT INTO ".$prefix."calendarinstances
     (
         calendarid,
         principaluri,
@@ -188,14 +189,14 @@ SELECT
     calendarorder,
     calendarcolor,
     transparent
-FROM ".$prefix."adav_calendars
+FROM ".$prefix."calendars
 ");
             break;
     }
 
 }
 try {
-    $result = $pdo->query("SELECT * FROM ".$prefix."adav_calendars LIMIT 1");
+    $result = $pdo->query("SELECT * FROM ".$prefix."calendars LIMIT 1");
     $row = $result->fetch(\PDO::FETCH_ASSOC);
 
     if (!$row) {
@@ -224,10 +225,10 @@ if ($migrateCalendars) {
 
     switch ($driver) {
         case 'mysql' :
-            $pdo->exec("RENAME TABLE ".$prefix."adav_calendars TO " . $calendarBackup);
+            $pdo->exec("RENAME TABLE ".$prefix."calendars TO " . $calendarBackup);
             break;
         case 'sqlite' :
-            $pdo->exec("ALTER TABLE ".$prefix."adav_calendars RENAME TO " . $calendarBackup);
+            $pdo->exec("ALTER TABLE ".$prefix."calendars RENAME TO " . $calendarBackup);
             break;
 
     }
@@ -236,7 +237,7 @@ if ($migrateCalendars) {
     switch ($driver) {
         case 'mysql' :
             $pdo->exec("
-CREATE TABLE ".$prefix."adav_calendars (
+CREATE TABLE ".$prefix."calendars (
     id INTEGER UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     synctoken INTEGER UNSIGNED NOT NULL DEFAULT '1',
     components VARBINARY(21)
@@ -246,7 +247,7 @@ CREATE TABLE ".$prefix."adav_calendars (
             break;
         case 'sqlite' :
             $pdo->exec("
-CREATE TABLE ".$prefix."adav_calendars (
+CREATE TABLE ".$prefix."calendars (
     id integer primary key asc NOT NULL,
     synctoken integer DEFAULT 1 NOT NULL,
     components text NOT NULL
@@ -260,7 +261,7 @@ CREATE TABLE ".$prefix."adav_calendars (
     echo "Migrating data from old to new table\n";
 
     $pdo->exec("
-INSERT INTO ".$prefix."adav_calendars (id, synctoken, components) SELECT id, synctoken, COALESCE(components,\"VEVENT,VTODO,VJOURNAL\") as components FROM $calendarBackup
+INSERT INTO ".$prefix."calendars (id, synctoken, components) SELECT id, synctoken, COALESCE(components,\"VEVENT,VTODO,VJOURNAL\") as components FROM $calendarBackup
 "
     );
 
