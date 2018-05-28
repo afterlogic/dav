@@ -44,6 +44,12 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 		return 'principals/' . $sTenantPrincipal;
 	}
 	
+	protected function allowSharing()
+	{
+		$oCorporateCalendar = \Aurora\System\Api::GetModule('CorporateCalendar');
+		return $oCorporateCalendar && $oCorporateCalendar->getConfig('AllowShare');
+	}
+	
     /**
      * Returns a list of calendars
      *
@@ -52,22 +58,35 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
     public function getChildren() {
 
 		$aChildren = parent::getChildren();
-		$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
-
-		foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar) 
+		
+		if ($this->allowSharing())
 		{
-			if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
+			$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
+			foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar) 
 			{
-				$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
-				if ($parentCalendar)
+				if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
 				{
-					$calendar['id'] = $parentCalendar['id'];
-					$calendar['principaluri'] = $parentCalendar['principaluri'];
-					$calendar['uri'] = $parentCalendar['uri'];
+					$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
+					if ($parentCalendar)
+					{
+						$calendar['id'] = $parentCalendar['id'];
+						$calendar['principaluri'] = $parentCalendar['principaluri'];
+						$calendar['uri'] = $parentCalendar['uri'];
+					}
+
+					$aChildren[] = new SharedWithAllCalendar($this->caldavBackend, $calendar);
+				} 
+			}
+		}
+		else
+		{
+			foreach ($aChildren as $sKey => $oChild)
+			{
+				if ($oChild instanceof \Sabre\CalDAV\SharedCalendar && $oChild->getShareAccess() !== \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER)
+				{
+					unset($aChildren[$sKey]);
 				}
-			
-				$aChildren[] = new SharedWithAllCalendar($this->caldavBackend, $calendar);
-			} 
+			}
 		}
 		
 		return $aChildren;
@@ -88,23 +107,26 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 		}
 		catch (\Sabre\DAV\Exception\NotFound $oEx)
 		{
-			$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
-
-			foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar) 
+			if ($this->allowSharing())
 			{
-				if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
+				$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
+
+				foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar) 
 				{
-					$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
-					if ($parentCalendar && $parentCalendar['uri'] === $name)
+					if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
 					{
-						$calendar['id'] = $parentCalendar['id'];
-						$calendar['principaluri'] = $parentCalendar['principaluri'];
-						$calendar['uri'] = $parentCalendar['uri'];
-					   
-						$oChild = new SharedWithAllCalendar($this->caldavBackend, $calendar);
-						break;
-					}
-				} 
+						$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
+						if ($parentCalendar && $parentCalendar['uri'] === $name)
+						{
+							$calendar['id'] = $parentCalendar['id'];
+							$calendar['principaluri'] = $parentCalendar['principaluri'];
+							$calendar['uri'] = $parentCalendar['uri'];
+
+							$oChild = new SharedWithAllCalendar($this->caldavBackend, $calendar);
+							break;
+						}
+					} 
+				}
 			}
 		}
 		
