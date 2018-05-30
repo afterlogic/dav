@@ -133,7 +133,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		$this->initPath();
 		
-		return parent::getChildren();
+		$aChildren = parent::getChildren();
+		foreach ($aChildren as $iKey => $oChild)
+		{
+			if ($oChild->getName() === '.sabredav')
+			{
+				unset($aChildren[$iKey]);
+			}
+		}
+		
+		return $aChildren;
     }
 	
     public function childExists($name) 
