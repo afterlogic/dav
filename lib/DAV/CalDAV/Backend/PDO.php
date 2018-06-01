@@ -197,7 +197,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) { 
 			
 			$sCommonName = basename($aRow['principaluri']);
-			$oAccount = \Afterlogic\DAV\Utils::GetAccountByLogin($sCommonName);
+			$oAccount = \Afterlogic\DAV\Utils::GetUserByPublicId($sCommonName);
 			if ($oAccount instanceof \CAccount) {
 				$sCommonName = $oAccount->FriendlyName;
 			}
