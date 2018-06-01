@@ -191,10 +191,10 @@ SQL
 	 * @param bool $value
 	 * @return void
 	 */
-	public function setPublishStatus($calendarUri, $value) 
+	public function setPublishStatus($calendarUri, $value, $oUser = null)
 	{
         $bResult = false;
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		$oUser = $oUser ? $oUser : \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
 			$stmt = $this->pdo->prepare('UPDATE ' . $this->calendarInstancesTableName . ' SET `public` = ? WHERE principaluri = ? AND uri = ?');
