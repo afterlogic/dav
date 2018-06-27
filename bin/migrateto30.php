@@ -30,7 +30,7 @@ php {$argv[0]} [pdo-dsn] [username] [password]
 
 For example:
 
-php {$argv[0]} "mysql:host=localhost;dbname=sabredav" root password
+php {$argv[0]} "mysql:host=localhost;dbname=sabredav" au_adav_ root password
 php {$argv[0]} sqlite:data/sabredav.db
 
 HELLO;
@@ -54,8 +54,9 @@ foreach($paths as $path) {
 }
 
 $dsn = $argv[1];
-$user = isset($argv[2])?$argv[2]:null;
-$pass = isset($argv[3])?$argv[3]:null;
+$prefix = isset($argv[2]) ? $argv[2] : '';
+$user = isset($argv[3])?$argv[3]:null;
+$pass = isset($argv[4])?$argv[4]:null;
 
 echo "Connecting to database: " . $dsn . "\n";
 
@@ -81,7 +82,7 @@ switch($driver) {
 echo "Upgrading 'propertystorage'\n";
 $addValueType = false;
 try {
-    $result = $pdo->query('SELECT * FROM adav_propertystorage LIMIT 1');
+    $result = $pdo->query('SELECT * FROM ' . $prefix . 'propertystorage LIMIT 1');
     $row = $result->fetch(\PDO::FETCH_ASSOC);
 
     if (!$row) {
@@ -92,9 +93,9 @@ try {
         switch($driver) {
 
             case 'mysql' :
-                $pdo->exec('RENAME TABLE adav_propertystorage TO adav_propertystorage_old' . $random);
+                $pdo->exec('RENAME TABLE ' . $prefix . 'propertystorage TO ' . $prefix . 'propertystorage_old' . $random);
                 $pdo->exec('
-    CREATE TABLE adav_propertystorage (
+    CREATE TABLE ' . $prefix . 'propertystorage (
         id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
         path VARBINARY(1024) NOT NULL,
         name VARBINARY(100) NOT NULL,
@@ -102,12 +103,12 @@ try {
         value MEDIUMBLOB
     );
                 ');
-                $pdo->exec('CREATE UNIQUE INDEX path_property_' . $random . '  ON adav_propertystorage (path(600), name(100));');
+                $pdo->exec('CREATE UNIQUE INDEX path_property_' . $random . '  ON ' . $prefix . 'propertystorage (path(600), name(100));');
                 break;
             case 'sqlite' :
-                $pdo->exec('ALTER TABLE adav_propertystorage RENAME TO propertystorage_old' . $random);
+                $pdo->exec('ALTER TABLE ' . $prefix . 'propertystorage RENAME TO propertystorage_old' . $random);
                 $pdo->exec('
-CREATE TABLE adav_propertystorage (
+CREATE TABLE ' . $prefix . 'propertystorage (
     id integer primary key asc,
     path text,
     name text,
@@ -115,7 +116,7 @@ CREATE TABLE adav_propertystorage (
     value blob
 );');
 
-                $pdo->exec('CREATE UNIQUE INDEX path_property_' . $random . ' ON adav_propertystorage (path, name);');
+                $pdo->exec('CREATE UNIQUE INDEX path_property_' . $random . ' ON ' . $prefix . 'propertystorage (path, name);');
                 break;
 
         }
@@ -137,22 +138,22 @@ if ($addValueType) {
 
     switch($driver) {
         case 'mysql' :
-            $pdo->exec('ALTER TABLE adav_propertystorage ADD valuetype INT UNSIGNED');
+            $pdo->exec('ALTER TABLE ' . $prefix . 'propertystorage ADD valuetype INT UNSIGNED');
             break;
         case 'sqlite' :
-            $pdo->exec('ALTER TABLE adav_propertystorage ADD valuetype INT');
+            $pdo->exec('ALTER TABLE ' . $prefix . 'propertystorage ADD valuetype INT');
 
             break;
     }
 
-    $pdo->exec('UPDATE adav_propertystorage SET valuetype = 1 WHERE valuetype IS NULL ');
+    $pdo->exec('UPDATE ' . $prefix . 'propertystorage SET valuetype = 1 WHERE valuetype IS NULL ');
 
 }
 
 echo "Migrating vcardurl\n";
 
-$result = $pdo->query('SELECT id, uri, vcardurl FROM adav_principals WHERE vcardurl IS NOT NULL');
-$stmt1 = $pdo->prepare('INSERT INTO adav_propertystorage (path, name, valuetype, value) VALUES (?, ?, 3, ?)');
+$result = $pdo->query('SELECT id, uri, vcardurl FROM ' . $prefix . 'principals WHERE vcardurl IS NOT NULL');
+$stmt1 = $pdo->prepare('INSERT INTO ' . $prefix . 'propertystorage (path, name, valuetype, value) VALUES (?, ?, 3, ?)');
 
 while($row = $result->fetch(\PDO::FETCH_ASSOC)) {
 

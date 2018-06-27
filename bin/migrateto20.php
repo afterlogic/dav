@@ -30,7 +30,7 @@ php {$argv[0]} [pdo-dsn] [username] [password]
 
 For example:
 
-php {$argv[0]} "mysql:host=localhost;dbname=sabredav" root password
+php {$argv[0]} "mysql:host=localhost;dbname=sabredav" au_adav_ root password
 php {$argv[0]} sqlite:data/sabredav.db
 
 HELLO;
@@ -54,8 +54,9 @@ foreach($paths as $path) {
 }
 
 $dsn = $argv[1];
-$user = isset($argv[2])?$argv[2]:null;
-$pass = isset($argv[3])?$argv[3]:null;
+$prefix = isset($argv[2]) ? $argv[2] : '';
+$user = isset($argv[3])?$argv[3]:null;
+$pass = isset($argv[4])?$argv[4]:null;
 
 echo "Connecting to database: " . $dsn . "\n";
 
@@ -78,11 +79,11 @@ switch($driver) {
         die(-1);
 }
 
-foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
+foreach(['calendar', 'addressbook'] as $itemType) {
 
-    $tableName = $itemType . 's';
+    $tableName = $prefix . $itemType . 's';
     $tableNameOld = $tableName . '_old';
-    $changesTable = $itemType . 'changes';
+    $changesTable = $prefix . $itemType . 'changes';
 
     echo "Upgrading '$tableName'\n";
 
@@ -101,9 +102,9 @@ foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
             case 'mysql' :
                 $pdo->exec("RENAME TABLE $tableName TO $tableNameOld");
                 switch($itemType) {
-                    case 'adav_calendar' :
+                    case 'calendar' :
                         $pdo->exec("
-            CREATE TABLE adav_calendars (
+            CREATE TABLE {$prefix}calendars (
                 id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 principaluri VARCHAR(100),
                 displayname VARCHAR(100),
@@ -119,9 +120,9 @@ foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
                         ");
                         break;
-                    case 'adav_addressbook' :
+                    case $prefix . 'addressbook' :
                         $pdo->exec("
-            CREATE TABLE adav_addressbooks (
+            CREATE TABLE {$prefix}addressbooks (
                 id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
                 principaluri VARCHAR(255),
                 displayname VARCHAR(255),
@@ -139,9 +140,9 @@ foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
                 $pdo->exec("ALTER TABLE $tableName RENAME TO $tableNameOld");
 
                 switch($itemType) {
-                    case 'adav_calendar' :
+                    case 'calendar' :
                         $pdo->exec("
-            CREATE TABLE adav_calendars (
+            CREATE TABLE {$prefix}calendars (
                 id integer primary key asc,
                 principaluri text,
                 displayname text,
@@ -156,9 +157,9 @@ foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
             );
                         ");
                         break;
-                    case 'adav_addressbook' :
+                    case $prefix . 'addressbook' :
                         $pdo->exec("
-            CREATE TABLE adav_addressbooks (
+            CREATE TABLE {$prefix}addressbooks (
                 id integer primary key asc,
                 principaluri text,
                 displayname text,
@@ -252,7 +253,7 @@ foreach(['adav_calendar', 'adav_addressbook'] as $itemType) {
 }
 
 try {
-    $pdo->query("SELECT * FROM adav_calendarsubscriptions LIMIT 1");
+    $pdo->query("SELECT * FROM {$prefix}calendarsubscriptions LIMIT 1");
 
     echo "'calendarsubscriptions' already exists. Assuming that this part of the\n";
     echo "upgrade was already completed.\n";
@@ -264,7 +265,7 @@ try {
 
         case 'mysql' :
             $pdo->exec("
-CREATE TABLE adav_calendarsubscriptions (
+CREATE TABLE {$prefix}calendarsubscriptions (
     id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     uri VARCHAR(200) NOT NULL,
     principaluri VARCHAR(100) NOT NULL,
@@ -284,7 +285,7 @@ CREATE TABLE adav_calendarsubscriptions (
         case 'sqlite' :
             $pdo->exec("
 
-CREATE TABLE adav_calendarsubscriptions (
+CREATE TABLE {$prefix}calendarsubscriptions (
     id integer primary key asc,
     uri text,
     principaluri text,
@@ -300,7 +301,7 @@ CREATE TABLE adav_calendarsubscriptions (
 );
             ");
 
-            $pdo->exec("CREATE INDEX principaluri_uri ON adav_calendarsubscriptions (principaluri, uri);");
+            $pdo->exec("CREATE INDEX principaluri_uri ON {$prefix}calendarsubscriptions (principaluri, uri);");
             break;
 
     }
@@ -308,7 +309,7 @@ CREATE TABLE adav_calendarsubscriptions (
 }
 
 try {
-    $pdo->query("SELECT * FROM adav_propertystorage LIMIT 1");
+    $pdo->query("SELECT * FROM {$prefix}propertystorage LIMIT 1");
 
     echo "'propertystorage' already exists. Assuming that this part of the\n";
     echo "upgrade was already completed.\n";
@@ -320,7 +321,7 @@ try {
 
         case 'mysql' :
             $pdo->exec("
-CREATE TABLE adav_propertystorage (
+CREATE TABLE {$prefix}propertystorage (
     id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     path VARBINARY(1024) NOT NULL,
     name VARBINARY(100) NOT NULL,
@@ -328,12 +329,12 @@ CREATE TABLE adav_propertystorage (
 );
             ");
             $pdo->exec("
-CREATE UNIQUE INDEX path_property ON adav_propertystorage (path(600), name(100));
+CREATE UNIQUE INDEX path_property ON {$prefix}propertystorage (path(600), name(100));
             ");
             break;
         case 'sqlite' :
             $pdo->exec("
-CREATE TABLE adav_propertystorage (
+CREATE TABLE {$prefix}propertystorage (
     id integer primary key asc,
     path TEXT,
     name TEXT,
@@ -341,7 +342,7 @@ CREATE TABLE adav_propertystorage (
 );
             ");
             $pdo->exec("
-CREATE UNIQUE INDEX path_property ON adav_propertystorage (path, name);
+CREATE UNIQUE INDEX path_property ON {$prefix}propertystorage (path, name);
             ");
 
             break;
@@ -355,7 +356,7 @@ echo "Upgrading cards table to 2.0 schema\n";
 try {
 
     $create = false;
-    $row = $pdo->query("SELECT * FROM adav_cards LIMIT 1")->fetch();
+    $row = $pdo->query("SELECT * FROM {$prefix}cards LIMIT 1")->fetch();
     if (!$row) {
         echo "There was no data in the cards table, so we're re-creating it\n";
         echo "The old table will be renamed to cards_old, just in case.\n";
@@ -364,10 +365,10 @@ try {
 
         switch($driver) {
             case 'mysql' :
-                $pdo->exec("RENAME TABLE adav_cards TO adav_cards_old");
+                $pdo->exec("RENAME TABLE {$prefix}cards TO {$prefix}cards_old");
                 break;
             case 'sqlite' :
-                $pdo->exec("ALTER TABLE adav_cards RENAME TO adav_cards_old");
+                $pdo->exec("ALTER TABLE {$prefix}cards RENAME TO {$prefix}cards_old");
                 break;
 
         }
@@ -384,7 +385,7 @@ if ($create) {
     switch($driver) {
         case 'mysql' :
             $pdo->exec("
-CREATE TABLE adav_cards (
+CREATE TABLE {$prefix}cards (
     id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     addressbookid INT(11) UNSIGNED NOT NULL,
     carddata MEDIUMBLOB,
@@ -400,7 +401,7 @@ CREATE TABLE adav_cards (
         case 'sqlite' :
 
             $pdo->exec("
-CREATE TABLE adav_cards (
+CREATE TABLE {$prefix}cards (
     id integer primary key asc,
     addressbookid integer,
     carddata blob,
@@ -417,7 +418,7 @@ CREATE TABLE adav_cards (
     switch($driver) {
         case 'mysql' :
             $pdo->exec("
-                ALTER TABLE adav_cards
+                ALTER TABLE {$prefix}cards
                 ADD etag VARBINARY(32),
                 ADD size INT(11) UNSIGNED NOT NULL;
             ");
@@ -426,15 +427,15 @@ CREATE TABLE adav_cards (
         case 'sqlite' :
 
             $pdo->exec("
-                ALTER TABLE adav_cards ADD etag text;
-                ALTER TABLE adav_cards ADD size integer;
+                ALTER TABLE {$prefix}cards ADD etag text;
+                ALTER TABLE {$prefix}cards ADD size integer;
             ");
             break;
 
     }
     echo "Reading all old vcards and populating etag and size fields.\n";
-    $result = $pdo->query('SELECT id, carddata FROM adav_cards');
-    $stmt = $pdo->prepare('UPDATE adav_cards SET etag = ?, size = ? WHERE id = ?');
+    $result = $pdo->query('SELECT id, carddata FROM ' . $prefix . 'cards');
+    $stmt = $pdo->prepare('UPDATE ' . $prefix . 'cards SET etag = ?, size = ? WHERE id = ?');
     while($row = $result->fetch(\PDO::FETCH_ASSOC)) {
         $stmt->execute([
             md5($row['carddata']),

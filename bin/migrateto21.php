@@ -31,7 +31,7 @@ php {$argv[0]} [pdo-dsn] [username] [password]
 
 For example:
 
-php {$argv[0]} "mysql:host=localhost;dbname=sabredav" root password
+php {$argv[0]} "mysql:host=localhost;dbname=sabredav" au_adav_ root password
 php {$argv[0]} sqlite:data/sabredav.db
 
 HELLO;
@@ -55,8 +55,9 @@ foreach($paths as $path) {
 }
 
 $dsn = $argv[1];
-$user = isset($argv[2])?$argv[2]:null;
-$pass = isset($argv[3])?$argv[3]:null;
+$prefix = isset($argv[2]) ? $argv[2] : '';
+$user = isset($argv[3])?$argv[3]:null;
+$pass = isset($argv[4])?$argv[4]:null;
 
 echo "Connecting to database: " . $dsn . "\n";
 
@@ -79,10 +80,10 @@ switch($driver) {
         die(-1);
 }
 
-echo "Upgrading 'adav_calendarobjects'\n";
+echo "Upgrading '{$prefix}calendarobjects'\n";
 $addUid = false;
 try {
-    $result = $pdo->query('SELECT * FROM adav_calendarobjects LIMIT 1');
+    $result = $pdo->query('SELECT * FROM ' . $prefix . 'calendarobjects LIMIT 1');
     $row = $result->fetch(\PDO::FETCH_ASSOC);
 
     if (!$row) {
@@ -105,15 +106,15 @@ if ($addUid) {
 
     switch($driver) {
         case 'mysql' :
-            $pdo->exec('ALTER TABLE adav_calendarobjects ADD uid VARCHAR(200)');
+            $pdo->exec('ALTER TABLE ' . $prefix . 'calendarobjects ADD uid VARCHAR(200)');
             break;
         case 'sqlite' :
-            $pdo->exec('ALTER TABLE adav_calendarobjects ADD uid TEXT');
+            $pdo->exec('ALTER TABLE ' . $prefix . 'calendarobjects ADD uid TEXT');
             break;
     }
 
-    $result = $pdo->query('SELECT id, calendardata FROM adav_calendarobjects');
-    $stmt = $pdo->prepare('UPDATE adav_calendarobjects SET uid = ? WHERE id = ?');
+    $result = $pdo->query('SELECT id, calendardata FROM ' . $prefix . 'calendarobjects');
+    $stmt = $pdo->prepare('UPDATE ' . $prefix . 'calendarobjects SET uid = ? WHERE id = ?');
     $counter = 0;
 
     while($row = $result->fetch(\PDO::FETCH_ASSOC)) {
@@ -143,7 +144,7 @@ echo "Creating 'schedulingobjects'\n";
 switch($driver) {
 
     case 'mysql' :
-        $pdo->exec('CREATE TABLE IF NOT EXISTS adav_schedulingobjects
+        $pdo->exec('CREATE TABLE IF NOT EXISTS ' . $prefix . 'schedulingobjects
 (
     id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     principaluri VARCHAR(255),
@@ -158,7 +159,7 @@ switch($driver) {
 
 
     case 'sqlite' :
-        $pdo->exec('CREATE TABLE IF NOT EXISTS adav_schedulingobjects (
+        $pdo->exec('CREATE TABLE IF NOT EXISTS ' . $prefix . 'schedulingobjects (
     id integer primary key asc,
     principaluri text,
     calendardata blob,
@@ -170,7 +171,7 @@ switch($driver) {
 ');
         break;
         $pdo->exec('
-            CREATE INDEX principaluri_uri ON adav_calendarsubscriptions (principaluri, uri);
+            CREATE INDEX principaluri_uri ON ' . $prefix . 'calendarsubscriptions (principaluri, uri);
         ');
         break;
 }
