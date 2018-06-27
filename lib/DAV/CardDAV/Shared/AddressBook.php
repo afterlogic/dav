@@ -97,12 +97,19 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      */
     public function getChild($name) {
 		
-		$oUser = $this->getUser();
+		$bResult = false;
 
-		$bResult = $this->getChildObj($oUser->EntityId, $name);
+		/* @var $oApiContactsManager \CApiContactsMainManager */
+		$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
 		
+		$oContact = $oContacts->GetContact(pathinfo($name, PATHINFO_FILENAME));
+		if ($oContact)
+		{
+			$bResult = $this->getChildObj($oContact->IdUser, $name);
+		}
+
 		if (!isset($bResult)) {
-			
+
 			throw new \Sabre\DAV\Exception\NotFound('Card not found');
 		}
 		
@@ -121,7 +128,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		$iUserId = $this->getUser();
 		if ($iUserId) {
 			/* @var $oApiContactsManager \CApiContactsMainManager */
-			$oContacts = \Aurora\System\Api::GetModule('Contacts');
+			$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
 			
 			$aContacts = $oContacts->GetContacts('shared', 0, 0);
 
