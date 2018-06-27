@@ -92,5 +92,35 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 		);
 	}
 	
+    /**
+     * Returns a list of cards.
+     *
+     * This method should work identical to getCard, but instead return all the
+     * cards in the list as an array.
+     *
+     * If the backend supports this, it may allow for some speed-ups.
+     *
+     * @param array $uris
+     * @return array
+     */
+    function getMultipleSharedWithAllCards(array $uris) {
+
+        $query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE uri IN (';
+        // Inserting a whole bunch of question marks
+        $query .= implode(',', array_fill(0, count($uris), '?'));
+        $query .= ')';
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute($uris);
+        $result = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $row['etag'] = '"' . $row['etag'] . '"';
+            $row['lastmodified'] = (int)$row['lastmodified'];
+            $result[] = $row;
+        }
+        return $result;
+
+    }	
+	
 }
 

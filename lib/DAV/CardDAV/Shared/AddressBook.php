@@ -8,24 +8,6 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     
 	protected $principalUri;
 	
-	protected $oUser = null;
-
-	protected $oApiContactsManager;
-	
-	public function getContactsManager()
-	{
-		if (!isset($this->oApiContactsManager))
-		{
-			$oContactsModule = \Aurora\System\Api::GetModule('Contacts');
-			if ($oContactsModule instanceof \Aurora\System\Module\AbstractModule) 
-			{
-				
-				$this->oApiContactsManager = $oContactsModule->oApiContactsManager;
-			}
-		}
-		return $this->oApiContactsManager;
-	}
-
 	/**
      * Constructor
      *
@@ -38,17 +20,24 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		$this->principalUri = $principalUri;
 		
     }	
+	
+    function getChildACL() {
 
-	public function getUser() {
-		
-		if (null === $this->oUser) {
-			
-			$this->oUser = \Aurora\System\Api::GetModule('Core')->getUserByPublicId(
-					basename($this->principalUri)
-			);
-		}
-		return $this->oUser;
-	}
+        return [
+            [
+                'privilege' => '{DAV:}all',
+                'principal' => $this->principalUri,
+                'protected' => true,
+            ],
+        ];
+
+    }	
+	
+    function getOwner() {
+
+        return $this->principalUri;
+
+    }	
 
 	/**
      * Returns a card
@@ -125,25 +114,44 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 
         $children = array();
 
-		$iUserId = $this->getUser();
-		if ($iUserId) {
-			/* @var $oApiContactsManager \CApiContactsMainManager */
-			$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
-			
-			$aContacts = $oContacts->GetContacts('shared', 0, 0);
+		/* @var $oApiContactsManager \CApiContactsMainManager */
+		$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
 
-			foreach ($aContacts['List'] as $aContact) {
-				
-				$child = $this->getChildObj($aContact['IdUser'], $aContact['UUID'] . '.vcf');
-				if ($child) {
-					
-					$children[] = $child;
-				}
+		$aContacts = $oContacts->GetContacts('shared', 0, 0);
+
+		foreach ($aContacts['List'] as $aContact) {
+
+			$child = $this->getChildObj($aContact['IdUser'], $aContact['UUID'] . '.vcf');
+			if ($child) {
+
+				$children[] = $child;
 			}
-
 		}
+
         return $children;
     }
+	
+    /**
+     * This method receives a list of paths in it's first argument.
+     * It must return an array with Node objects.
+     *
+     * If any children are not found, you do not have to return them.
+     *
+     * @param string[] $paths
+     * @return array
+     */
+    function getMultipleChildren(array $paths) {
+
+        $objs = $this->carddavBackend->getMultipleSharedWithAllCards($paths);
+		
+        $children = [];
+        foreach ($objs as $obj) {
+            $obj['acl'] = $this->getChildACL();
+            $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
+        }
+        return $children;
+
+	}	
 	
     public function createFile($name,$vcardData = null) {
 
