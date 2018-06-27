@@ -60,18 +60,6 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$this->server->on('afterCreateFile', array($this, 'afterCreateFile'), 90);		
 		$this->server->on('afterWriteContent', array($this, 'afterWriteContent'), 90);		
     }
-	
-	protected function getUser()
-	{
-		$user = null;
-		$authPlugin = $this->server->getPlugin('auth');
-		if ($authPlugin !== null) {
-			
-			 $user = $authPlugin->getCurrentUser();
-		}
-		
-		return $user;
-	}
 
     /**
      * @param string $method
@@ -98,12 +86,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	public function afterCreateFile($uri, \Sabre\DAV\ICollection $parent)
 	{
 		$node = $parent->getChild(Backend\PDO::getEventUri($uri));
-		$this->updateReminder($uri, $node->get(), $this->getUser());
+		$this->updateReminder($uri, $node->get(), \Afterlogic\DAV\Server::getUser());
 	}
 	
 	public function afterWriteContent($uri, \Sabre\DAV\IFile $node)
 	{
-		$this->updateReminder($uri, $node->get(), $this->getUser());
+		$this->updateReminder($uri, $node->get(), \Afterlogic\DAV\Server::getUser());
 	}
 			
 	public function getReminder($eventId, $user = null)
