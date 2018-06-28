@@ -100,7 +100,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
      */
     function getChild($name) {
 		
-		$oChild = null;
+		$oChild = false;
 		try
 		{
 			$oChild = parent::getChild($name);
@@ -127,6 +127,10 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome{
 						}
 					} 
 				}
+			}
+			if (!$oChild)
+			{
+				throw $oEx;
 			}
 		}
 		
