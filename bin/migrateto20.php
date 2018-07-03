@@ -120,7 +120,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
                         ");
                         break;
-                    case $prefix . 'addressbook' :
+                    case 'addressbook' :
                         $pdo->exec("
             CREATE TABLE {$prefix}addressbooks (
                 id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -134,7 +134,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
                         ");
                         break;
                 }
-
+			break;
             case 'sqlite' :
 
                 $pdo->exec("ALTER TABLE $tableName RENAME TO $tableNameOld");
@@ -157,7 +157,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
             );
                         ");
                         break;
-                    case $prefix . 'addressbook' :
+                    case 'addressbook' :
                         $pdo->exec("
             CREATE TABLE {$prefix}addressbooks (
                 id integer primary key asc,
@@ -171,7 +171,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
 
                         break;
                 }
-
+		break;
         }
         echo "Creation of 2.0 $tableName table is complete\n";
 
@@ -392,7 +392,7 @@ CREATE TABLE {$prefix}cards (
     uri VARCHAR(200),
     lastmodified INT(11) UNSIGNED,
     etag VARBINARY(32),
-    size INT(11) UNSIGNED NOT NULL,
+    size INT(11) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
             ");
