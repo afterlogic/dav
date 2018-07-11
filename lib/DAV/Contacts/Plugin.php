@@ -71,13 +71,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$iUserId = 0;
 			$sUserPublicId = $this->oServer->getUser();
-			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
+			
+			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
-				$oUser = $oCoreDecorator->GetUserByUUID($sUserPublicId);
+				$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
 				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 				{
-					$iUserId = $oUser->iId;
+					$iUserId = $oUser->EntityId;
 				}
 			}
 			
@@ -85,9 +86,22 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			{
 				$aPathInfo = pathinfo($sPath);
 				\Aurora\System\Api::setUserId($iUserId);
-				$this->oContactsDecorator->DeleteContacts(
-					array($aPathInfo['filename'])
+
+				$oEavManager = new \Aurora\System\Managers\Eav();
+				$aEntities = $oEavManager->getEntities(
+					'Aurora\\Modules\\Contacts\\Classes\\Contact', 
+					[], 
+					0, 
+					1,
+					['DavContacts::UID' => $aPathInfo['filename']]
 				);
+				if (is_array($aEntities) && count($aEntities) > 0)
+				{
+					$this->oContactsDecorator->DeleteContacts(
+						array($aEntities[0]->UUID)
+					);
+				}
+
 			}
 		}
 		return true;
@@ -156,8 +170,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 					if ($oVCard && $oVCard->UID)
 					{
+						$sUUID = (string) $oVCard->UID;
 						$oContactDb = $this->oContactsDecorator->GetContact(
-							(string)$oVCard->UID
+							$sUUID
 						);
 					}
 				}

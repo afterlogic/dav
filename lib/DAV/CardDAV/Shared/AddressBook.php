@@ -118,7 +118,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 		$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
 
 		$aContacts = $oContacts->GetContacts('shared', 0, 0);
-
+		
 		foreach ($aContacts['List'] as $aContact) {
 
 			$child = $this->getChildObj($aContact['IdUser'], $aContact['UUID'] . '.vcf');
