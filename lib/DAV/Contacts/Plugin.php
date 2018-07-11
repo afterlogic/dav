@@ -49,6 +49,25 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     {
         return 'contacts';
     }
+	
+	protected function getContact($sUID)
+	{
+		$mResult = false;
+		$oEavManager = new \Aurora\System\Managers\Eav();
+		$aEntities = $oEavManager->getEntities(
+			'Aurora\\Modules\\Contacts\\Classes\\Contact', 
+			[], 
+			0, 
+			1,
+			['DavContacts::UID' => $sUID]
+		);
+		if (is_array($aEntities) && count($aEntities) > 0)
+		{
+			$mResult = $aEntities[0];
+		}
+		
+		return $mResult;
+	}
 
     /**
      * @param string $sPath
@@ -87,21 +106,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				$aPathInfo = pathinfo($sPath);
 				\Aurora\System\Api::setUserId($iUserId);
 
-				$oEavManager = new \Aurora\System\Managers\Eav();
-				$aEntities = $oEavManager->getEntities(
-					'Aurora\\Modules\\Contacts\\Classes\\Contact', 
-					[], 
-					0, 
-					1,
-					['DavContacts::UID' => $aPathInfo['filename']]
-				);
-				if (is_array($aEntities) && count($aEntities) > 0)
+				$oContact = $this->getContact($aPathInfo['filename']);
+				if ($oContact)
 				{
 					$this->oContactsDecorator->DeleteContacts(
-						array($aEntities[0]->UUID)
+						array($oContact->UUID)
 					);
 				}
-
 			}
 		}
 		return true;
@@ -158,9 +169,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				$sPath = $oNode->getName();
 				$aPathInfo = pathinfo($sPath);
 				$sUUID = $aPathInfo['filename'];
-				$oContactDb = $this->oContactsDecorator->GetContact(
-					$sUUID
-				);
+				$oContactDb = $this->getContact($sUUID);
+
 				if (!isset($oContactDb)) 
 				{
 					$oVCard = \Sabre\VObject\Reader::read(
@@ -171,21 +181,16 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					if ($oVCard && $oVCard->UID)
 					{
 						$sUUID = (string) $oVCard->UID;
-						$oContactDb = $this->oContactsDecorator->GetContact(
-							$sUUID
-						);
+						$oContactDb = $this->getContact($sUUID);
 					}
 				}
 
-				\Aurora\System\Api::LogObject($iUserId, \Aurora\System\Enums\LogLevel::Full, 'dav-');
 				if (isset($oContactDb)) 
 				{
-					\Aurora\System\Api::Log('UpdateContact', \Aurora\System\Enums\LogLevel::Full, 'dav-');
 					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID);
 				} 
 				else 
 				{
-					\Aurora\System\Api::Log('CreateContact', \Aurora\System\Enums\LogLevel::Full, 'dav-');
 					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
 				}
 			}
