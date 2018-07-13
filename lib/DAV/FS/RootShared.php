@@ -14,8 +14,6 @@ class RootShared extends RootPersonal{
 	
     public function getChild($name) {
 
-		$this->initPath();
-		
         $path = $this->path . '/' . trim($name, '/');
 
         if (!file_exists($path)) {
@@ -50,8 +48,6 @@ class RootShared extends RootPersonal{
 	
 	public function getChildren() {
 
-		$this->initPath();
-		
 		if(!file_exists($this->path)) {
 			
 			mkdir($this->path);

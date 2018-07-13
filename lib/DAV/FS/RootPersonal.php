@@ -6,24 +6,24 @@ namespace Afterlogic\DAV\FS;
 
 class RootPersonal extends Directory{
 	
-	private $rootPath = null;
-
-	public function initPath() {
+	public function __construct($path, $sUserPublicId = null) {
 		
-		$sUserPublicId = $this->getUser();
-		$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
-		$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
+		if (empty($sUserPublicId))
+		{
+			$sUserPublicId = $this->getUser();
+		}
+		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
 		
-		if ($this->rootPath === null && $oUser) {
+		if ($oUser) {
 			
-			$this->rootPath = $this->path . '/' . $oUser->UUID;
-			if (!\file_exists($this->rootPath)) {
+			$path = $path . '/' . $oUser->UUID;
+			if (!\file_exists($path)) {
 				
-				\mkdir($this->rootPath, 0777, true);
+				\mkdir($path, 0777, true);
 			}
 		}
-		$this->path = $this->rootPath;
-	}	
+		parent::__construct($path);
+	}
 
     public function getName() {
 

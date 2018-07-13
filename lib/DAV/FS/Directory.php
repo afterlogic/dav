@@ -59,8 +59,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $this->oTenant;
 	}
 	
-	public function initPath() {}
-
 	public function getPath() 
 	{
         return $this->path;
@@ -68,8 +66,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
     
 	public function createDirectory($name) 
 	{
-		$this->initPath();
-		
 		if ($this->childExists($name)) throw new \Sabre\DAV\Exception\Conflict('Can\'t create a directory');
 
 		parent::createDirectory($name);
@@ -77,8 +73,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
 	{
-		$this->initPath();
-		
 		if (!$this->childExists($name))
 		{
 			if ($rangeType === 0)
@@ -119,8 +113,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
     public function getChild($name) {
 
-		$this->initPath();
-		
         $path = $this->path . '/' . trim($name, '/');
 
         if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
@@ -131,8 +123,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	
 	public function getChildren() 
 	{
-		$this->initPath();
-		
 		$aChildren = parent::getChildren();
 		foreach ($aChildren as $iKey => $oChild)
 		{
@@ -147,15 +137,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	
     public function childExists($name) 
 	{
-		$this->initPath();
-		
 		return parent::childExists($name);
     }
 
     public function delete() {
 
-		$this->initPath();
-		
 		parent::delete();
 		
 		$this->updateQuota();
@@ -164,8 +150,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	public function Search($pattern, $path = null) 
 	{
 		$aResult = array();
-		
-		$this->initPath();
 		
 		$path = ($path === null) ? $this->path : $path;
 		$aItems = \Aurora\System\Utils::SearchFiles($path, $pattern);

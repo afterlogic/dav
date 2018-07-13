@@ -6,10 +6,16 @@ use Afterlogic\DAV\Constants;
 
 class FilesRoot extends \Sabre\DAV\Collection {
 
-	protected $aTree = array();
+	public function getName() {
+		
+		return 'files';
+		
+	}
 	
-	public function __construct() 
-	{
+	public function getChildren() {
+		
+		$aTree = [];
+		
 		$bErrorCreateDir = false;
 
 		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
@@ -44,29 +50,18 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			switch ($sType)
 			{
 				case 'personal':
-					array_push($this->aTree, new RootPersonal($sPath));
+					$aTree[] = new RootPersonal($sPath);
 					break;
 				case 'corporate':
-					array_push($this->aTree, new RootCorporate($sPath));
+					$aTree[] = new RootCorporate($sPath);
 					break;
 				case 'shared':
-					array_push($this->aTree, new RootShared($sPath));
+					$aTree[] = new RootShared($sPath);
 					break;
 			}
-		}
-	}	
-	
-	
-	public function getName() {
+		}		
 		
-		return 'files';
-		
-	}
-	
-	public function getChildren() {
-		
-		return $this->aTree;
-		
+		return $aTree;
 	}
 	
 }

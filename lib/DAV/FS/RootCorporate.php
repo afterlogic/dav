@@ -6,27 +6,20 @@ namespace Afterlogic\DAV\FS;
 
 class RootCorporate extends Directory {
 	
-	private $rootPath = null;
-
-    public function initPath() {
+	public function __construct($path) {
 		
-		if ($this->rootPath === null) {
-			
-			$oTenant = $this->getTenant();
-			if ($oTenant) {
-				
-				$this->rootPath = $this->path . '/' . $oTenant->EntityId;
-				if (!\file_exists($this->rootPath)) {
-					
-					\mkdir($this->rootPath, 0777, true);
-				}
+		$oTenant = $this->getTenant();
+		if ($oTenant) {
+
+			$path = $path . '/' . $oTenant->EntityId;
+			if (!\file_exists($path)) {
+
+				\mkdir($path, 0777, true);
 			}
 		}
-		if ($this->rootPath !== null) {
-			
-			$this->path = $this->rootPath;
-		}
-	}	
+
+		parent::__construct($path);
+	}
 	
     public function getName() {
 

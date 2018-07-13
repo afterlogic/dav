@@ -65,8 +65,6 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 
     public function getChild($name) {
 
-		$this->initPath();
-		
         $path = $this->path . '/' . trim($name, '/');
 
         if (!file_exists($path)) {
@@ -89,8 +87,6 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 	
 	public function getChildren() {
 
-		$this->initPath();
-		
 		$nodes = array();
 		
 		if(!file_exists($this->path)) {
@@ -109,16 +105,12 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 	
     public function childExists($name) {
 
-		$this->initPath();
-		
 		return parent::childExists($name);
 
     }
 
     public function delete() {
 
-		$this->initPath();
-		
 		parent::delete();
 		
 		$this->updateQuota();
@@ -126,8 +118,6 @@ class Directory extends Afterlogic\DAV\FS\Directory {
 	
 	public function Search($pattern, $path = null) {
 
-		$this->initPath();
-		
 		$aResult = array();
 		if ($path === null)	{
 			
