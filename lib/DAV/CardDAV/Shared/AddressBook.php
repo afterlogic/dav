@@ -38,71 +38,19 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         return $this->principalUri;
 
     }	
-
-	/**
-     * Returns a card
-     *
-     * @param int $iUserId
-     * @param string $sContactId
-     * @return \Sabre\CardDAV\\ICard
-     */
-    public function getChildObj($iUserId, $sContactId) {
-		
-		$oResult = null;
-
-		$sUserPublicId = \Aurora\System\Api::getUserPublicIdById($iUserId);
-		
-		if ($sUserPublicId) {
-			$aAddressBook = $this->carddavBackend->getAddressBookForUser(
-					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId, 
-					\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME
-			);
-			if ($aAddressBook) {
-				
-				$obj = $this->carddavBackend->getCard(
-						$aAddressBook['id'], 
-						$sContactId
-				);
-				if (is_array($obj)) {
-					
-					$oResult = new Card(
-							$this->carddavBackend, 
-							$aAddressBook, 
-							$obj, 
-							$this->principalUri
-					);
-				}
-			}
-		}
-		
-		return $oResult;
-	}
 	
-	/**
+   /**
      * Returns a card
      *
      * @param string $name
-     * @return \Sabre\CardDAV\\ICard
+     * @return Card
      */
-    public function getChild($name) {
-		
-		$bResult = false;
+    function getChild($name) {
 
-		/* @var $oApiContactsManager \CApiContactsMainManager */
-		$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
-		
-		$oContact = $oContacts->GetContact(pathinfo($name, PATHINFO_FILENAME));
-		if ($oContact)
-		{
-			$bResult = $this->getChildObj($oContact->IdUser, $name);
-		}
+        $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
+        if (!$obj) throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        return new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
 
-		if (!isset($bResult)) {
-
-			throw new \Sabre\DAV\Exception\NotFound('Card not found');
-		}
-		
-        return $bResult;
     }
 
     /**
@@ -110,26 +58,17 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      *
      * @return array
      */
-    public function getChildren() {
+    function getChildren() {
 
-        $children = array();
-
-		/* @var $oApiContactsManager \CApiContactsMainManager */
-		$oContacts = \Aurora\System\Api::GetModuleDecorator('Contacts');
-
-		$aContacts = $oContacts->GetContacts('shared', 0, 0);
-		
-		foreach ($aContacts['List'] as $aContact) {
-
-			$child = $this->getChildObj($aContact['IdUser'], $aContact['UUID'] . '.vcf');
-			if ($child) {
-
-				$children[] = $child;
-			}
-		}
-
+        $objs = $this->carddavBackend->getCards($this->addressBookInfo['id']);
+        $children = [];
+        foreach ($objs as $obj) {
+            $obj['acl'] = $this->getChildACL();
+            $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
+        }
         return $children;
-    }
+
+    }	
 	
     /**
      * This method receives a list of paths in it's first argument.
@@ -142,7 +81,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      */
     function getMultipleChildren(array $paths) {
 
-        $objs = $this->carddavBackend->getMultipleSharedWithAllCards($paths);
+        $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
 		
         $children = [];
         foreach ($objs as $obj) {
@@ -152,17 +91,4 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         return $children;
 
 	}	
-	
-    public function createFile($name,$vcardData = null) {
-
-        throw new \Sabre\DAV\Exception\Forbidden(
-				'Permission denied to create file (filename ' . $name . ')'
-		);
-    }
-
-    public function delete() {
-
-        throw new \Sabre\DAV\Exception\Forbidden('Could not delete addressbook');
-
-    }	
 }

@@ -192,16 +192,6 @@ class Server extends \Sabre\DAV\Server
 				parent::__construct([]);
 			}
 		}
-		
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		if ($oUser)
-		{
-			date_default_timezone_set($oUser->DefaultTimeZone);
-		}
-		else
-		{
-			date_default_timezone_set('GMT');
-		}
     }
 	
 	/*

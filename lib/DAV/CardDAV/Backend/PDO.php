@@ -8,6 +8,19 @@ use Afterlogic\DAV\Constants;
 
 class PDO extends \Sabre\CardDAV\Backend\PDO {
 	
+	protected function getTenantPrincipal($sUserPublicId)
+	{
+		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+		if ($oUser)
+		{
+			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+		}
+		
+		return 'principals/' . $sTenantPrincipal;
+	}
+
+
 	/**
      * Sets up the object
      */
@@ -29,20 +42,27 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      */
     public function getAddressBookForUser($principalUri, $addressbookUri) {
 
+		$mAddressBook = false;
+		
         $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-		return array(
-			'id'  => $row['id'],
-			'uri' => $row['uri'],
-			'principaluri' => $row['principaluri'],
-			'{DAV:}displayname' => $row['displayname'],
-			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
-//			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
-			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Xml\Property\SupportedAddressData(),
-		);
-
+		
+		if ($row)
+		{
+			$mAddressBook = [
+				'id'  => $row['id'],
+				'uri' => $row['uri'],
+				'principaluri' => $row['principaluri'],
+				'{DAV:}displayname' => $row['displayname'],
+				'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
+	//			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
+				'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Xml\Property\SupportedAddressData()
+			];
+		}
+		
+		return $mAddressBook;
     }	
 	
     /**
@@ -80,16 +100,21 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 	
     public function getSharedAddressBook($sPrincipalUri)
 	{
-		return array(
-			'id'  => '0',
-			'uri' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME,
-			'principaluri' => $sPrincipalUri,
-			'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME,
-			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME,
-//			'{http://calendarserver.org/ns/}getctag' => date('Gi'),
-			'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' =>
-				new \Sabre\CardDAV\Xml\Property\SupportedAddressData()
-		);
+		$sTenantPrincipal = $this->getTenantPrincipal(basename($sPrincipalUri));
+		
+		$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
+		
+		if (!is_array($aAddressBook))
+		{
+			$sProperties = [
+				'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME
+			];
+
+			$this->createAddressBook($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME, $sProperties);
+			$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
+		}
+		
+		return $aAddressBook;
 	}
 	
     /**

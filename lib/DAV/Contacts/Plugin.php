@@ -34,6 +34,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		$this->oServer->on('beforeUnbind', array($this, 'beforeUnbind'),30);
         $this->oServer->on('afterUnbind', array($this, 'afterUnbind'),30);
 		$this->oServer->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
+		$this->oServer->on('beforeCreateFile', array($this, 'beforeCreateFile'), 30);
 		$this->oServer->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
     }
 
@@ -118,11 +119,33 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		return true;
 	}
 	
+	function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parent, &$modified) {
+		
+		if ($parent->childExists(basename($path)))
+		{
+            throw new \Sabre\DAV\Exception\Conflict();
+			
+			return false;
+		}
+
+	}	
+	
 	function afterCreateFile($sPath, \Sabre\DAV\ICollection $oParent)
 	{
 		$aPathInfo = pathinfo($sPath);
 		$sUUID = $aPathInfo['filename'];
 		$oNode = $oParent->getChild($aPathInfo['basename']);
+		
+		$sStorage = 'personal';
+		if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME)
+		{
+			$sStorage = 'personal';
+		}
+		else if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME)
+		{
+			$sStorage = 'shared';
+		}
+		
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
 			$iUserId = 0;
@@ -140,7 +163,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($iUserId > 0) 
 			{
 				\Aurora\System\Api::setUserId($iUserId);
-				$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
+				$oContactDb = $this->getContact($sUUID);
+				if ($oContactDb)
+				{
+					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID, $sStorage);
+				}
+				else
+				{
+					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+				}
 			}
 		}
 	}
@@ -187,7 +218,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 				if (isset($oContactDb)) 
 				{
-					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID);
+					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID, $oContactDb->Storage);
 				} 
 				else 
 				{
