@@ -145,6 +145,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$sStorage = 'shared';
 		}
+		else if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
+		{
+			$sStorage = 'collected';
+		}
 		
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
