@@ -51,7 +51,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         return 'contacts';
     }
 	
-	protected function getContact($sUID)
+	protected function getContact($iUserId, $sStorage, $sUID)
 	{
 		$mResult = false;
 		$oEavManager = new \Aurora\System\Managers\Eav();
@@ -60,7 +60,11 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			[], 
 			0, 
 			1,
-			['DavContacts::UID' => $sUID]
+			[
+				'IdUser' => $iUserId,
+				'Storage' => $sStorage,
+				'DavContacts::UID' => $sUID
+			]
 		);
 		if (is_array($aEntities) && count($aEntities) > 0)
 		{
@@ -68,6 +72,25 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		}
 		
 		return $mResult;
+	}
+	
+	protected function getStorage($sStorage)
+	{
+		$sResult = 'personal';
+		if ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME)
+		{
+			$sResult = 'personal';
+		}
+		else if ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME)
+		{
+			$sResult = 'shared';
+		}
+		else if ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
+		{
+			$sResult = 'collected';
+		}
+		
+		return $sResult;
 	}
 
     /**
@@ -107,7 +130,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				$aPathInfo = pathinfo($sPath);
 				\Aurora\System\Api::setUserId($iUserId);
 
-				$oContact = $this->getContact($aPathInfo['filename']);
+				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
+				$oContact = $this->getContact($iUserId, $sStorage, $aPathInfo['filename']);
 				if ($oContact)
 				{
 					$this->oContactsDecorator->DeleteContacts(
@@ -136,19 +160,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		$sUUID = $aPathInfo['filename'];
 		$oNode = $oParent->getChild($aPathInfo['basename']);
 		
-		$sStorage = 'personal';
-		if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME)
-		{
-			$sStorage = 'personal';
-		}
-		else if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME)
-		{
-			$sStorage = 'shared';
-		}
-		else if ($oParent->getName() === \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME)
-		{
-			$sStorage = 'collected';
-		}
+		$sStorage = $this->getStorage($oParent->getName());
 		
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
@@ -167,10 +179,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($iUserId > 0) 
 			{
 				\Aurora\System\Api::setUserId($iUserId);
-				$oContactDb = $this->getContact($sUUID);
+				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
 				if ($oContactDb)
 				{
-					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID, $sStorage);
+					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
 				}
 				else
 				{
@@ -204,7 +216,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				$sPath = $oNode->getName();
 				$aPathInfo = pathinfo($sPath);
 				$sUUID = $aPathInfo['filename'];
-				$oContactDb = $this->getContact($sUUID);
+				
+				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
+				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
+				\Aurora\System\Api::LogObject($oContactDb, \Aurora\System\Enums\LogLevel::Full, 'eee-');
 
 				if (!isset($oContactDb)) 
 				{
@@ -216,13 +231,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					if ($oVCard && $oVCard->UID)
 					{
 						$sUUID = (string) $oVCard->UID;
-						$oContactDb = $this->getContact($sUUID);
+						$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
 					}
 				}
 
 				if (isset($oContactDb)) 
 				{
-					$this->oDavContactsDecorator->UpdateContact($oNode->get(), $sUUID, $oContactDb->Storage);
+					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $oContactDb->Storage);
 				} 
 				else 
 				{
