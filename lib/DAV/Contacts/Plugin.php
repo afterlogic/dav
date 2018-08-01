@@ -219,7 +219,6 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				
 				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
 				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
-				\Aurora\System\Api::LogObject($oContactDb, \Aurora\System\Enums\LogLevel::Full, 'eee-');
 
 				if (!isset($oContactDb)) 
 				{
