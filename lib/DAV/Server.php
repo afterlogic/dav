@@ -34,7 +34,7 @@ class Server extends \Sabre\DAV\Server
 				)
 		);
 		
-		$carddavPlugin = new \Sabre\CardDAV\Plugin();
+		$carddavPlugin = new CardDAV\Plugin();
 		
 		if ($this->isModuleEnabled('TeamContacts'))
 		{
@@ -65,7 +65,7 @@ class Server extends \Sabre\DAV\Server
 	{
 		/* CalDAV Plugin */
 		$this->addPlugin(
-			new \Sabre\CalDAV\Plugin()
+			new CalDAV\Plugin()
 		);
 
 		/* ICS Export Plugin */
