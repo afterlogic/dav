@@ -12,6 +12,12 @@ class File extends \Sabre\DAV\FSExt\File{
 
     }
 	
+	public function setPath($path)
+	{
+		$this->path = $path;
+	}
+	
+	
 	public function getDirectory() {
 		
 		return new Directory(dirname($this->path));

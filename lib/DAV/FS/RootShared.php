@@ -6,7 +6,14 @@ namespace Afterlogic\DAV\FS;
 
 class RootShared extends RootPersonal{
 	
-    public function getName() {
+    protected $pdo = null;
+	
+	public function __construct($path, $sUserPublicId = null) {
+		parent::__construct($path, $sUserPublicId);
+		$this->pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+	}
+
+		public function getName() {
 
         return 'shared';
 
@@ -14,58 +21,70 @@ class RootShared extends RootPersonal{
 	
     public function getChild($name) {
 
-        $path = $this->path . '/' . trim($name, '/');
-
-        if (!file_exists($path)) {
-
-			throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located');
-			
-		}
-
-		if (!is_dir($path)) {
-			
-			$node = new Shared\Node($this->authPlugin, $path);
-			
-			if (!$node->exists()) {
-				
-				$node->delete();
+		$mResult = false;
+		$aSharedFile = $this->pdo->getSharedFile('principals/' . $this->UserPublicId, $name);
+		
+		if (is_array($aSharedFile))
+		{
+			if (is_dir($aSharedFile['path']))
+			{
+				$mResult = new \Afterlogic\DAV\FS\Shared\Directory(
+					$aSharedFile['owner'],
+					$aSharedFile['principaluri'],
+					$aSharedFile['path'],
+					$aSharedFile['uid'],
+					$aSharedFile['access']
+				);
 			}
-/*
-			$item->updateProperties(array(
-				'owner' => 'test1@localhost',
-				'access' => \ECalendarPermission::Write,
-				'link' => 'folder',
-				'directory' => true
-			));
-*/		
-			return $node->getItem();
-		} else {
-			
-			return false;
+			else
+			{
+				$mResult = new \Afterlogic\DAV\FS\Shared\File(
+					$aSharedFile['owner'],
+					$aSharedFile['principaluri'],
+					$aSharedFile['path'],
+					$aSharedFile['uid'],
+					$aSharedFile['access']
+				);
+			}
+		
 		}
-
+		
+		return $mResult;
+		
     }	
 	
 	public function getChildren() {
 
-		if(!file_exists($this->path)) {
-			
-			mkdir($this->path);
-		}
+		$aResult = [];
 		
-		$nodes = array();
-        foreach(scandir($this->path) as $node)  {
-			
-			if($node!=='.' && $node!=='..' && $node!== '.sabredav' && $node !== AU_API_HELPDESK_PUBLIC_NAME) {
-
-				$child = $this->getChild($node);
-				if ($child) {
-					
-					$nodes[] = $child;
-				}
+		$aSharedFiles = $this->pdo->getSharedFilesForUser('principals/' . $this->UserPublicId);
+		
+		foreach ($aSharedFiles as $aSharedFile)
+		{
+			if (is_dir($aSharedFile['path']))
+			{
+				$aResult[] = new \Afterlogic\DAV\FS\Shared\Directory(
+					$aSharedFile['owner'],
+					$aSharedFile['principaluri'],
+					$aSharedFile['path'],
+					$aSharedFile['uid'],
+					$aSharedFile['access']
+				);
+			}
+			else
+			{
+				$aResult[] = new \Afterlogic\DAV\FS\Shared\File(
+					$aSharedFile['owner'],
+					$aSharedFile['principaluri'],
+					$aSharedFile['path'],
+					$aSharedFile['uid'],
+					$aSharedFile['access']
+				);
 			}
 		}
-        return $nodes;
+		
+		
+		return $aResult;
 
     }	
 	

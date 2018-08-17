@@ -35,7 +35,7 @@ class Backend
 						$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
 						if ($oUser)
 						{
-								$mResult = $oUser->PublicId;
+							$mResult = $oUser->PublicId;
 						}
 				}
 				else 
@@ -51,4 +51,5 @@ class Backend
 		
 		return $mResult;
 	}
+
 }

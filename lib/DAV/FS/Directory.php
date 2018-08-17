@@ -63,6 +63,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
         return $this->path;
     }
+	
+	public function setPath($path)
+	{
+		$this->path = $path;
+	}
     
 	public function createDirectory($name) 
 	{
@@ -113,6 +118,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
     public function getChild($name) {
 
+		if (empty(trim($name))) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+		
         $path = $this->path . '/' . trim($name, '/');
 
         if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');

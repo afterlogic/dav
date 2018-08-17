@@ -20,64 +20,131 @@ class Server extends \Sabre\DAV\Server
 		} 
 		return $oInstance; 
 	}	
+	
+	protected function initAddressbooks($rootNode)
+	{
+		$bIsOwncloud = false;
+		$rootNode->addChild(
+			($bIsOwncloud) ? 
+				new CardDAV\AddressBookRoot(
+						Backend::getBackend('carddav-owncloud')
+				) : 
+				new CardDAV\AddressBookRoot(
+						Backend::Carddav()
+				)
+		);
+		
+		$carddavPlugin = new \Sabre\CardDAV\Plugin();
+		
+		if ($this->isModuleEnabled('TeamContacts'))
+		{
+			/* Global Address Book */                                        
+			$rootNode->addChild(new CardDAV\GAB\AddressBook(
+				'gab', 
+				Constants::GLOBAL_CONTACTS
+			)); 
+			$carddavPlugin->directories = ['gab'];
+		}
+		
+		$this->addPlugin(
+			$carddavPlugin
+		);
+
+		$this->addPlugin(
+			new Contacts\Plugin()
+		);
+
+
+		/* VCF Export Plugin */
+		$this->addPlugin(
+			new \Sabre\CardDAV\VCFExportPlugin()
+		);
+	}		
+	
+	protected function initCalendars($rootNode)
+	{
+		/* CalDAV Plugin */
+		$this->addPlugin(
+			new \Sabre\CalDAV\Plugin()
+		);
+
+		/* ICS Export Plugin */
+		$this->addPlugin(
+			new \Sabre\CalDAV\ICSExportPlugin()
+		);
+
+		$rootNode->addChild(
+			new CalDAV\CalendarRoot(
+				Backend::Caldav()
+			)
+		);
+
+		/* Reminders Plugin */
+		$this->addPlugin(
+			new Reminders\Plugin(Backend::Reminders())
+		);
+
+		$oCorporateCalendar = \Aurora\System\Api::GetModule('CorporateCalendar');
+		if ($oCorporateCalendar && !$oCorporateCalendar->getConfig('Disabled', false))
+		{
+			/* Sharing Plugin */
+			$this->addPlugin(
+				new \Sabre\DAV\Sharing\Plugin()
+			);
+
+			/* Calendar Sharing Plugin */
+			$this->addPlugin(
+				new \Sabre\CalDAV\SharingPlugin()
+			);
+		}
+
+/*
+		$this->addPlugin(
+			new \Sabre\CalDAV\Schedule\Plugin()
+		);
+		$this->addPlugin(
+			new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host')
+		);
+*/
+	}	
+	
+	protected function initFiles($rootNode)
+	{
+		$this->addPlugin(
+			new FS\Plugin()
+		);
+
+		// Automatically guess (some) contenttypes, based on extesion
+		$this->addPlugin(
+			new \Sabre\DAV\Browser\GuessContentType()
+		);				
+
+		$rootNode->addChild(
+			new \Afterlogic\DAV\FS\FilesRoot()
+		);
+	}
+	
+	protected function isModuleEnabled($sModule)
+	{
+		$oModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule($sModule); 
+		return ($oModule && !$oModule->getConfig('Disabled', false));
+	}
 
 	public function __construct()
 	{
 		if (\Aurora\System\Api::GetPDO()) 
 		{
-			$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
-			if ($oDavModule && !$oDavModule->getConfig('Disabled', false))
+			if ($this->isModuleEnabled('Dav'))
 			{
-				$bIsOwncloud = false;
-				/* Directory tree */
-				$aTree = [
-					($bIsOwncloud) ? 
-						new CardDAV\AddressBookRoot(
-								Backend::Principal(), 
-								Backend::getBackend('carddav-owncloud')
-						) : 
-						new CardDAV\AddressBookRoot(
-								Backend::Principal(), 
-								Backend::Carddav()
-						),
-					new CalDAV\CalendarRoot(
-						Backend::Principal(), 
-						Backend::Caldav()),
-				];
-
-				$oTeamContacts = \Aurora\System\Api::GetModule('TeamContacts');
-				if ($oTeamContacts && !$oTeamContacts->getConfig('Disabled', false))
-				{
-					/* Global Address Book */                                        
-					$aTree[] = new CardDAV\GAB\AddressBooks(
-						'gab', 
-						Constants::GLOBAL_CONTACTS
-					); 
-				}
-
-				/* Files folder */
-				$bFilesEnabled = false;
-				$oFiles = \Aurora\System\Api::GetModule('Files');
-				if ($oFiles && !$oFiles->getConfig('Disabled', false))
-				{
-					$aTree[] = new \Afterlogic\DAV\FS\FilesRoot();
-					$bFilesEnabled = true;
-				}
-
-				$oPrincipalColl = new \Sabre\DAVACL\PrincipalCollection(Backend::Principal());
-				$oPrincipalColl->disableListing = false;
-
-				$aTree[] = $oPrincipalColl;
+				$oDavModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 
 				/* Initializing server */
-				parent::__construct($aTree);
+				parent::__construct();
 
 				$this->debugExceptions = true;
 				self::$exposeVersion = false;
 				
 				$this->httpResponse->setHeader("X-Server", Constants::DAV_SERVER_NAME);
-
-				/* Add Plugins */
 
 				/* Authentication Plugin */
 				$this->addPlugin(
@@ -93,78 +160,39 @@ class Server extends \Sabre\DAV\Server
 				$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
 								[Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal] : [];
 				$this->addPlugin($aclPlugin);
-
-				/* Reminders Plugin */
-				$this->addPlugin(
-					new Reminders\Plugin(Backend::Reminders())
-				);
-
-				$this->addPlugin(
-					new \Sabre\CalDAV\Schedule\Plugin()
-				);
-				$this->addPlugin(
-					new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host')
-				);
-
-				/* Contacts Plugin */
-				$this->addPlugin(
-					new Contacts\Plugin()
-				);
 				
-				/* Files Plugin */
-				if ($bFilesEnabled)
-				{
-					$this->addPlugin(
-						new FS\Plugin()
-					);
+				$rootNode = $this->tree->getNodeForPath('');
+				
+				$bIsMobileSyncEnabled = $this->isModuleEnabled('MobileSync');
 
-					// Automatically guess (some) contenttypes, based on extesion
-					$this->addPlugin(
-						new \Sabre\DAV\Browser\GuessContentType()
-					);				
+				if ($this->isModuleEnabled('Contacts') && $bIsMobileSyncEnabled)
+				{
+					$this->initAddressbooks($rootNode);
+				}
+				
+				if ($this->isModuleEnabled('Calendar') && $bIsMobileSyncEnabled)
+				{
+					$this->initCalendars($rootNode);
+				}
+				
+				if ($this->isModuleEnabled('Files'))
+				{
+					$this->initFiles($rootNode);
 				}
 
-				$oMobileSync = \Aurora\System\Api::GetModule('MobileSync');
-				if ($oMobileSync && !$oMobileSync->getConfig('Disabled', false))
-				{
-					/* CalDAV Plugin */
-					$this->addPlugin(
-						new \Sabre\CalDAV\Plugin()
-					);
-
-					/* CardDAV Plugin */
-					$this->addPlugin(
-						new \Sabre\CardDAV\Plugin()
-					);
-
-					/* ICS Export Plugin */
-					$this->addPlugin(
-						new \Sabre\CalDAV\ICSExportPlugin()
-					);
-
-					/* VCF Export Plugin */
-					$this->addPlugin(
-						new \Sabre\CardDAV\VCFExportPlugin()
-					);
-				}
-
-				/* Calendar Sharing Plugin */
-				$this->addPlugin(
-					new \Sabre\DAV\Sharing\Plugin()
+				$oPrincipalColl = new \Sabre\DAVACL\PrincipalCollection(
+					Backend::Principal()
 				);
-
-				/* Calendar Sharing Plugin */
-				$this->addPlugin(
-					new \Sabre\CalDAV\SharingPlugin()
-				);
-
+				$oPrincipalColl->disableListing = false;
+				$rootNode->addChild($oPrincipalColl);				
+				
 				/* DAV Sync Plugin */
 				$this->addPlugin(
 					new \Sabre\DAV\Sync\Plugin()
 				);			
 
 				/* HTML Frontend Plugin */
-				if ($oDavModule->getConfig('UseBrowserPlugin', false) !== false) 
+				if ($oDavModule->getConfig('UseBrowserPlugin', false)) 
 				{
 					$this->addPlugin(
 						new \Sabre\DAV\Browser\Plugin()
@@ -183,16 +211,15 @@ class Server extends \Sabre\DAV\Server
 
 				/* Logs Plugin */
 //                $this->addPlugin(new Logs\Plugin());
-
-				$this->on('propFind', array($this, 'onPropFind'), 90);
-			}
-			else
-			{
-				/* Initializing server */
-				parent::__construct([]);
 			}
 		}
     }
+	
+	public function exec() {
+		if ($this->isModuleEnabled('Dav')) {
+			parent::exec();
+		}
+	}
 	
 	/*
 	 * 
@@ -213,25 +240,35 @@ class Server extends \Sabre\DAV\Server
 			}
 		}
 		return self::$sUserPublicId;
-	}	
+	}
 
 	/**
-	 * @param \Sabre\DAV\PropFind $propfind
-	 * @param \Sabre\DAV\INode $node
-	 * @return void
+	 * @param string $sUserPublicId
+	 *
+	 * @return array
 	 */
-	public function onPropFind($propfind, \Sabre\DAV\INode $node)
+	public static function getPrincipalInfo($sUserPublicId)
 	{
-		$iUserId = self::getUser();
-                
-		if (isset($iUserId)/* && $node->getName() === 'root'*/)
+		$mPrincipal = [];
+
+		if (isset($sUserPublicId))
 		{
-			$carddavPlugin = $this->getPlugin('carddav');
-			$oTeamContacts = \Aurora\System\Api::GetModule('TeamContacts');
-			if (isset($carddavPlugin) && $oTeamContacts && !$oTeamContacts->getConfig('Disabled', false))
+			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(
+				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId
+			);
+			
+			if (isset($aPrincipalProperties['uri'])) 
 			{
-				$carddavPlugin->directories = ['gab'];
+				$mPrincipal['uri'] = $aPrincipalProperties['uri'];
+				$mPrincipal['id'] = $aPrincipalProperties['id'];
+			} 
+			else 
+			{
+				$mPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId;
+				$mPrincipal['id'] = -1;
 			}
 		}
+		
+		return $mPrincipal;
 	}
 }

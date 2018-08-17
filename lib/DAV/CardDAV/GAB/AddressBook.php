@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\CardDAV\GAB;
 
-class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirectory, \Sabre\DAV\IProperties, \Sabre\DAVACL\IACL {
+class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirectory, \Sabre\DAV\IProperties, \Sabre\DAVACL\IACL {
 
     /**
 	 * @var string
@@ -49,65 +49,131 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
 	{
         return $this->name;
     }
+	
+	public function getChild($name)
+	{
+		$aPathInfo = pathinfo($name);
+		
+		$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity($aPathInfo['filename'], 'Aurora\Modules\Contacts\Classes\Contact');
+		if ($oContact)
+		{
+			$aName = [$oContact->LastName, $oContact->FirstName];
+			$vCard = new \Sabre\VObject\Component\VCard(
+				[
+					'VERSION' => '3.0',
+					'UID' => $oContact->UUID,
+					'FN' => $oContact->FullName,
+					'N' => (empty($oContact->LastName) && empty($oContact->FirstName)) ? explode(' ', $oContact->FullName) : $aName
+				]
+			);
+
+			$vCard->add(
+				'EMAIL',
+				$oContact->ViewEmail,
+				[
+					'type' => ['work'],
+					'pref' => 1,
+				]
+			);				
+
+			return new Card(
+				[
+					'uri' => $oContact->UUID . '.vcf',
+					'carddata' => $vCard->serialize(),
+					'lastmodified' => strtotime($oContact->DateModified)
+				]
+			);
+		}
+		else
+		{
+	        throw new \Sabre\DAV\Exception\NotFound();
+		}
+		
+	}
 
     /**
      * @return array
      */
     public function getChildren()
 	{
-        $aCards = array();
-		$aContacts = array();
+        $aCards = [];
 
-		$oContactsDecorator = /* @var $oContactsDecorator \Aurora\Modules\Contacts\Module */ \Aurora\Modules\Contacts\Module::Decorator();
+		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
+			'Aurora\Modules\Contacts\Classes\Contact',
+			[
+				'LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'
+			], 
+			0, 
+			0, 
+			['Storage' => 'team']
+		);
 		
-		if ($oContactsDecorator)
+		if (is_array($aContacts) && count($aContacts) > 0)
 		{
-			$aContacts = $oContactsDecorator->GetContacts(
-				'team', 
-				0, 
-				9999, 
-				\Aurora\Modules\Contacts\Enums\SortField::Email, 
-				\Aurora\System\Enums\SortOrder::ASC
-			);
-		}
+			foreach($aContacts as $oContact) {
 
-		foreach($aContacts['List'] as $aContact) {
+				$aName = [$oContact->LastName, $oContact->FirstName];
+				$vCard = new \Sabre\VObject\Component\VCard(
+					[
+						'VERSION' => '3.0',
+						'UID' => $oContact->UUID,
+						'FN' => $oContact->FullName,
+						'N' => (empty($oContact->LastName) && empty($oContact->FirstName)) ? explode(' ', $oContact->FullName) : $aName
+					]
+				);
 
-			$aName = [$aContact['LastName'], $aContact['FirstName']];
-			$vCard = new \Sabre\VObject\Component\VCard(
-				array(
-					'VERSION' => '3.0',
-					'UID' => $aContact['UUID'],
-					'FN' => $aContact['FullName'],
-					'N' => (empty($aContact['LastName']) && empty($aContact['FirstName'])) ? explode(' ', $aContact['FullName']) : $aName
-				)
-			);
+				$vCard->add(
+					'EMAIL',
+					$oContact->ViewEmail,
+					[
+						'type' => ['work'],
+						'pref' => 1,
+					]
+				);				
 
-			$vCard->add(
-				'EMAIL',
-				$aContact['ViewEmail'],
-				array(
-					'type' => array(
-						'work'
-					),
-					'pref' => 1,
-				)
-			);				
-
-			$aCards[] = new Card(
-				array(
-					'uri' => $aContact['UUID'] . '.vcf',
-					'carddata' => $vCard->serialize(),
-					'lastmodified' => strtotime($aContact['DateModified'])
-				)
-			);
+				$aCards[] = new Card(
+					[
+						'uri' => $oContact->UUID . '.vcf',
+						'carddata' => $vCard->serialize(),
+						'lastmodified' => strtotime($oContact->DateModified)
+					]
+				);
+			}
 		}
         return $aCards;
     }
 
+    public function getCTag() {
+
+		$iResult = \Aurora\System\Managers\Eav::getInstance()->getEntitiesCount(
+			'Aurora\Modules\Contacts\Classes\Contact',
+			['Storage' => 'team']
+		);
+		
+		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
+			'Aurora\Modules\Contacts\Classes\Contact',
+			[
+				'DateModified'
+			], 
+			0, 
+			0, 
+			['Storage' => 'team'],
+			['DateModified'], 
+			\Aurora\System\Enums\SortOrder::DESC				
+		);
+		if (is_array($aContacts) && isset($aContacts[0]))
+		{
+			$iResult .= strtotime($aContacts[0]->DateModified);
+		}
+		
+		return (int) $iResult;
+	}
+	
     public function getProperties($properties) {
 
-        $response = array();
+		$this->addressBookInfo['{http://calendarserver.org/ns/}getctag'] = $this->getCTag();
+        $response = [];
+		
         foreach($properties as $propertyName) {
 
             if (isset($this->addressBookInfo[$propertyName])) {
@@ -117,7 +183,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
             }
 
         }
-
+		
         return $response;
 
     }
@@ -132,7 +198,9 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
     }
 	
 	public function propPatch(\Sabre\DAV\PropPatch $propPatch) {
+		
 		return false;
+		
 	}
 	
     /**
@@ -177,13 +245,13 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
     public function getACL() {
 
 		$iUserId = $this->getUser();
-        return array(
-            array(
+        return [
+            [
                 'privilege' => '{DAV:}read',
                 'principal' => ($iUserId) ? 'principals/' . $iUserId : null,
                 'protected' => true,
-            ),
-        );
+            ],
+        ];
 
     }
 
@@ -197,7 +265,7 @@ class AddressBooks extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDire
      */
     public function setACL(array $acl) {
 
-        throw new DAV\Exception\MethodNotAllowed('Changing ACL is not yet supported');
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Changing ACL is not yet supported');
 
     }
 

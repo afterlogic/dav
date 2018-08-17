@@ -11,7 +11,7 @@ namespace Afterlogic\DAV\CalDAV;
  */
 class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
 
-    /**
+ /**
      * Returns a list of ACE's for this node.
      *
      * Each ACE has the following properties:
@@ -157,13 +157,4 @@ class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
         return $acl;
 
     }
-	
-	public function getChildren() {
-		$aChildren = parent::getChildren();
-		
-//		print_r($aChildren);
-		
-		return $aChildren;
-	}
-
 }

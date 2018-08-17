@@ -11,10 +11,4 @@ namespace Afterlogic\DAV\CalDAV;
  */
 class PublicCalendar extends \Sabre\CalDAV\SharedCalendar {
 
-	public function getChildren() {
-		$aChildren = parent::getChildren();
-		
-		return $aChildren;
-	}
-
 }

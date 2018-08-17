@@ -44,7 +44,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
 		$mAddressBook = false;
 		
-        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
+        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, synctoken FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -52,13 +52,13 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 		if ($row)
 		{
 			$mAddressBook = [
-				'id'  => $row['id'],
-				'uri' => $row['uri'],
-				'principaluri' => $row['principaluri'],
-				'{DAV:}displayname' => $row['displayname'],
-				'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
-	//			'{http://calendarserver.org/ns/}getctag' => $row['ctag'],
-				'{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}supported-address-data' => new \Sabre\CardDAV\Xml\Property\SupportedAddressData()
+                'id'                                                          => $row['id'],
+                'uri'                                                         => $row['uri'],
+                'principaluri'                                                => $row['principaluri'],
+                '{DAV:}displayname'                                           => $row['displayname'],
+                '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
+                '{http://calendarserver.org/ns/}getctag'                      => $row['synctoken'],
+                '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
 			];
 		}
 		
@@ -79,24 +79,6 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
 
     }
-	
-	/**
-     * Returns all cards for a specific addressbook id.
-     *
-     * @param mixed $addressbookId
-     * @return array
-     */
-    public function getCardsByOffset($addressbookId, $iOffset, $iRequestLimit) {
-
-        $stmt = $this->pdo->prepare(
-				'SELECT id, carddata, uri, lastmodified 
-					FROM ' . $this->cardsTableName . ' 
-						WHERE addressbookid = ? LIMIT ?, ?');
-        $stmt->execute(array($addressbookId, $iOffset, $iRequestLimit));
-
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-    }	
 	
     public function getSharedAddressBook($sPrincipalUri)
 	{

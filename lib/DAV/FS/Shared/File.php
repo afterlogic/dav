@@ -4,94 +4,41 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class File extends Afterlogic\DAV\FS\Shared\File{
+class File extends \Sabre\DAV\FSExt\File{
 	
-	protected $linkPath;
+	protected $owner;
+	protected $principalUri;
+	protected $uid;
+	protected $access;
 
-	protected $sharedItem;
-    
-	protected $isLink;
 
-	public function __construct($path, $sharedItem, $isLink = false) {
 
-		parent::__construct($sharedItem->getPath());
+    public function __construct($owner, $principalUri, $path, $uid, $access) {
 
-		$this->sharedItem = $sharedItem;
-		$this->linkPath = $path;
-		$this->isLink = $isLink;
+		parent::__construct($path);
+        $this->owner = $owner;
+        $this->principalUri = $principalUri;
+        $this->uid = $uid;
+        $this->access = $access;
 		
     }
 	
-	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal) {
-
-		return $this->path;
-
-    }
-
-	public function getPath() {
-
-		return $this->linkPath;
-
-    }
-	
-	public function getName() {
-
-        if ($this->isLink) {
-			return $this->sharedItem->getName();
-		} else {
-	        list(, $name)  = \Sabre\HTTP\URLUtil::splitPath($this->linkPath);
-		    return $name;
-		}
-
-    }
-
 	public function getOwner() {
 
-        return $this->sharedItem->getOwner();
+        return $this->owner;
 
     }
 
 	public function getAccess() {
 
-        return $this->sharedItem->getAccess();
+        return $this->access;
 
     }
 
-	public function getLink() {
+    public function getName() {
 
-        return $this->sharedItem->getLink();
-
-    }
-
-	public function isDirectory() {
-
-        return $this->sharedItem->isDirectory();
-
-    }
-
-	public function getDirectory() {
-		
-		return new Directory(dirname($this->path));
-		
-	}
-	
-    /**
-     * Returns the data
-     *
-     * @return resource
-     */
-    public function get() {
-
-		return fopen($this->path,'r');
+        return $this->uid;
 
     }	
-	
-	public function delete() {
-
-        parent::delete();
-		
-		$this->getDirectory()->updateQuota();
-
-    }
 }
 
