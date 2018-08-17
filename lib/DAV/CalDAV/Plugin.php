@@ -2,7 +2,7 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-class Plugin extends Sabre\CalDAV\Plugin {
+class Plugin extends \Sabre\CalDAV\Plugin {
 
     /**
      * Returns the path to a principal's calendar home.

@@ -2,7 +2,7 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
-class Plugin extends Sabre\CardDAV\Plugin {
+class Plugin extends \Sabre\CardDAV\Plugin {
 
 	/**
      * Returns the addressbook home for a given principal
