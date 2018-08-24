@@ -15,7 +15,7 @@ class RootShared extends RootPersonal{
 
 		public function getName() {
 
-        return 'shared';
+        return \Aurora\System\Enums\FileStorageType::Shared;
 
     }	
 	

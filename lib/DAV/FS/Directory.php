@@ -141,11 +141,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		return $aChildren;
     }
-	
-    public function childExists($name) 
-	{
-		return parent::childExists($name);
-    }
 
     public function delete() {
 

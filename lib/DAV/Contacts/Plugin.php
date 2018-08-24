@@ -213,11 +213,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			{
 				\Aurora\System\Api::setUserId($iUserId);
 
-				$sPath = $oNode->getName();
+				$sName = $oNode->getName();
+				$aNamePathInfo = pathinfo($sName);
+				$sUUID = $aNamePathInfo['filename'];
+
 				$aPathInfo = pathinfo($sPath);
-				$sUUID = $aPathInfo['filename'];
 				
 				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
+				
 				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
 
 				if (!isset($oContactDb)) 
@@ -234,13 +237,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					}
 				}
 
-				if (isset($oContactDb)) 
+				if ($oContactDb instanceof \Aurora\Modules\Contacts\Classes\Contact) 
 				{
 					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $oContactDb->Storage);
 				} 
 				else 
 				{
-					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID);
+					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
 				}
 			}
 		}

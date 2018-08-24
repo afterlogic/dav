@@ -23,7 +23,7 @@ class RootCorporate extends Directory {
 	
     public function getName() {
 
-        return 'corporate';
+        return \Aurora\System\Enums\FileStorageType::Corporate;
 
     }	
 

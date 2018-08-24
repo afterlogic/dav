@@ -20,15 +20,32 @@ class FilesRoot extends \Sabre\DAV\Collection {
 
 		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
-		$aPaths = [['root', $sRootDir]];
-		$aPaths[] = ['personal', $sRootDir . Constants::FILESTORAGE_PATH_PERSONAL];
+		$aPaths = [
+			['root', $sRootDir]
+		];
+
+		$oPersonalFiles = \Aurora\System\Api::GetModule('PersonalFiles'); 
+		if ($oPersonalFiles && !$oPersonalFiles->getConfig('Disabled', false)) {
+			$aPaths[] = [
+				\Aurora\System\Enums\FileStorageType::Personal, 
+				$sRootDir . Constants::FILESTORAGE_PATH_PERSONAL
+			];
+		}
+
 		$oCorpFiles = \Aurora\System\Api::GetModule('CorporateFiles'); 
 		if ($oCorpFiles && !$oCorpFiles->getConfig('Disabled', false)) {
-			$aPaths[] = ['corporate', $sRootDir . Constants::FILESTORAGE_PATH_CORPORATE];
+			$aPaths[] = [
+				\Aurora\System\Enums\FileStorageType::Corporate, 
+				$sRootDir . Constants::FILESTORAGE_PATH_CORPORATE
+			];
 		}
+
 		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
 		if ($oDavModule && $oDavModule->getConfig('FilesSharing', true)) {
-			$aPaths[] = ['shared', $sRootDir . Constants::FILESTORAGE_PATH_SHARED];
+			$aPaths[] = [
+				\Aurora\System\Enums\FileStorageType::Shared, 
+				$sRootDir . Constants::FILESTORAGE_PATH_SHARED
+			];
 		}
 		 
 		foreach ($aPaths as $aPath)
@@ -49,13 +66,13 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			}
 			switch ($sType)
 			{
-				case 'personal':
+				case \Aurora\System\Enums\FileStorageType::Personal:
 					$aTree[] = new RootPersonal($sPath);
 					break;
-				case 'corporate':
+				case \Aurora\System\Enums\FileStorageType::Corporate:
 					$aTree[] = new RootCorporate($sPath);
 					break;
-				case 'shared':
+				case \Aurora\System\Enums\FileStorageType::Shared:
 					$aTree[] = new RootShared($sPath);
 					break;
 			}

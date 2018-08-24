@@ -27,7 +27,7 @@ class RootPersonal extends Directory{
 
     public function getName() {
 
-        return 'personal';
+        return \Aurora\System\Enums\FileStorageType::Personal;
 
     }	
 	

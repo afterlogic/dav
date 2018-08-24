@@ -4,14 +4,12 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class File extends \Sabre\DAV\FSExt\File{
+class File extends \Afterlogic\DAV\FS\File{
 	
 	protected $owner;
 	protected $principalUri;
 	protected $uid;
 	protected $access;
-
-
 
     public function __construct($owner, $principalUri, $path, $uid, $access) {
 
