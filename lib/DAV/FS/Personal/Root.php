@@ -2,9 +2,9 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS;
+namespace Afterlogic\DAV\FS\Personal;
 
-class RootPersonal extends Directory{
+class Root extends  Directory{
 	
 	public function __construct($path, $sUserPublicId = null) {
 		

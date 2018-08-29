@@ -26,10 +26,11 @@ class File extends \Sabre\DAV\FSExt\File{
 	
 	public function delete() {
 
-        parent::delete();
+        $result = parent::delete();
 
 		$this->deleteResourceData();
-		$this->getDirectory()->updateQuota();
+		
+		return $result;
 
     }
 	

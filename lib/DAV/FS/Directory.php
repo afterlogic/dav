@@ -78,15 +78,16 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
 	{
+		$result = false;
 		if (!$this->childExists($name))
 		{
 			if ($rangeType === 0)
 			{
-				parent::createFile($name, $data);
+				$result = parent::createFile($name, $data);
 			}
 			else
 			{
-				parent::createFile($name);
+				$result = parent::createFile($name);
 			}
 		}
 		$oFile = $this->getChild($name);
@@ -114,6 +115,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 			$oFile->delete();
 			throw new \Sabre\DAV\Exception\InsufficientStorage();
 		}
+		
+		return $result;
     }
 
     public function getChild($name) {
@@ -144,9 +147,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
     public function delete() {
 
-		parent::delete();
+		$result = parent::delete();
 		
 		$this->updateQuota();
+		
+		return $result;
     }	
 	
 	public function Search($pattern, $path = null) 

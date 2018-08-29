@@ -53,27 +53,25 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			$sType = $aPath[0];
 			$sPath = $aPath[1];
 			
-			if (!file_exists($sPath)) {
+			if (!file_exists($sPath) && $sType !== \Aurora\System\Enums\FileStorageType::Shared) {
 				if (!@mkdir($sPath)) {
-					$bErrorCreateDir = true;
+					throw new \Sabre\DAV\Exception(
+							'Can\'t create directory in ' . $sRootDir, 
+							500
+					);
 				}
 			}
-			if ($bErrorCreateDir) {
-				throw new \Sabre\DAV\Exception(
-						'Can\'t create directory in ' . $sRootDir, 
-						500
-				);
-			}
+
 			switch ($sType)
 			{
 				case \Aurora\System\Enums\FileStorageType::Personal:
-					$aTree[] = new RootPersonal($sPath);
+					$aTree[] = new Personal\Root($sPath);
 					break;
 				case \Aurora\System\Enums\FileStorageType::Corporate:
-					$aTree[] = new RootCorporate($sPath);
+					$aTree[] = new Corporate\Root($sPath);
 					break;
 				case \Aurora\System\Enums\FileStorageType::Shared:
-					$aTree[] = new RootShared($sPath);
+					$aTree[] = new Shared\Root($sPath);
 					break;
 			}
 		}		
