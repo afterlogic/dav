@@ -31,6 +31,17 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 
 	}
 	
+	public function createCalendar($principalUri, $calendarUri, array $properties) {
+		
+		$sOrderProp = '{http://apple.com/ns/ical/}calendar-order';
+		if (!isset($properties[$sOrderProp]))
+		{
+			$properties[$sOrderProp] = 1;
+		}
+		
+		parent::createCalendar($principalUri, $calendarUri, $properties);
+	}
+
 	protected function getTenantPrincipal($sUserPublicId)
 	{
 		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;

@@ -16,8 +16,6 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		
 		$aTree = [];
 		
-		$bErrorCreateDir = false;
-
 		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
 		$aPaths = [

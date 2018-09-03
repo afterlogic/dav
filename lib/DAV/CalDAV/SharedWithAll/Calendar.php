@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\CalDAV;
+namespace Afterlogic\DAV\CalDAV\SharedWithAll;
 
 /**
  * This object represents a CalDAV calendar that is shared by a different user.
@@ -9,7 +9,7 @@ namespace Afterlogic\DAV\CalDAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
+class Calendar extends \Sabre\CalDAV\SharedCalendar {
 
  /**
      * Returns a list of ACE's for this node.
@@ -157,4 +157,10 @@ class SharedWithAllCalendar extends \Sabre\CalDAV\SharedCalendar {
         return $acl;
 
     }
+	
+    public function delete() {
+
+        throw new \Sabre\DAV\Exception\Forbidden();
+
+    }	
 }

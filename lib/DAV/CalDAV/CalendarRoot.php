@@ -73,6 +73,7 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 				if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
 				{
 					$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
+					
 					if ($parentCalendar)
 					{
 						$calendar['id'] = $parentCalendar['id'];
@@ -85,7 +86,21 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 						}
 					}
 
-					$aChildren[] = new SharedWithAllCalendar($this->caldavBackend, $calendar);
+					$oSharedWithAllCalendar = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
+					
+					$bOwner = false;
+					foreach ($oSharedWithAllCalendar->getInvites() as $oSharee)
+					{
+						if ($oSharee->principal === $this->principalInfo['uri'] && $oSharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER)
+						{
+							$bOwner = true;
+							break;
+						}
+					}
+					if (!$bOwner)
+					{
+						$aChildren[] = $oSharedWithAllCalendar;
+					}
 				} 
 			}
 		}
@@ -139,7 +154,7 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 								$calendar['principaluri'] = 'principals/' . $oUser->PublicId;
 							}
 
-							$oChild = new SharedWithAllCalendar($this->caldavBackend, $calendar);
+							$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
 							break;
 						}
 					} 

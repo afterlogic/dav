@@ -25,4 +25,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 		
 		return $result;
 	}
+	
+    function getQuotaInfo() {
+		
+	}	
 }

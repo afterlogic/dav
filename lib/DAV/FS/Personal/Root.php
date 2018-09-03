@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS\Personal;
 
-class Root extends  Directory{
+class Root extends Directory {
 	
 	public function __construct($path, $sUserPublicId = null) {
 		
@@ -45,15 +45,12 @@ class Root extends  Directory{
 	
     public function getQuotaInfo() {
 
-        $iSize = 0;
-		$aResult = \Aurora\System\Utils::GetDirectorySize($this->path);
-		if ($aResult && $aResult['size']) {
-			
-			$iSize = (int) $aResult['size'];
-		}
+		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
+		$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->EntityId, $this->getName());
+		
 		return array(
-            $iSize,
-            disk_free_space($this->path)
+            $aQuota['Used'],
+            $aQuota['Limit']
         );
 
     }	

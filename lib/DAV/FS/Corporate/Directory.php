@@ -18,4 +18,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 		return is_dir($path) ? new self($path) : new File($path);
     }		
 	
+    function getQuotaInfo() {
+		
+	}	
+	
 }

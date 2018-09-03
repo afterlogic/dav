@@ -14,6 +14,13 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 		{
 			$sUserPublicId = $this->getUser();
 		}
+		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+		
+		if ($oUser) {
+			
+			$path = $path . '/' . $oUser->UUID;
+		}
+		
 		$this->path = $path;
 		
 		$this->pdo = new \Afterlogic\DAV\FS\Backend\PDO();
@@ -90,9 +97,16 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 			}
 		}
 		
-		
 		return $aResult;
 
     }	
+	
+    function getLastModified() {
+		return time();
+	}	
+	
+    public function getQuotaInfo() {
+
+    }		
 	
 }

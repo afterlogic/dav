@@ -144,9 +144,20 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		return $aChildren;
     }
+	
+	public function deleteResourceData()
+	{
+		$path = $this->path . '/.sabredav';
+		if (file_exists($path))
+		{
+			unlink($path);
+		}
+	}
 
     public function delete() {
 
+	    $this->deleteResourceData();
+		
 		$result = parent::delete();
 		
 		$this->updateQuota();
