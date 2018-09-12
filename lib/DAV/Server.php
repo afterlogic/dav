@@ -193,9 +193,11 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\DAV\Browser\GuessContentType()
 			);				
 
-			$rootNode->addChild(
-				new \Afterlogic\DAV\FS\FilesRoot()
-			);
+			$oFilesRoot = new \Afterlogic\DAV\FS\FilesRoot();
+			if (count($oFilesRoot->getChildren()) > 0)
+			{
+				$rootNode->addChild($oFilesRoot);
+			}
 		}
 	}
 	

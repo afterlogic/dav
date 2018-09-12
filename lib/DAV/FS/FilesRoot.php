@@ -18,9 +18,7 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		
 		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
-		$aPaths = [
-			['root', $sRootDir]
-		];
+		$aPaths = [];
 
 		$oPersonalFiles = \Aurora\System\Api::GetModule('PersonalFiles'); 
 		if ($oPersonalFiles && !$oPersonalFiles->getConfig('Disabled', false)) {
@@ -45,34 +43,39 @@ class FilesRoot extends \Sabre\DAV\Collection {
 				$sRootDir . Constants::FILESTORAGE_PATH_SHARED
 			];
 		}
+		
+		$aPaths = [];
 		 
-		foreach ($aPaths as $aPath)
+		if (count($aPaths) > 0)
 		{
-			$sType = $aPath[0];
-			$sPath = $aPath[1];
-			
-			if (!file_exists($sPath) && $sType !== \Aurora\System\Enums\FileStorageType::Shared) {
-				if (!@mkdir($sPath)) {
-					throw new \Sabre\DAV\Exception(
-							'Can\'t create directory in ' . $sRootDir, 
-							500
-					);
-				}
-			}
-
-			switch ($sType)
+			foreach ($aPaths as $aPath)
 			{
-				case \Aurora\System\Enums\FileStorageType::Personal:
-					$aTree[] = new Personal\Root($sPath);
-					break;
-				case \Aurora\System\Enums\FileStorageType::Corporate:
-					$aTree[] = new Corporate\Root($sPath);
-					break;
-				case \Aurora\System\Enums\FileStorageType::Shared:
-					$aTree[] = new Shared\Root($sPath);
-					break;
-			}
-		}		
+				$sType = $aPath[0];
+				$sPath = $aPath[1];
+
+				if (!file_exists($sPath) && $sType !== \Aurora\System\Enums\FileStorageType::Shared) {
+					if (!@mkdir($sPath)) {
+						throw new \Sabre\DAV\Exception(
+								'Can\'t create directory in ' . $sRootDir, 
+								500
+						);
+					}
+				}
+
+				switch ($sType)
+				{
+					case \Aurora\System\Enums\FileStorageType::Personal:
+						$aTree[] = new Personal\Root($sPath);
+						break;
+					case \Aurora\System\Enums\FileStorageType::Corporate:
+						$aTree[] = new Corporate\Root($sPath);
+						break;
+					case \Aurora\System\Enums\FileStorageType::Shared:
+						$aTree[] = new Shared\Root($sPath);
+						break;
+				}
+			}		
+		}
 		
 		return $aTree;
 	}
