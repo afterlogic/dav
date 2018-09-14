@@ -9,7 +9,10 @@ class File extends \Afterlogic\DAV\FS\File{
 	public function delete() {
 		$result = parent::delete();
 		
-		\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
+		$oModuleManager = \Aurora\System\Api::GetModuleManager();
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
+			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
+		}
 		
 		return $result;
 	}
@@ -17,7 +20,10 @@ class File extends \Afterlogic\DAV\FS\File{
 	public function put($data) {
 		$result = parent::put($data);
 
-		\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
+		$oModuleManager = \Aurora\System\Api::GetModuleManager();
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
+			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
+		}
 
 		return $result;
 	}
