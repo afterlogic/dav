@@ -41,13 +41,18 @@ class Root extends Directory {
 	
     public function getQuotaInfo() {
 
+		$mResult = [0, 0];
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
-		$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->EntityId, $this->getName());
+		if ($oUser)
+		{
+			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->EntityId, $this->getName());
+			$mResult = [
+				$aQuota['Used'],
+				$aQuota['Limit']
+			];
+		}
 		
-		return array(
-            $aQuota['Used'],
-            $aQuota['Limit']
-        );
+		return $mResult;
 		
 	}
 	
