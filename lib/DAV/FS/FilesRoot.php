@@ -44,8 +44,6 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			];
 		}
 		
-		$aPaths = [];
-		 
 		if (count($aPaths) > 0)
 		{
 			foreach ($aPaths as $aPath)
