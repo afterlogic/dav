@@ -8,7 +8,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 
 	public function getChild($name) {
 
-		if (empty(trim($name))) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to empty item');
 		
 		$path = $this->path . '/' . trim($name, '/');
 
