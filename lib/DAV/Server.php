@@ -45,6 +45,7 @@ class Server extends \Sabre\DAV\Server
 		/* DAV ACL Plugin */
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
 		$aclPlugin->hideNodesFromListings = true;
+		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
 
 		$oDavModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
