@@ -9,7 +9,14 @@ namespace Afterlogic\DAV\CalDAV\SharedWithAll;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Calendar extends \Sabre\CalDAV\SharedCalendar {
+class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
+
+    use \Afterlogic\DAV\CalDAV\CalendarTrait;
+
+    public function getProperties($requestedProperties)
+    {
+        return $this->_getProperties($this->calendarInfo, $requestedProperties);
+    }
 
  /**
      * Returns a list of ACE's for this node.
