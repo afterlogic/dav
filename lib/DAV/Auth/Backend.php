@@ -19,33 +19,36 @@ class Backend
         return self::$instance;		
 	}
 	
+	/**
+	 * 
+	 */
 	public static function Login($sUserName, $sPassword)
 	{
 		$mResult = false;
 		
-		$oCoreModule = \Aurora\System\Api::GetModuleDecorator('Core');
-		if ($oCoreModule)
+		$oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
+		if ($oDavModule)
 		{
 			try
 			{
-				$mResult = $oCoreModule->Login($sUserName, $sPassword, true);
+				$mResult = $oDavModule->Login($sUserName, $sPassword);
 
 				if (isset($mResult['AuthToken']))
 				{
-						$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
-						if ($oUser)
-						{
-							$mResult = $oUser->PublicId;
-						}
+					$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
+					if ($oUser)
+					{
+						$mResult = $oUser->PublicId;
+					}
 				}
 				else 
 				{
-						$mResult = false;
+					$mResult = false;
 				}
 			} 
 			catch (\Exception $ex) 
 			{
-					$mResult = false;
+				$mResult = false;
 			}
 		}
 		

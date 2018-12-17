@@ -42,6 +42,20 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		parent::createCalendar($principalUri, $calendarUri, $properties);
 	}
 
+	public function deletePrincipalCalendars($principalUri)
+	{
+		$bResult = false;
+		$stmt = $this->pdo->prepare('SELECT calendarid, id FROM ' . $this->calendarInstancesTableName . ' where principaluri = ?');
+        $stmt->execute([$principalUri]);
+		$aCalendars = $stmt->fetchAll(\PDO::FETCH_NUM);
+		foreach ($aCalendars as $aCalendar)
+		{
+			$bResult = $this->deleteCalendar($aCalendar);
+		}
+
+		return $bResult;
+	}
+
 	protected function getTenantPrincipal($sUserPublicId)
 	{
 		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
