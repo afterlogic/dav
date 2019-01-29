@@ -11,6 +11,11 @@ class FilesRoot extends \Sabre\DAV\Collection {
 		return 'files';
 		
 	}
+
+    public function getDisplayName()
+	{
+		return $this->getName();
+	}
 	
 	public function getChildren() {
 		
@@ -36,8 +41,9 @@ class FilesRoot extends \Sabre\DAV\Collection {
 			];
 		}
 
-		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
-		if ($oDavModule && $oDavModule->getConfig('FilesSharing', true)) {
+		$oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles'); 
+
+		if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false)) {
 			$aPaths[] = [
 				\Aurora\System\Enums\FileStorageType::Shared, 
 				$sRootDir . Constants::FILESTORAGE_PATH_SHARED

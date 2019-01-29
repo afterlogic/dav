@@ -44,6 +44,9 @@ class Backend
 				case 'reminders':
 					$oBackend = new \Afterlogic\DAV\Reminders\Backend\PDO();
 					break;
+				case 'fs':
+					$oBackend = new \Afterlogic\DAV\FS\Backend\PDO();
+					break;
 			}
 			if (isset($oBackend)) {
 				

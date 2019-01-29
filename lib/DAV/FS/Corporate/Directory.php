@@ -6,6 +6,12 @@ namespace Afterlogic\DAV\FS\Corporate;
 
 class Directory extends \Afterlogic\DAV\FS\Directory {
     
+    public function getStorage() {
+
+        return \Aurora\System\Enums\FileStorageType::Corporate;
+
+    }	
+    
     public function getChild($name) {
 
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');

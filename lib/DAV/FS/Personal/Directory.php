@@ -6,6 +6,12 @@ namespace Afterlogic\DAV\FS\Personal;
 
 class Directory extends \Afterlogic\DAV\FS\Directory {
 
+    public function getStorage() {
+
+        return \Aurora\System\Enums\FileStorageType::Personal;
+
+	}
+	
 	public function getChild($name) {
 
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to empty item');

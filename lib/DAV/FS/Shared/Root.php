@@ -22,7 +22,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 		}
 		
 		$this->path = $path;
-		
+
 		$this->pdo = new \Afterlogic\DAV\FS\Backend\PDO();
 	}
 
@@ -31,23 +31,30 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 
         return \Aurora\System\Enums\FileStorageType::Shared;
 
-    }	
+	}	
 	
-    public function getChild($name) {
-
+	protected function populateItem($aSharedFile)
+	{
 		$mResult = false;
-		$aSharedFile = $this->pdo->getSharedFile('principals/' . $this->UserPublicId, $name);
-		
+
 		if (is_array($aSharedFile))
 		{
-			if (is_dir($aSharedFile['path']))
+			$sRootPath = \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
+				basename($aSharedFile['owner']), 
+				$aSharedFile['storage']
+			);
+			
+			$path = $sRootPath . '/' . trim($aSharedFile['path'], '/');
+					
+			if ($aSharedFile['isdir'])
 			{
 				$mResult = new Directory(
 					$aSharedFile['owner'],
 					$aSharedFile['principaluri'],
-					$aSharedFile['path'],
-					$aSharedFile['uid'],
-					$aSharedFile['access']
+					$aSharedFile['storage'],
+					$path,
+					$aSharedFile['access'],
+					$aSharedFile['uid']
 				);
 			}
 			else
@@ -55,15 +62,21 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 				$mResult = new File(
 					$aSharedFile['owner'],
 					$aSharedFile['principaluri'],
-					$aSharedFile['path'],
-					$aSharedFile['uid'],
-					$aSharedFile['access']
+					$aSharedFile['storage'],
+					$path,
+					$aSharedFile['access'],
+					$aSharedFile['uid']
 				);
 			}
-		
 		}
-		
-		return $mResult;
+		return $mResult;		
+	}
+	
+    public function getChild($name) {
+
+		$aSharedFile = $this->pdo->getSharedFileByUid('principals/' . $this->UserPublicId, $name);
+
+		return $this->populateItem($aSharedFile);
 		
     }	
 	
@@ -72,28 +85,13 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root{
 		$aResult = [];
 		
 		$aSharedFiles = $this->pdo->getSharedFilesForUser('principals/' . $this->UserPublicId);
-		
+
 		foreach ($aSharedFiles as $aSharedFile)
 		{
-			if (is_dir($aSharedFile['path']))
+			$oSharedItem = $this->populateItem($aSharedFile);
+			if ($oSharedItem)	
 			{
-				$aResult[] = new Directory(
-					$aSharedFile['owner'],
-					$aSharedFile['principaluri'],
-					$aSharedFile['path'],
-					$aSharedFile['uid'],
-					$aSharedFile['access']
-				);
-			}
-			else
-			{
-				$aResult[] = new File(
-					$aSharedFile['owner'],
-					$aSharedFile['principaluri'],
-					$aSharedFile['path'],
-					$aSharedFile['uid'],
-					$aSharedFile['access']
-				);
+				$aResult[] = $oSharedItem;
 			}
 		}
 		

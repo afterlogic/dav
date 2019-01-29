@@ -72,9 +72,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function initialize(\Sabre\DAV\Server $server) {
 
-		$server->on('beforeMethod', array($this, 'beforeMethod'));   
-		$server->on('beforeBind', array($this, 'beforeBind'), 30);
-		$server->on('afterUnbind', array($this, 'afterUnbind'), 30);
+		$server->on('beforeMethod', [$this, 'beforeMethod']);   
+		$server->on('beforeBind', [$this, 'beforeBind'], 30);
+		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
+        $server->on('propFind',         [$this, 'propFind']);
 		
 	}
 
@@ -87,9 +88,47 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function getFeatures() {
 
-        return array('files');
+        return ['files'];
 
-    }
+	}
+	
+	public static function getPathByStorage($sUserPublicId, $sStorage)
+	{
+		$sPath = null;
+
+		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+
+		switch ($sStorage)
+		{
+			case 'personal':
+				$sPath = self::getPersonalPath();
+				if ($oUser) {
+			
+					$sPath = $sPath . '/' . $oUser->UUID;
+					if (!\file_exists($sPath)) {
+						
+						\mkdir($sPath, 0777, true);
+					}
+				}
+				break;
+			case 'corporate':
+				$sPath = self::getCorporatePath();
+				if ($oUser) {
+			
+					$sPath = $sPath . '/' . $oUser->IdTenant;
+					if (!\file_exists($sPath)) {
+						
+						\mkdir($sPath, 0777, true);
+					}
+				}
+				break;
+			case 'shared':
+				$sPath = self::getSharedPath();
+				break;
+		}
+		
+		return $sPath;
+	}
 	
 	public static function getPersonalPath() {
 		
@@ -247,6 +286,24 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		}
 	    $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = false;
 		return true;
+	}
+
+    /**
+     * This method is called when properties are retrieved.
+     *
+     * Here we add all the default properties.
+     *
+     * @param \Sabre\DAV\PropFind $propFind
+     * @param \Sabre\DAV\INode $node
+     * @return void
+     */
+    function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node) {
+
+        $propFind->handle('{DAV:}displayname', function() use ($node) {
+
+			return $node->getDisplayName();
+
+        });
 	}
 	
 }

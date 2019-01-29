@@ -5,22 +5,62 @@
 namespace Afterlogic\DAV\FS;
 
 class File extends \Sabre\DAV\FSExt\File{
-	
+    
+	/**
+	 * @var string $UserPublicId
+	 */
+    protected $UserPublicId = null;		
+    
+    public function getOwner()
+	{
+		if ($this->UserPublicId === null) {
+			
+			$this->UserPublicId = \Afterlogic\DAV\Server::getUser();
+		}
+		return $this->UserPublicId;
+	}
+
+    public function getDisplayName()
+	{
+		return $this->getName();
+	}
+    
+    public function getId()
+	{
+		return $this->getName();
+    }
+    
 	public function getPath() {
 
         return $this->path;
 
     }
-	
+
 	public function setPath($path)
 	{
 		$this->path = $path;
-	}
-	
+    }
+    
+	public function getRelativePath() 
+	{
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
+        list($dir,) = \Sabre\Uri\split($this->getPath());
+
+		return \str_replace(
+            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
+                $owner, 
+                $this->getStorage()
+            ), 
+            '', 
+            $dir
+        );
+
+    }
 	
 	public function getDirectory() {
-		
-		return new Directory(dirname($this->path));
+        
+        list($dir, ) = \Sabre\Uri\split($this->path);
+		return new Directory($dir);
 		
 	}
 	

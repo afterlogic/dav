@@ -29,6 +29,21 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
 		return $this->UserPublicId;
 	}
+
+	public function getOwner()
+	{
+		return $this->getUser();
+	}
+	
+	public function getId()
+	{
+		return $this->getName();
+	}
+
+    public function getDisplayName()
+	{
+		return $this->getName();
+	}
 	
 	public function getUserObject()
 	{
@@ -43,7 +58,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
 		return $this->UserObject;
 	}
-	
+
 	public function getTenant()
 	{
 		if ($this->oTenant == null) 
@@ -69,6 +84,22 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		$this->path = $path;
 	}
     
+	public function getRelativePath() 
+	{
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
+        list($dir,) = \Sabre\Uri\split($this->getPath());
+
+		return \str_replace(
+            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
+                $owner, 
+                $this->getStorage()
+            ), 
+            '', 
+            $dir
+        );
+
+    }
+
 	public function createDirectory($name) 
 	{
 		if ($this->childExists($name)) throw new \Sabre\DAV\Exception\Conflict('Can\'t create a directory');
