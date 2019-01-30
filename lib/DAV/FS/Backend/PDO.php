@@ -187,7 +187,7 @@ WHERE {$this->sharedFilesTableName}.owner = ? AND {$this->sharedFilesTableName}.
 SQL
         );
 
-		$stmt->execute([$owner, $storage, $path, $id]);
+		$stmt->execute([$owner, $storage, $path]);
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))		
 		{
 			$aResult[] = [
