@@ -301,7 +301,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
         $propFind->handle('{DAV:}displayname', function() use ($node) {
 
-			return $node->getDisplayName();
+			if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
+			{
+				return $node->getDisplayName();
+			}
 
         });
 	}

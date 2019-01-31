@@ -75,6 +75,10 @@ class Server extends \Sabre\DAV\Server
 			)
 		);			
 
+		$this->addPlugin(
+			new \Sabre\DAV\Sharing\Plugin()
+		);			
+
 		/* Locks Plugin */
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
@@ -194,10 +198,10 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\DAV\Browser\GuessContentType()
 			);				
 
-			$oFilesRoot = new \Afterlogic\DAV\FS\FilesRoot();
-			if (count($oFilesRoot->getChildren()) > 0)
+			$oRoot = new \Afterlogic\DAV\FS\Root();
+			if (count($oRoot->getChildren()) > 0)
 			{
-				$rootNode->addChild($oFilesRoot);
+				$rootNode->addChild($oRoot);
 			}
 		}
 	}
@@ -250,6 +254,7 @@ class Server extends \Sabre\DAV\Server
 		if (null === self::$sUserPublicId) 
 		{
 			$oUser = \Aurora\System\Api::getAuthenticatedUser();
+
 			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
 				self::$sUserPublicId = $oUser->PublicId;

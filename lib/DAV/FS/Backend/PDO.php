@@ -249,5 +249,16 @@ SQL
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE owner = ? AND storage = ? AND path = ?');
         $stmt->execute([$owner, $storage, $path]);		
 	}
+
+	/**
+	 * 
+	 * @param type $owner
+	 * @param type $path
+	 */
+	public function deleteShare($principaluri, $uid)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ?');
+        $stmt->execute([$principaluri, $uid]);		
+	}	
 	
 }

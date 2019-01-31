@@ -4,29 +4,106 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class Directory extends \Afterlogic\DAV\FS\Directory {
+class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
     
     protected $owner;
     protected $principalUri;
     protected $storage;
 	protected $access;
 	protected $uid;
+	protected $inRoot;
 
-    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null) {
+    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) {
 
         $this->owner = $owner;
         $this->principalUri = $principalUri;
         $this->storage = $storage;
         $this->access = $access;
         $this->uid = $uid;
+        $this->inRoot = $inRoot;
 
         parent::__construct($path);
 
     }
 
+    /**
+     * Returns a group principal.
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+	public function getGroup()
+	{
+		return null;
+	}
+	
+    /**
+     * Returns a list of ACE's for this node.
+     *
+     * Each ACE has the following properties:
+     *   * 'privilege', a string such as {DAV:}read or {DAV:}write. These are
+     *     currently the only supported privileges
+     *   * 'principal', a url to the principal who owns the node
+     *   * 'protected' (optional), indicating that this ACE is not allowed to
+     *      be updated.
+     *
+     * @return array
+     */
+	public function getACL()
+	{
+		$acl = [
+            [
+                'privilege' => '{DAV:}read',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ],
+        ];
+
+        if ($this->access == 1) {
+            $acl[] = [
+                'privilege' => '{DAV:}write',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ];
+        }
+
+        return $acl;        
+
+	}
+	
+    /**
+     * Updates the ACL.
+     *
+     * This method will receive a list of new ACE's as an array argument.
+     *
+     * @param array $acl
+     */
+	public function setACL(array $acl)
+	{
+
+	}
+
+    /**
+     * Returns the list of supported privileges for this node.
+     *
+     * The returned data structure is a list of nested privileges.
+     * See Sabre\DAVACL\Plugin::getDefaultSupportedPrivilegeSet for a simple
+     * standard structure.
+     *
+     * If null is returned from this method, the default privilege set is used,
+     * which is fine for most common usecases.
+     *
+     * @return array|null
+     */
+	public function getSupportedPrivilegeSet()
+	{
+		return null;
+	}
+
     public function getOwner() {
 
-        return $this->owner;
+        return $this->principalUri;
 
     }
 
@@ -94,109 +171,19 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
             $mResult = new File($this->owner, $this->principalUri, $this->storage, $path, $this->access);
 		}
 		
-		return $mResult;
-    }	
-	
-	
-    function getChildren() {
-
-        $nodes = [];
-
-        $iterator = new \FilesystemIterator(
-            $this->path,
-            \FilesystemIterator::CURRENT_AS_SELF
-          | \FilesystemIterator::SKIP_DOTS
-        );
-
-        foreach ($iterator as $entry) {
-	
-            if ($entry->getFilename() !== '.sabredav')
-            {
-                $nodes[] = $this->getChild($entry->getFilename());
-            }
-        }
-        return $nodes;
-
+        return $mResult;
     }
 
-    /**
-     * Creates a new file in the directory
-     *
-     * Data will either be supplied as a stream resource, or in certain cases
-     * as a string. Keep in mind that you may have to support either.
-     *
-     * After successful creation of the file, you may choose to return the ETag
-     * of the new file here.
-     *
-     * The returned ETag must be surrounded by double-quotes (The quotes should
-     * be part of the actual string).
-     *
-     * If you cannot accurately determine the ETag, you should not return it.
-     * If you don't store the file exactly as-is (you're transforming it
-     * somehow) you should also not return an ETag.
-     *
-     * This means that if a subsequent GET to this new file does not exactly
-     * return the same contents of what was submitted here, you are strongly
-     * recommended to omit the ETag.
-     *
-     * @param string $name Name of the file
-     * @param resource|string $data Initial payload
-     * @return null|string
-     */
-    function createFile($name, $data = null) {
-
-        if ($this->access === 1)
+    function delete()
+    {
+        if ($this->inRoot)
         {
-            parent::createFile($name, $data);
+            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $pdo->deleteShare($this->principalUri, $this->getId());
         }
         else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-
-    }
-
-    /**
-     * Creates a new subdirectory
-     *
-     * @param string $name
-     * @return void
-     */
-    function createDirectory($name) {
-
-        if ($this->access === 1)
-        {
-            parent::createDirectory($name);
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-    }       
-
-    public function delete() {
-
-        if ($this->access === 1)
         {
             parent::delete();
         }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-    }	
-
-    public function setName($name) {
-
-        if ($this->access === 1)
-        {
-            parent::setName($name);
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-
-    }	    
-
+    }    
 }

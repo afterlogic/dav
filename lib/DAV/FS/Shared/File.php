@@ -11,22 +11,99 @@ class File extends \Afterlogic\DAV\FS\File{
     protected $storage;
 	protected $access;
 	protected $uid;
+	protected $inRoot;
 
-    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null) {
+    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) {
 
         $this->owner = $owner;
         $this->principalUri = $principalUri;
         $this->storage = $storage;
         $this->access = $access;
         $this->uid = $uid;
+        $this->inRoot = $inRoot;
         
         parent::__construct($path);
         
     }
-	
-	public function getOwner() {
 
-        return $this->owner;
+    /**
+     * Returns a group principal.
+     *
+     * This must be a url to a principal, or null if there's no owner
+     *
+     * @return string|null
+     */
+	public function getGroup()
+	{
+		return null;
+	}
+	
+    /**
+     * Returns a list of ACE's for this node.
+     *
+     * Each ACE has the following properties:
+     *   * 'privilege', a string such as {DAV:}read or {DAV:}write. These are
+     *     currently the only supported privileges
+     *   * 'principal', a url to the principal who owns the node
+     *   * 'protected' (optional), indicating that this ACE is not allowed to
+     *      be updated.
+     *
+     * @return array
+     */
+	public function getACL()
+	{
+		$acl = [
+            [
+                'privilege' => '{DAV:}read',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ],
+        ];
+
+        if ($this->access == 1) {
+            $acl[] = [
+                'privilege' => '{DAV:}write',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ];
+        }
+
+        return $acl;        
+
+	}
+	
+    /**
+     * Updates the ACL.
+     *
+     * This method will receive a list of new ACE's as an array argument.
+     *
+     * @param array $acl
+     */
+	public function setACL(array $acl)
+	{
+
+	}
+
+    /**
+     * Returns the list of supported privileges for this node.
+     *
+     * The returned data structure is a list of nested privileges.
+     * See Sabre\DAVACL\Plugin::getDefaultSupportedPrivilegeSet for a simple
+     * standard structure.
+     *
+     * If null is returned from this method, the default privilege set is used,
+     * which is fine for most common usecases.
+     *
+     * @return array|null
+     */
+	public function getSupportedPrivilegeSet()
+	{
+		return null;
+	}
+
+    public function getOwner() {
+
+        return $this->principalUri;
 
     }
     
@@ -44,7 +121,7 @@ class File extends \Afterlogic\DAV\FS\File{
 
     public function getName() {
 
-        list(, $name) = \Sabre\Uri\split($this->path);
+        list(, $name) = \Sabre\Uri\split($this->getPath());
         return isset($this->uid) ? $this->uid : $name;
 
     }	
@@ -56,17 +133,15 @@ class File extends \Afterlogic\DAV\FS\File{
 
     public function getDisplayName()
 	{
-        list(, $name) = \Sabre\Uri\split($this->path);
+        list(, $name) = \Sabre\Uri\split($this->getPath());
         return $name;
 	}
 
 	public function getRelativePath() 
 	{
 
-        list(, $owner) = \Sabre\Uri\split($this->owner);
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
         list($dir,) = \Sabre\Uri\split($this->getPath());
-
-//        var_dump($owner); exit;
 
 		return \str_replace(
             \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
@@ -80,95 +155,53 @@ class File extends \Afterlogic\DAV\FS\File{
     }    
 
     /**
-     * Updates the data
+     * Returns the last modification time, as a unix timestamp
      *
-     * Data is a readable stream resource.
-     *
-     * @param resource|string $data
-     * @return string
+     * @return int
      */
-    function put($data) {
+    function getLastModified() {
 
-        if ($this->access === 1)
+        if (\file_exists($this->path))
         {
-            return parent::put($data);
+            \filemtime($this->path);
         }
         else
         {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-    }
-
-    /**
-     * Updates the file based on a range specification.
-     *
-     * The first argument is the data, which is either a readable stream
-     * resource or a string.
-     *
-     * The second argument is the type of update we're doing.
-     * This is either:
-     * * 1. append
-     * * 2. update based on a start byte
-     * * 3. update based on an end byte
-     *;
-     * The third argument is the start or end byte.
-     *
-     * After a successful put operation, you may choose to return an ETag. The
-     * ETAG must always be surrounded by double-quotes. These quotes must
-     * appear in the actual string you're returning.
-     *
-     * Clients may use the ETag from a PUT request to later on make sure that
-     * when they update the file, the contents haven't changed in the mean
-     * time.
-     *
-     * @param resource|string $data
-     * @param int $rangeType
-     * @param int $offset
-     * @return string|null
-     */
-    function patch($data, $rangeType, $offset = null) {
-
-        if ($this->access === 1)
-        {
-            return parent::patch($data, $rangeType, $offset);
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
-
-    }
-
-    /**
-     * Delete the current file
-     *
-     * @return bool
-     */
-    function delete() {
-
-        if ($this->access === 1)
-        {
-            return parent::delete();
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Forbidden();
+            return null;
         }
 
     }    
 
-    public function setName($name) {
+    /**
+     * Returns the last modification time, as a unix timestamp
+     *
+     * @return int
+     */
+    function getSize() {
 
-        if ($this->access === 1)
+        if (\file_exists($this->path))
         {
-            parent::setName($name);
+            \filesize($this->path);
         }
         else
         {
-            throw new \Sabre\DAV\Exception\Forbidden();
+            return null;
         }
 
-    }	
+    }        
+
+    function delete()
+    {
+        if ($this->inRoot)
+        {
+            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $pdo->deleteShare($this->principalUri, $this->getId());
+        }
+        else
+        {
+            parent::delete();
+        }
+    }
 
 }
 
