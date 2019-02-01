@@ -12,39 +12,20 @@ class Root extends \Sabre\DAV\Collection {
 		
 	}
 
-	protected function checkPath($sPath)
+	public function getChildren() 
 	{
-		if (!file_exists($sPath)) {
-			if (!@mkdir($sPath)) {
-				throw new \Sabre\DAV\Exception(
-						'Can\'t create \'' . $sPath . '\' directory', 
-						500
-				);
-			}
-		}
-
-	}
-
-	public function getChildren() {
-		
 		$aChildren = [];
-
-		$sRootDir = \Aurora\System\Api::DataPath() . Constants::FILESTORAGE_PATH_ROOT;
 
 		$oPersonalFiles = \Aurora\System\Api::GetModule('PersonalFiles'); 
 		if ($oPersonalFiles && !$oPersonalFiles->getConfig('Disabled', false)) 
 		{
-			$sPath = $sRootDir . Constants::FILESTORAGE_PATH_PERSONAL;
-			$this->checkPath($sPath);
-			$aChildren[] = new Personal\Root($sPath);
+			$aChildren[] = new Personal\Root();
 		}
 
 		$oCorpFiles = \Aurora\System\Api::GetModule('CorporateFiles'); 
 		if ($oCorpFiles && !$oCorpFiles->getConfig('Disabled', false)) 
 		{
-			$sPath = $sRootDir . Constants::FILESTORAGE_PATH_CORPORATE;
-			$this->checkPath($sPath);
-			$aChildren[] = new Corporate\Root($sPath);
+			$aChildren[] = new Corporate\Root();
 		}
 
 		$oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles'); 
@@ -54,7 +35,6 @@ class Root extends \Sabre\DAV\Collection {
 		}
 			
 		return $aChildren;
-
 	}
 	
 }

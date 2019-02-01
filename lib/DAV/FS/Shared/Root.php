@@ -103,7 +103,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 
 		if (is_array($aSharedFile))
 		{
-			$sRootPath = \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
+			$sRootPath = \Afterlogic\DAV\FS\Plugin::getStoragePath(
 				basename($aSharedFile['owner']), 
 				$aSharedFile['storage']
 			);

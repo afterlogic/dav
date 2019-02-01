@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class File extends \Afterlogic\DAV\FS\File{
+class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL {
 	
 	protected $owner;
     protected $principalUri;
@@ -144,10 +144,7 @@ class File extends \Afterlogic\DAV\FS\File{
         list($dir,) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
-            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
-                $owner, 
-                $this->getStorage()
-            ), 
+            $this->getRootPath(), 
             '', 
             $dir
         );
@@ -163,7 +160,7 @@ class File extends \Afterlogic\DAV\FS\File{
 
         if (\file_exists($this->path))
         {
-            \filemtime($this->path);
+            return \filemtime($this->path);
         }
         else
         {
@@ -181,7 +178,7 @@ class File extends \Afterlogic\DAV\FS\File{
 
         if (\file_exists($this->path))
         {
-            \filesize($this->path);
+            return \filesize($this->path);
         }
         else
         {

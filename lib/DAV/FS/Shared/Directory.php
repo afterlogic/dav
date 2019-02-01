@@ -23,7 +23,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
         $this->inRoot = $inRoot;
 
         parent::__construct($path);
-
     }
 
     /**
@@ -143,10 +142,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
         list($dir,) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
-            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
-                $owner, 
-                $this->getStorage()
-            ), 
+                $this->getRootPath(), 
             '', 
             $dir
         );
@@ -160,9 +156,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
         
         $path = $this->path . '/' . $path;
 
-        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
+        if (!\file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
 
-		if (is_dir($path))
+		if (\is_dir($path))
 		{
             $mResult = new self($this->owner, $this->principalUri, $this->storage, $path, $this->access);
 		}

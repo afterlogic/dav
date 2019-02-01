@@ -6,8 +6,14 @@ namespace Afterlogic\DAV\FS\Corporate;
 
 class Root extends Directory {
 	
-	public function __construct($path) {
+	public function __construct() {
 		
+		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE;
+		if (!file_exists($path))
+		{
+			\mkdir($path);
+		}
+
 		$oTenant = $this->getTenant();
 		if ($oTenant) {
 

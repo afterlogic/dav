@@ -12,8 +12,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 
 	}
 	
-	public function getChild($name) {
-
+	public function getChild($name) 
+	{
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to empty item');
 		
 		$path = $this->path . '/' . trim($name, '/');
@@ -24,11 +24,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 		return is_dir($path) ? new self($path) : new File($path);
 	}	 
 	
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = array()) {
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = array()) 
+	{
 		$result = parent::createFile($name, $data, $rangeType, $offset, $extendedProps);
 
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
+		{
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
 

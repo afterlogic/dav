@@ -40,6 +40,22 @@ class File extends \Sabre\DAV\FSExt\File{
 	{
 		$this->path = $path;
     }
+
+	public function getRootPath()
+	{
+		$sPath = null;
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
+		$oServer->setUser($owner);
+		$oNode = $oServer->tree->getNodeForPath('files/'. $this->getStorage());
+		if ($oNode)
+		{
+			$sPath = $oNode->getPath();
+		}
+		
+		return $sPath;
+	}    
     
 	public function getRelativePath() 
 	{
@@ -47,10 +63,8 @@ class File extends \Sabre\DAV\FSExt\File{
         list($dir,) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
-            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
-                $owner, 
-                $this->getStorage()
-            ), 
+            $this->getRootPath()
+            , 
             '', 
             $dir
         );

@@ -12,24 +12,28 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     protected $iUserId = null;
 	
 	/**
-	 * @var \CApiTenantsManager
+	 * @var \Aurora\Modules\Min\Module
 	 */
-	protected $oApiTenants = null;	
+	protected $oMinModule = null;
 	
 	/**
-	 * @var \CApiMinManager
-	 */
-	protected $oApiMin = null;
-	
-	/**
-	 * @var \CApiUsersManager
-	 */
-	protected $oApiUsers= null;	
-	
+	 * @var string
+	 */	
 	protected $sOldPath = null;
+
+	/**
+	 * @var string
+	 */	
 	protected $sOldID = null;
 
+	/**
+	 * @var string
+	 */	
 	protected $sNewPath = null;
+
+	/**
+	 * @var string
+	 */	
 	protected $sNewID = null;
 
 	/*
@@ -40,25 +44,24 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      *
      * @return string
      */
-    function getPluginName() {
-
+	function getPluginName()
+	{
         return 'files';
-
     }	
 	
-	public function getMinMan()
+	public function getMinModule()
 	{
-		if ($this->oApiMin == null) {
-			
-			$this->oApiMin = \Aurora\System\Api::Manager('min');
+		if ($this->oMinModule == null) 
+		{
+			$this->oMinModule = \Aurora\System\Api::GetModule('Min');
 		}
-		return $this->oApiMin;
+		return $this->oMinModule;
 	}
 	
     public function getUser()
 	{	
-		if (!isset($this->iUserId)) {
-			
+		if (!isset($this->iUserId)) 
+		{
 			$this->iUserId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->iUserId; 
@@ -70,13 +73,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      * @param \Sabre\DAV\Server $server
      * @return void
      */
-    public function initialize(\Sabre\DAV\Server $server) {
-
+	public function initialize(\Sabre\DAV\Server $server) 
+	{
 		$server->on('beforeMethod', [$this, 'beforeMethod']);   
 		$server->on('beforeBind', [$this, 'beforeBind'], 30);
 		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
-        $server->on('propFind',         [$this, 'propFind']);
-		
+        $server->on('propFind', [$this, 'propFind'], 30);
+        $server->on('propPatch', [$this, 'propPatch'], 30);
 	}
 
     /**
@@ -86,130 +89,36 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      *
      * @return array
      */
-    public function getFeatures() {
-
+	public function getFeatures() 
+	{
         return ['files'];
-
 	}
 	
-	public static function getPathByStorage($sUserPublicId, $sStorage)
+	public static function getStoragePath($sUserPublicId, $sStorage)
 	{
 		$sPath = null;
 
-		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
-
-		switch ($sStorage)
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oServer->setUser($sUserPublicId);
+		$oNode = $oServer->tree->getNodeForPath('files/'. $sStorage);
+		if ($oNode)
 		{
-			case 'personal':
-				$sPath = self::getPersonalPath();
-				if ($oUser) {
-			
-					$sPath = $sPath . '/' . $oUser->UUID;
-					if (!\file_exists($sPath)) {
-						
-						\mkdir($sPath, 0777, true);
-					}
-				}
-				break;
-			case 'corporate':
-				$sPath = self::getCorporatePath();
-				if ($oUser) {
-			
-					$sPath = $sPath . '/' . $oUser->IdTenant;
-					if (!\file_exists($sPath)) {
-						
-						\mkdir($sPath, 0777, true);
-					}
-				}
-				break;
-			case 'shared':
-				$sPath = self::getSharedPath();
-				break;
+			$sPath = $oNode->getPath();
 		}
-		
+
 		return $sPath;
 	}
-	
-	public static function getPersonalPath() {
-		
-		return ltrim(
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL, '/'
-		);		
-	}	
-	
-	public static function getCorporatePath() {
-		
-		return ltrim(
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE, '/'
-		);		
-	}	
 
-	public static function getSharedPath() {
-		
-		return ltrim(
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED, '/'
-		);		
-	}	
-
-	public static function isFilestoragePrivate($path)
+	public function getNodeFromPath($path)
 	{
-		return (strpos($path, self::getPersonalPath()) !== false);
-	}
-	
-	public static function isFilestorageCorporate($path)
-	{
-		return (strpos($path, self::getCorporatePath()) !== false);
-	}
-	
-	public static function isFilestorageShared($path)
-	{
-		return (strpos($path, self::getSharedPath()) !== false);
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		return $oServer->tree->getNodeForPath($path);
 	}
 
-	public static function getTypeFromPath($path)
+	function beforeMethod($methodName, $uri) 
 	{
-		$sResult = \Aurora\System\Enums\FileStorageType::Personal;
-		if (self::isFilestoragePrivate($path)) {
-			
-			$sResult = \Aurora\System\Enums\FileStorageType::Personal;
-		}
-		if (self::isFilestorageCorporate($path)) {
-			
-			$sResult = \Aurora\System\Enums\FileStorageType::Corporate;
-		}
-		if (self::isFilestorageShared($path)) {
-			
-			$sResult = \Aurora\System\Enums\FileStorageType::Shared;
-		}
-		return $sResult;
-	}
-
-	public static function getFilePathFromPath($path)
-	{
-		$sPath = '';
-		if (self::isFilestoragePrivate($path)) {
-			
-			$sPath = self::getPersonalPath();
-		}
-		if (self::isFilestorageCorporate($path)) {
-			
-			$sPath = self::getCorporatePath();
-		}
-		if (self::isFilestorageShared($path)) {
-			
-			$sPath = self::getSharedPath();
-		}
-		
-		return str_replace($sPath, '', $path);
-	}
-
-	function beforeMethod($methodName, $uri) {
-
-	  if ($methodName === 'MOVE') {
-		  
+	  if ($methodName === 'MOVE') 
+	  {
 		  $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
 	  }
 	  return true;
@@ -223,18 +132,19 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function beforeBind($path)
     {
-		if (self::isFilestoragePrivate($path) || 
-				self::isFilestorageCorporate($path)) {
-			
+		$sFilePath = \dirname($path);
+		$sFileName = \basename($path);
+		
+		$oNode = $this->getNodeFromPath($sFilePath);
+		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
+		{
 			$iUserId = $this->getUser();
-			if ($iUserId) {
-				
-				$iType = self::getTypeFromPath($path);
-				$sFilePath = self::getFilePathFromPath(dirname($path));
-				$sFileName = basename($path);
+			if ($iUserId) 
+			{
+				$sType = $oNode->getStorage();
 
 				$this->sNewPath = $path;
-				$this->sNewID = implode('|', array($iUserId, $iType, $sFilePath, $sFileName));
+				$this->sNewID = implode('|', [$iUserId, $sType, $sFilePath, $sFileName]);
 			}
 		}
 		return true;
@@ -247,39 +157,36 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function afterUnbind($path)
     {
-		if (self::isFilestoragePrivate($path) || self::isFilestorageCorporate($path)) {
-			
+		$sFilePath = \dirname($path);
+		$sFileName = \basename($path);
+		
+		$oNode = $this->getNodeFromPath($sFilePath);
+		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
+		{
 			$iUserId = $this->getUser();
 
-			if ($iUserId) {
-				
- 				$iType = self::getTypeFromPath($path);
-				$sFilePath = self::getFilePathFromPath(dirname($path));
-				$sFileName = basename($path);
+			if ($iUserId) 
+			{
+ 				$sType = $oNode->getStorage();
 
-				$oMin = $this->getMinMan();
+				$oMin = $this->getMinModule();
 				$this->sOldPath = $path;
-				$this->sOldID = implode('|', array($iUserId, $iType, $sFilePath, $sFileName));
+				$this->sOldID = implode('|', [$iUserId, $sType, $sFilePath, $sFileName]);
 				$aData = $oMin->getMinByID($this->sOldID);
 				
-				if (isset($this->sNewPath)) {
-					
-//					$node = $this->server->tree->getNodeForPath($this->sNewPath);
-//					\Aurora\System\Api::LogObject($node, \ELogLevel::Full, 'fs-');
-				}
-				
-				if (isset($this->sNewID) && !empty($aData['__hash__'])) {
-					
+				if (isset($this->sNewID) && !empty($aData['__hash__'])) 
+				{
 					$aNewData = explode('|', $this->sNewID);
-					$aParams = array(
+					$aParams = [
 						'Type' => $aNewData[1],
 						'Path' => $aNewData[2],
 						'Name' => $aNewData[3],
 						'Size' => $aData['Size']
-					);
+					];
 					$oMin->updateMinByID($this->sOldID, $aParams, $this->sNewID);
-				} else {
-					
+				} 
+				else 
+				{
 					$oMin->deleteMinByID($this->sOldID);
 				}
 			}
@@ -297,10 +204,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      * @param \Sabre\DAV\INode $node
      * @return void
      */
-    function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node) {
-
-        $propFind->handle('{DAV:}displayname', function() use ($node) {
-
+	function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node) 
+	{
+		$propFind->handle('{DAV:}displayname', function() use ($node) {
 			if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
 			{
 				return $node->getDisplayName();
@@ -308,5 +214,19 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
         });
 	}
+
+	function propPatch($path, \Sabre\DAV\PropPatch $propPatch) 
+	{
+    	\Aurora\System\Api::LogObject($propPatch, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+		// This tells sabredav that we are responsible for handling storing
+		// the `{DAV:}displayname` property.
+		$propPatch->handle('{DAV:}displayname', function($value) {
 	
+			// Make sure you save $value somewhere.
+			return true;
+	
+		});
+	
+	}
+
 }

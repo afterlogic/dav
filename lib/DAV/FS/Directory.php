@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS;
 
-class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IACL*/{
+class Directory extends \Sabre\DAV\FSExt\Directory {
 	
 	/**
 	 * @var string $UserPublicId
@@ -20,65 +20,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IA
 	 * @var \CTenant
 	 */
 	protected $oTenant = null;
-
-    /**
-     * Returns a group principal
-     *
-     * This must be a url to a principal, or null if there's no owner
-     *
-     * @return string|null
-     */
-	function getGroup()
-	{
-		return null;
-	}
-
-    /**
-     * Returns a list of ACE's for this node.
-     *
-     * Each ACE has the following properties:
-     *   * 'privilege', a string such as {DAV:}read or {DAV:}write. These are
-     *     currently the only supported privileges
-     *   * 'principal', a url to the principal who owns the node
-     *   * 'protected' (optional), indicating that this ACE is not allowed to
-     *      be updated.
-     *
-     * @return array
-     */
-	function getACL()
-	{
-		return [];
-	}
-
-    /**
-     * Updates the ACL
-     *
-     * This method will receive a list of new ACE's as an array argument.
-     *
-     * @param array $acl
-     * @return void
-     */
-	function setACL(array $acl)
-	{
-
-	}
-
-    /**
-     * Returns the list of supported privileges for this node.
-     *
-     * The returned data structure is a list of nested privileges.
-     * See Sabre\DAVACL\Plugin::getDefaultSupportedPrivilegeSet for a simple
-     * standard structure.
-     *
-     * If null is returned from this method, the default privilege set is used,
-     * which is fine for most common usecases.
-     *
-     * @return array|null
-     */
-	function getSupportedPrivilegeSet()
-	{
-		return null;
-	}
 
 	public function getUser()
 	{
@@ -142,6 +83,22 @@ class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IA
 	{
 		$this->path = $path;
 	}
+
+	public function getRootPath()
+	{
+		$sPath = null;
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
+		$oServer->setUser($owner);
+		$oNode = $oServer->tree->getNodeForPath('files/'. $this->getStorage());
+		if ($oNode)
+		{
+			$sPath = $oNode->getPath();
+		}
+		
+		return $sPath;
+	}
     
 	public function getRelativePath() 
 	{
@@ -149,14 +106,10 @@ class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IA
         list($dir,) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
-            \Aurora\System\Api::DataPath() . '/' . \Afterlogic\DAV\FS\Plugin::getPathByStorage(
-                $owner, 
-                $this->getStorage()
-            ), 
+            $this->getRootPath(), 
             '', 
             $dir
         );
-
     }
 
 	public function createDirectory($name) 
@@ -271,7 +224,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IA
 		
 		return $aResult;
 	}
-	
+/*	
 	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal)
 	{
 		$sRootPath = '';
@@ -298,7 +251,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory/* implements \Sabre\DAVACL\IA
 		
 		return $sRootPath;
 	}
-	
+*/	
 	public function getFullQuotaInfo()
 	{
 		$iFreeSize = 0;

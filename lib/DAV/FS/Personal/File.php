@@ -12,22 +12,26 @@ class File extends \Afterlogic\DAV\FS\File{
 
     }
 
-	public function delete() {
+	public function delete() 
+	{
 		$result = parent::delete();
 		
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
+		{
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
 		
 		return $result;
 	}
 	
-	public function put($data) {
+	public function put($data) 
+	{
 		$result = parent::put($data);
 
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
+		{
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
 
