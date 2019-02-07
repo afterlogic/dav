@@ -6,10 +6,9 @@ use Afterlogic\DAV\Constants;
 
 class Root extends \Sabre\DAV\Collection {
 
-	public function getName() {
-		
+	public function getName() 
+	{
 		return 'files';
-		
 	}
 
 	public function getChildren() 
@@ -36,5 +35,4 @@ class Root extends \Sabre\DAV\Collection {
 			
 		return $aChildren;
 	}
-	
 }

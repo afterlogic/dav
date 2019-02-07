@@ -4,12 +4,12 @@
 
 namespace Afterlogic\DAV\FS\Personal;
 
-class File extends \Afterlogic\DAV\FS\File{
+class File extends \Afterlogic\DAV\FS\File
+{
 
-    public function getStorage() {
-
+	public function getStorage() 
+	{
         return \Aurora\System\Enums\FileStorageType::Personal;
-
     }
 
 	public function delete() 

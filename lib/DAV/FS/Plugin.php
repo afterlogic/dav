@@ -75,11 +75,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
 	public function initialize(\Sabre\DAV\Server $server) 
 	{
-		$server->on('beforeMethod', [$this, 'beforeMethod']);   
 		$server->on('beforeBind', [$this, 'beforeBind'], 30);
 		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
         $server->on('propFind', [$this, 'propFind'], 30);
-        $server->on('propPatch', [$this, 'propPatch'], 30);
+		$server->on('method:MOVE', [$this, 'move'], 30);   
 	}
 
     /**
@@ -112,17 +111,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	public function getNodeFromPath($path)
 	{
 		$oServer = \Afterlogic\DAV\Server::getInstance();
+//		var_dump($this->getUser());
+		$oServer->setUser($this->getUser());
 		return $oServer->tree->getNodeForPath($path);
-	}
-
-	function beforeMethod($methodName, $uri) 
-	{
-	  if ($methodName === 'MOVE') 
-	  {
-		  $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
-	  }
-	  return true;
-
 	}
 
 	/**
@@ -215,18 +206,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
         });
 	}
 
-	function propPatch($path, \Sabre\DAV\PropPatch $propPatch) 
+	function move($request, $response) 
 	{
-    	\Aurora\System\Api::LogObject($propPatch, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
-		// This tells sabredav that we are responsible for handling storing
-		// the `{DAV:}displayname` property.
-		$propPatch->handle('{DAV:}displayname', function($value) {
-	
-			// Make sure you save $value somewhere.
-			return true;
-	
-		});
-	
+	  if ($request->getMethod() === 'MOVE') 
+	  {
+		  $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
+	  }
+
+	  return true;
 	}
 
 }

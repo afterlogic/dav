@@ -4,18 +4,30 @@
 
 namespace Afterlogic\DAV\FS;
 
-class File extends \Sabre\DAV\FSExt\File{
-    
+class File extends \Sabre\DAV\FSExt\File 
+{
+    use NodeTrait;
+
+	/**
+	 * @var string $storage
+	 */
+    protected $storage = null;		
+
 	/**
 	 * @var string $UserPublicId
 	 */
     protected $UserPublicId = null;		
     
+	public function getStorage() 
+	{
+    	return $this->storage;
+	}
+
     public function getOwner()
 	{
-		if ($this->UserPublicId === null) {
-			
-			$this->UserPublicId = \Afterlogic\DAV\Server::getUser();
+        if ($this->UserPublicId === null) 
+        {
+			$this->UserPublicId = 'principals/' . \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->UserPublicId;
 	}
@@ -30,62 +42,31 @@ class File extends \Sabre\DAV\FSExt\File{
 		return $this->getName();
     }
     
-	public function getPath() {
-
+    public function getPath() 
+    {
         return $this->path;
-
     }
 
 	public function setPath($path)
 	{
 		$this->path = $path;
     }
-
-	public function getRootPath()
-	{
-		$sPath = null;
-
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-		$oServer->setUser($owner);
-		$oNode = $oServer->tree->getNodeForPath('files/'. $this->getStorage());
-		if ($oNode)
-		{
-			$sPath = $oNode->getPath();
-		}
-		
-		return $sPath;
-	}    
-    
-	public function getRelativePath() 
-	{
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-        list($dir,) = \Sabre\Uri\split($this->getPath());
-
-		return \str_replace(
-            $this->getRootPath()
-            , 
-            '', 
-            $dir
-        );
-
+ 	
+    public function getDirectory() 
+    {
+        list($dir) = \Sabre\Uri\split($this->path);
+		return new Directory($dir);
     }
 	
-	public function getDirectory() {
-        
-        list($dir, ) = \Sabre\Uri\split($this->path);
-		return new Directory($dir);
-		
-	}
-	
-	public function delete() {
-
+    public function delete() 
+    {
         $result = parent::delete();
+
+        $this->deleteShares();
 
 		$this->deleteResourceData();
 		
 		return $result;
-
     }
 	
 	public function getProperty($sName)
@@ -108,18 +89,22 @@ class File extends \Sabre\DAV\FSExt\File{
      * @see Sabre\DAV\IProperties::updateProperties
      * @return bool|array
      */
-    public function updateProperties($properties) {
-
+    public function updateProperties($properties) 
+    {
         $resourceData = $this->getResourceData();
 
-        foreach($properties as $propertyName=>$propertyValue) {
-
+        foreach($properties as $propertyName=>$propertyValue) 
+        {
             // If it was null, we need to delete the property
-            if (is_null($propertyValue)) {
-                if (isset($resourceData['properties'][$propertyName])) {
+            if (is_null($propertyValue)) 
+            {
+                if (isset($resourceData['properties'][$propertyName])) 
+                {
                     unset($resourceData['properties'][$propertyName]);
                 }
-            } else {
+            } 
+            else 
+            {
                 $resourceData['properties'][$propertyName] = $propertyValue;
             }
 
@@ -138,20 +123,20 @@ class File extends \Sabre\DAV\FSExt\File{
      * @param array $properties
      * @return array
      */
-    function getProperties($properties) {
-
+    function getProperties($properties) 
+    {
         $resourceData = $this->getResourceData();
 
         // if the array was empty, we need to return everything
         if (!$properties) return $resourceData['properties'];
 
         $props = array();
-        foreach($properties as $property) {
+        foreach($properties as $property) 
+        {
             if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
         }
 
         return $props;
-
     }
 
     /**
@@ -159,11 +144,10 @@ class File extends \Sabre\DAV\FSExt\File{
      *
      * @return string
      */
-    protected function getResourceInfoPath() {
-
+    protected function getResourceInfoPath() 
+    {
         list($parentDir) = \Sabre\Uri\split($this->path);
         return $parentDir . '/.sabredav';
-
     }
 
     /**
@@ -171,8 +155,8 @@ class File extends \Sabre\DAV\FSExt\File{
      *
      * @return array
      */
-    protected function getResourceData() {
-
+    protected function getResourceData() 
+    {
         $path = $this->getResourceInfoPath();
         if (!file_exists($path)) return array('properties' => array());
 
@@ -182,7 +166,8 @@ class File extends \Sabre\DAV\FSExt\File{
         $data = '';
 
         // Reading data until the eof
-        while(!feof($handle)) {
+        while(!feof($handle)) 
+        {
             $data.=fread($handle,8192);
         }
 
@@ -191,14 +176,14 @@ class File extends \Sabre\DAV\FSExt\File{
 
         // Unserializing and checking if the resource file contains data for this file
         $data = unserialize($data);
-        if (!isset($data[$this->getName()])) {
+        if (!isset($data[$this->getName()])) 
+        {
             return array('properties' => array());
         }
 
         $data = $data[$this->getName()];
         if (!isset($data['properties'])) $data['properties'] = array();
         return $data;
-
     }
 
     /**
@@ -207,8 +192,8 @@ class File extends \Sabre\DAV\FSExt\File{
      * @param array $newData
      * @return void
      */
-    protected function putResourceData(array $newData) {
-
+    protected function putResourceData(array $newData) 
+    {
         $path = $this->getResourceInfoPath();
 
         // opening up the file, and creating a shared lock
@@ -219,7 +204,8 @@ class File extends \Sabre\DAV\FSExt\File{
         rewind($handle);
 
         // Reading data until the eof
-        while(!feof($handle)) {
+        while(!feof($handle)) 
+        {
             $data.=fread($handle,8192);
         }
 
@@ -240,9 +226,9 @@ class File extends \Sabre\DAV\FSExt\File{
      * @param string $name The new name
      * @return void
      */
-    public function setName($name) {
-
-        list($parentPath, ) = \Sabre\Uri\split($this->path);
+    public function setName($name) 
+    {
+        list($parentPath) = \Sabre\Uri\split($this->path);
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
 
@@ -251,18 +237,16 @@ class File extends \Sabre\DAV\FSExt\File{
         $resourceData = $this->getResourceData();
         $this->deleteResourceData();
 
-        rename($this->path,$newPath);
+        rename($this->path, $newPath);
         $this->path = $newPath;
         $this->putResourceData($resourceData);
-
-
     }
 
     /**
      * @return bool
      */
-    public function deleteResourceData() {
-
+    public function deleteResourceData() 
+    {
         // When we're deleting this node, we also need to delete any resource information
         $path = $this->getResourceInfoPath();
         if (!file_exists($path)) return true;
@@ -275,7 +259,8 @@ class File extends \Sabre\DAV\FSExt\File{
         rewind($handle);
 
         // Reading data until the eof
-        while(!feof($handle)) {
+        while(!feof($handle)) 
+        {
             $data.=fread($handle,8192);
         }
 

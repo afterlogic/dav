@@ -4,12 +4,12 @@
 
 namespace Afterlogic\DAV\FS\Personal;
 
-class Root extends Directory {
-	
-	public function __construct($sUserPublicId = null) {
-		
+class Root extends Directory 
+{
+	public function __construct($sUserPublicId = null) 
+	{
 		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
-		if (!file_exists($path))
+		if (!\file_exists($path))
 		{
 			\mkdir($path);
 		}
@@ -20,37 +20,34 @@ class Root extends Directory {
 		}
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
 		
-		if ($oUser) {
-			
+		if ($oUser) 
+		{
 			$path = $path . '/' . $oUser->UUID;
-			if (!\file_exists($path)) {
-				
+			if (!\file_exists($path)) 
+			{
 				\mkdir($path, 0777, true);
 			}
 		}
 		parent::__construct($path);
 	}
 
-    public function getName() {
-
+	public function getName() 
+	{
         return \Aurora\System\Enums\FileStorageType::Personal;
-
     }	
 	
-	public function setName($name) {
-
+	public function setName($name) 
+	{
         throw new \Sabre\DAV\Exception\Forbidden();
-
     }
 
-    public function delete() {
-
+	public function delete() 
+	{
         throw new \Sabre\DAV\Exception\Forbidden();
-
     }
 	
-    public function getQuotaInfo() {
-
+	public function getQuotaInfo() 
+	{
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
 		if ($oUser)
 		{

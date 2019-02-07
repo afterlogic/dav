@@ -4,10 +4,11 @@
 
 namespace Afterlogic\DAV\FS\Corporate;
 
-class Root extends Directory {
+class Root extends Directory 
+{
 	
-	public function __construct() {
-		
+	public function __construct() 
+	{
 		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE;
 		if (!file_exists($path))
 		{
@@ -15,11 +16,11 @@ class Root extends Directory {
 		}
 
 		$oTenant = $this->getTenant();
-		if ($oTenant) {
-
+		if ($oTenant) 
+		{
 			$path = $path . '/' . $oTenant->EntityId;
-			if (!\file_exists($path)) {
-
+			if (!\file_exists($path)) 
+			{
 				\mkdir($path, 0777, true);
 			}
 		}
@@ -27,26 +28,23 @@ class Root extends Directory {
 		parent::__construct($path);
 	}
 	
-    public function getName() {
-
+	public function getName() 
+	{
         return \Aurora\System\Enums\FileStorageType::Corporate;
-
     }	
 
-	public function setName($name) {
-
+	public function setName($name) 
+	{
 		throw new \Sabre\DAV\Exception\Forbidden();
-
 	}
 
-	public function delete() {
-
+	public function delete() 
+	{
 		throw new \Sabre\DAV\Exception\Forbidden();
-
 	} 	
 	
-    public function getQuotaInfo() {
-
+	public function getQuotaInfo() 
+	{
 		$mResult = [0, 0];
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
 		if ($oUser)
@@ -59,7 +57,5 @@ class Root extends Directory {
 		}
 		
 		return $mResult;
-		
 	}
-	
 }

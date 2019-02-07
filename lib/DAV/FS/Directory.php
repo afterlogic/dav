@@ -4,7 +4,14 @@
 
 namespace Afterlogic\DAV\FS;
 
-class Directory extends \Sabre\DAV\FSExt\Directory {
+class Directory extends \Sabre\DAV\FSExt\Directory 
+{
+	use NodeTrait;
+
+	/**
+	 * @var string $storage
+	 */
+    protected $storage = null;		
 	
 	/**
 	 * @var string $UserPublicId
@@ -23,16 +30,21 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 
 	public function getUser()
 	{
-		if ($this->UserPublicId === null) {
-			
+		if ($this->UserPublicId === null) 
+		{
 			$this->UserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->UserPublicId;
 	}
 
+	public function getStorage() 
+	{
+    	return $this->storage;
+	}
+
 	public function getOwner()
 	{
-		return $this->getUser();
+		return 'principals/' . $this->getUser();
 	}
 	
 	public function getId()
@@ -47,11 +59,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	
 	public function getUserObject()
 	{
-		if ($this->UserObject === null) {
-			
+		if ($this->UserObject === null) 
+		{
 			$sUserPublicId = $this->getUser();
-			if ($sUserPublicId !== null) {
-				
+			if ($sUserPublicId !== null) 
+			{
 				$oCore = \Aurora\System\Api::GetModule('Core');
 				$this->UserObject = $oCore->GetUserByPublicId($sUserPublicId);
 			}
@@ -83,34 +95,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	{
 		$this->path = $path;
 	}
-
-	public function getRootPath()
-	{
-		$sPath = null;
-
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-		$oServer->setUser($owner);
-		$oNode = $oServer->tree->getNodeForPath('files/'. $this->getStorage());
-		if ($oNode)
-		{
-			$sPath = $oNode->getPath();
-		}
-		
-		return $sPath;
-	}
-    
-	public function getRelativePath() 
-	{
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-        list($dir,) = \Sabre\Uri\split($this->getPath());
-
-		return \str_replace(
-            $this->getRootPath(), 
-            '', 
-            $dir
-        );
-    }
 
 	public function createDirectory($name) 
 	{
@@ -162,8 +146,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		return $result;
     }
 
-    public function getChild($name) {
-
+	public function getChild($name) 
+	{
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
 
         $path = $this->path . '/' . trim($name, '/');
@@ -177,6 +161,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 	public function getChildren() 
 	{
 		$aChildren = parent::getChildren();
+
 		foreach ($aChildren as $iKey => $oChild)
 		{
 			if ($oChild->getName() === '.sabredav')
@@ -197,11 +182,13 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		}
 	}
 
-    public function delete() {
-
+	public function delete() 
+	{
 	    $this->deleteResourceData();
 		
 		$result = parent::delete();
+
+        $this->deleteShares();
 		
 		$this->updateQuota();
 		
@@ -224,34 +211,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory {
 		
 		return $aResult;
 	}
-/*	
-	public function getRootPath($sType = \Aurora\System\Enums\FileStorageType::Personal)
-	{
-		$sRootPath = '';
-		$UserPublicId = $this->getUser();
-		
-		if ($sType === \Aurora\System\Enums\FileStorageType::Corporate) 
-		{
-			$oTenant = $this->getTenant();
-			$iIdTenant = $oTenant ? $oTenant->EntityId : 0;
-			
-			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-				\Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE . '/' . $iIdTenant;
-		} 
-		else if ($sType === \Aurora\System\Enums\FileStorageType::Shared) 
-		{
-			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_SHARED . '/' . $UserPublicId;
-		} 
-		else 
-		{
-			$sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . 
-					\Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL . '/' . $UserPublicId;
-		}
-		
-		return $sRootPath;
-	}
-*/	
+
 	public function getFullQuotaInfo()
 	{
 		$iFreeSize = 0;

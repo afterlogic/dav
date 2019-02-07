@@ -64,7 +64,17 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
                 'privilege' => '{DAV:}read',
                 'principal' => $this->getOwner(),
                 'protected' => true,
-            ],
+			],
+			[
+                'privilege' => '{DAV:}bind',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ],			
+			[
+                'privilege' => '{DAV:}unbind',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ],			
         ];
 	}
 	
@@ -138,16 +148,15 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 		return $mResult;		
 	}
 	
-    public function getChild($name) {
-
+	public function getChild($name) 
+	{
 		$aSharedFile = $this->pdo->getSharedFileByUid('principals/' . $this->UserPublicId, $name);
 
 		return $this->populateItem($aSharedFile);
-		
     }	
 	
-	public function getChildren() {
-
+	public function getChildren() 
+	{
 		$aResult = [];
 		
 		$aSharedFiles = $this->pdo->getSharedFilesForUser('principals/' . $this->UserPublicId);
@@ -162,7 +171,6 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 		}
 		
 		return $aResult;
-
     }	
 	
 }

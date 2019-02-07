@@ -4,25 +4,24 @@
 
 namespace Afterlogic\DAV\FS\Personal;
 
-class Directory extends \Afterlogic\DAV\FS\Directory {
-
-    public function getStorage() {
-
-        return \Aurora\System\Enums\FileStorageType::Personal;
-
-	}
-	
-	public function getChild($name) 
+class Directory extends \Afterlogic\DAV\FS\Directory 
+{
+	public function getStorage() 
 	{
-		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to empty item');
-		
-		$path = $this->path . '/' . trim($name, '/');
+    	return \Aurora\System\Enums\FileStorageType::Personal;
+	}
 
-		if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
-		if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
+    public function getChild($name) 
+    {
+		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+
+        $path = $this->path . '/' . trim($name, '/');
+
+        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
+        if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
 
 		return is_dir($path) ? new self($path) : new File($path);
-	}	 
+    }	
 	
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = array()) 
 	{
@@ -37,7 +36,5 @@ class Directory extends \Afterlogic\DAV\FS\Directory {
 		return $result;
 	}
 	
-	function getQuotaInfo() {
-		
-	}	
+	function getQuotaInfo() {}	
 }
