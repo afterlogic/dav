@@ -6,7 +6,7 @@ namespace Afterlogic\DAV\FS\Shared;
 
 class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL 
 {
-    use AclTrait;    
+    use NodeTrait;    
 	
 	protected $owner;
     protected $principalUri;
@@ -54,8 +54,10 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getDisplayName()
 	{
-        list(, $name) = \Sabre\Uri\split($this->getPath());
-        return $name;
+        return $this->getName();
+
+//        list(, $name) = \Sabre\Uri\split($this->getPath());
+//        return $name;
 	}
 
     /**
@@ -117,7 +119,15 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         if ($this->inRoot)
         {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            var_dump($name); exit;
+
+            if (!$pdo->getSharedFileByUid($this->principalUri, $name))
+            {
+                $pdo->updateSharedFileName($this->principalUri, $this->getId(), $name);      
+            }
+            else
+            {
+                throw new \Sabre\DAV\Exception\Conflict();
+            }
         }
         else
         {

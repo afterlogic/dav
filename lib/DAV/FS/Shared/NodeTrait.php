@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-trait AclTrait 
+trait NodeTrait 
 {
      /**
      * Returns a group principal.

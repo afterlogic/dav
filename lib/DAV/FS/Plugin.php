@@ -7,9 +7,9 @@ namespace Afterlogic\DAV\FS;
 class Plugin extends \Sabre\DAV\ServerPlugin {
 
     /**
-     * @var int $iUserId
+     * @var string $sUserPublicId
      */
-    protected $iUserId = null;
+    protected $sUserPublicId = null;
 	
 	/**
 	 * @var \Aurora\Modules\Min\Module
@@ -49,6 +49,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
         return 'files';
     }	
 	
+	/***
+	 * 
+	 */
 	public function getMinModule()
 	{
 		if ($this->oMinModule == null) 
@@ -58,13 +61,16 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		return $this->oMinModule;
 	}
 	
-    public function getUser()
+	/**
+	 * 
+	 */
+	public function getUser()
 	{	
-		if (!isset($this->iUserId)) 
+		if (!isset($this->sUserPublicId)) 
 		{
-			$this->iUserId = \Afterlogic\DAV\Server::getUser();
+			$this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
-		return $this->iUserId; 
+		return $this->sUserPublicId; 
 	}
 	
 	/**
@@ -93,6 +99,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
         return ['files'];
 	}
 	
+	/**
+	 * 
+	 */
 	public static function getStoragePath($sUserPublicId, $sStorage)
 	{
 		$sPath = null;
@@ -108,10 +117,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		return $sPath;
 	}
 
+	/**
+	 * 
+	 */
 	public function getNodeFromPath($path)
 	{
 		$oServer = \Afterlogic\DAV\Server::getInstance();
-//		var_dump($this->getUser());
 		$oServer->setUser($this->getUser());
 		return $oServer->tree->getNodeForPath($path);
 	}
@@ -123,19 +134,18 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function beforeBind($path)
     {
-		$sFilePath = \dirname($path);
-		$sFileName = \basename($path);
+		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
 		
 		$oNode = $this->getNodeFromPath($sFilePath);
 		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
 		{
-			$iUserId = $this->getUser();
-			if ($iUserId) 
+			$sUserPublicId = $this->getUser();
+			if ($sUserPublicId) 
 			{
 				$sType = $oNode->getStorage();
 
 				$this->sNewPath = $path;
-				$this->sNewID = implode('|', [$iUserId, $sType, $sFilePath, $sFileName]);
+				$this->sNewID = implode('|', [$sUserPublicId, $sType, $sFilePath, $sFileName]);
 			}
 		}
 		return true;
@@ -148,21 +158,20 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
     public function afterUnbind($path)
     {
-		$sFilePath = \dirname($path);
-		$sFileName = \basename($path);
+		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
 		
 		$oNode = $this->getNodeFromPath($sFilePath);
 		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
 		{
-			$iUserId = $this->getUser();
+			$sUserPublicId = $this->getUser();
 
-			if ($iUserId) 
+			if ($sUserPublicId) 
 			{
  				$sType = $oNode->getStorage();
 
 				$oMin = $this->getMinModule();
 				$this->sOldPath = $path;
-				$this->sOldID = implode('|', [$iUserId, $sType, $sFilePath, $sFileName]);
+				$this->sOldID = implode('|', [$sUserPublicId, $sType, $sFilePath, $sFileName]);
 				$aData = $oMin->getMinByID($this->sOldID);
 				
 				if (isset($this->sNewID) && !empty($aData['__hash__'])) 
@@ -206,14 +215,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
         });
 	}
 
+	/**
+	 * 
+	 */
 	function move($request, $response) 
 	{
-	  if ($request->getMethod() === 'MOVE') 
-	  {
-		  $GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
-	  }
-
-	  return true;
+		$GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
+		return true;
 	}
 
 }
