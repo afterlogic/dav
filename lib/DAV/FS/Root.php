@@ -2,8 +2,6 @@
 
 namespace Afterlogic\DAV\FS;
 
-use Afterlogic\DAV\Constants;
-
 class Root extends \Sabre\DAV\Collection {
 
 	public function getName() 

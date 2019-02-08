@@ -18,22 +18,16 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     {
         $this->owner = $owner;
         $this->principalUri = $principalUri;
-        $this->storage = $storage;
         $this->access = $access;
         $this->uid = $uid;
         $this->inRoot = $inRoot;
         
-        parent::__construct($path);
+        parent::__construct($storage, $path);
     }
 
     public function getOwner() 
     {
         return $this->principalUri;
-    }
-    
-    public function getStorage() 
-    {
-        return $this->storage;
     }
 
     public function getAccess() 

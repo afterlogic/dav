@@ -12,7 +12,12 @@ class File extends \Sabre\DAV\FSExt\File
 	 * @var string $storage
 	 */
     protected $storage = null;		
-
+	
+	public function __construct($storage, $path)
+	{
+		$this->storage = $storage;
+		parent::__construct($path);
+	}
 	/**
 	 * @var string $UserPublicId
 	 */
@@ -27,7 +32,7 @@ class File extends \Sabre\DAV\FSExt\File
 	{
         if ($this->UserPublicId === null) 
         {
-			$this->UserPublicId = 'principals/' . \Afterlogic\DAV\Server::getUser();
+			$this->UserPublicId = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->UserPublicId;
 	}
@@ -130,7 +135,7 @@ class File extends \Sabre\DAV\FSExt\File
         // if the array was empty, we need to return everything
         if (!$properties) return $resourceData['properties'];
 
-        $props = array();
+        $props = [];
         foreach($properties as $property) 
         {
             if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
@@ -158,7 +163,7 @@ class File extends \Sabre\DAV\FSExt\File
     protected function getResourceData() 
     {
         $path = $this->getResourceInfoPath();
-        if (!file_exists($path)) return array('properties' => array());
+        if (!file_exists($path)) return ['properties' => []];
 
         // opening up the file, and creating a shared lock
         $handle = fopen($path,'r');
@@ -178,11 +183,11 @@ class File extends \Sabre\DAV\FSExt\File
         $data = unserialize($data);
         if (!isset($data[$this->getName()])) 
         {
-            return array('properties' => array());
+            return ['properties' => []];
         }
 
         $data = $data[$this->getName()];
-        if (!isset($data['properties'])) $data['properties'] = array();
+        if (!isset($data['properties'])) $data['properties'] = [];
         return $data;
     }
 

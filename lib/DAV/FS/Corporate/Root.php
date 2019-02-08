@@ -24,7 +24,6 @@ class Root extends Directory
 				\mkdir($path, 0777, true);
 			}
 		}
-
 		parent::__construct($path);
 	}
 	

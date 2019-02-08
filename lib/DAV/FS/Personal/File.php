@@ -6,22 +6,19 @@ namespace Afterlogic\DAV\FS\Personal;
 
 class File extends \Afterlogic\DAV\FS\File
 {
+	use NodeTrait;
 
-	public function getStorage() 
+	public function __construct($path) 
 	{
-        return \Aurora\System\Enums\FileStorageType::Personal;
-    }
-
+		parent::__construct(\Aurora\System\Enums\FileStorageType::Personal, $path);
+	}
+	
 	public function delete() 
 	{
 		$result = parent::delete();
 		
-		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
-		{
-			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
-		}
-		
+		$this->updateUsedSpace();
+				
 		return $result;
 	}
 	
@@ -29,11 +26,7 @@ class File extends \Afterlogic\DAV\FS\File
 	{
 		$result = parent::put($data);
 
-		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
-		{
-			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
-		}
+		$this->updateUsedSpace();
 
 		return $result;
 	}

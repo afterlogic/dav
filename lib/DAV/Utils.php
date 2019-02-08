@@ -48,7 +48,7 @@ class Utils
 		$oAccount = self::GetAccountByLogin(basename($principalUri));
 		if ($oAccount) {
 			$aTenantEmail = self::getTenantUser($oAccount);
-			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $aTenantEmail;
+			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aTenantEmail;
 		}
 		
 		return $sTenantPrincipalUri;
@@ -83,14 +83,14 @@ class Utils
 		$sEmail = trim(str_ireplace("mailto:", "", $sEmail));
 		
 		$aPrincipalsPath = Backend::Principal()->searchPrincipals(
-				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, 
+				\rtrim(Constants::PRINCIPALS_PREFIX, '/'), 
 				array(
 					'{http://sabredav.org/ns}email-address' => $sEmail
 				)
 		);
 		if(is_array($aPrincipalsPath) && count($aPrincipalsPath) === 0) {
 			$aPrincipalsPath = Backend::Principal()->searchPrincipals(
-					\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX, 
+					\rtrim(Constants::PRINCIPALS_PREFIX, '/'), 
 					array(
 						'{http://sabredav.org/ns}email-address' => $sEmail
 					)
@@ -103,7 +103,7 @@ class Utils
 		$aPrincipals = array_filter(
 				$aPrincipalsPath, 
 				function ($sPrincipalPath) use ($sEmail) {
-					return ($sPrincipalPath === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sEmail);
+					return ($sPrincipalPath === \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sEmail);
 				}
 		);
 		

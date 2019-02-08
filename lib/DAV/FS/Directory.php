@@ -27,6 +27,12 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 	 * @var \CTenant
 	 */
 	protected $oTenant = null;
+	
+	public function __construct($storage, $path)
+	{
+		$this->storage = $storage;
+		parent::__construct($path);
+	}
 
 	public function getUser()
 	{
@@ -44,7 +50,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 
 	public function getOwner()
 	{
-		return 'principals/' . $this->getUser();
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->getUser();
 	}
 	
 	public function getId()
@@ -126,7 +132,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 			}
 		}
 		
-		$aProps = $oFile->getProperties(array('Owner'));
+		$aProps = $oFile->getProperties(['Owner']);
 		
 		if (!isset($aProps['Owner'])) 
 		{
@@ -155,13 +161,13 @@ class Directory extends \Sabre\DAV\FSExt\Directory
         if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
         if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
 
-		return is_dir($path) ? new self($path) : new File($path);
+		return is_dir($path) ? new self($this->getStorage(), $path) : new File($this->getStorage(), $path);
     }	
 	
 	public function getChildren() 
 	{
 		$aChildren = parent::getChildren();
-
+		
 		foreach ($aChildren as $iKey => $oChild)
 		{
 			if ($oChild->getName() === '.sabredav')
@@ -197,7 +203,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 	
 	public function Search($pattern, $path = null) 
 	{
-		$aResult = array();
+		$aResult = [];
 		
 		$path = ($path === null) ? $this->path : $path;
 		$aItems = \Aurora\System\Utils::SearchFiles($path, $pattern);
@@ -205,7 +211,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 		{
 			foreach ($aItems as $sItem) 
 			{
-				$aResult[] = is_dir($sItem) ? new self($sItem) : new File($sItem);
+				$aResult[] = is_dir($sItem) ? new self($this->getStorage(), $sItem) : new File($this->getStorage(), $sItem);
 			}
 		}
 		
@@ -234,7 +240,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 			}
 		}
 		
-		return array($iUsageSize, $iFreeSize);
+		return [$iUsageSize, $iFreeSize];
 	}
 
 	public function updateQuota()
@@ -331,7 +337,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
         // if the array was empty, we need to return everything
         if (!$properties) return $resourceData['properties'];
 
-        $props = array();
+        $props = [];
         foreach($properties as $property) 
 		{
             if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
@@ -360,7 +366,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory
     protected function getResourceData() 
 	{
         $path = $this->getResourceInfoPath();
-        if (!file_exists($path)) return array('properties' => array());
+        if (!file_exists($path)) return ['properties' => []];
 
         // opening up the file, and creating a shared lock
         $handle = fopen($path,'r');
@@ -380,11 +386,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory
         $data = unserialize($data);
         if (!isset($data[$this->getName()])) 
 		{
-            return array('properties' => array());
+            return ['properties' => []];
         }
 
         $data = $data[$this->getName()];
-        if (!isset($data['properties'])) $data['properties'] = array();
+        if (!isset($data['properties'])) $data['properties'] = [];
         return $data;
     }
 

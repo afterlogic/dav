@@ -46,13 +46,13 @@ class Server extends \Sabre\DAV\Server
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
 		$aclPlugin->hideNodesFromListings = true;
 		$aclPlugin->allowUnauthenticatedAccess = false;
-		$aclPlugin->defaultUsernamePath = Constants::PRINCIPALS_PREFIX;
+		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
 		$oDavModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 
 		$mAdminPrincipal = $oDavModule->getConfig('AdminPrincipal', false);
 		$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
-						[Constants::PRINCIPALS_PREFIX . '/' . $mAdminPrincipal] : [];
+						[Constants::PRINCIPALS_PREFIX . $mAdminPrincipal] : [];
 		$this->addPlugin($aclPlugin);
 
 		/* DAV Sync Plugin */
@@ -275,7 +275,7 @@ class Server extends \Sabre\DAV\Server
 		if (isset($sUserPublicId))
 		{
 			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(
-				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId
+				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUserPublicId
 			);
 			
 			if (isset($aPrincipalProperties['uri'])) 
@@ -285,7 +285,7 @@ class Server extends \Sabre\DAV\Server
 			} 
 			else 
 			{
-				$mPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $sUserPublicId;
+				$mPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUserPublicId;
 				$mPrincipal['id'] = -1;
 			}
 		}

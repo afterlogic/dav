@@ -18,12 +18,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
     {
         $this->owner = $owner;
         $this->principalUri = $principalUri;
-        $this->storage = $storage;
         $this->access = $access;
         $this->uid = $uid;
         $this->inRoot = $inRoot;
 
-        parent::__construct($path);
+        parent::__construct($storage, $path);
     }
 
     public function getAccess() 

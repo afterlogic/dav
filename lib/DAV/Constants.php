@@ -55,5 +55,5 @@ class Constants
 	const FILESTORAGE_PATH_CORPORATE = '/corporate';
 	const FILESTORAGE_PATH_SHARED = '/shared';
 	
-	const PRINCIPALS_PREFIX = 'principals';
+	const PRINCIPALS_PREFIX = 'principals/';
 }

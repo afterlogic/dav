@@ -30,7 +30,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
      */
 	public function getOwner()
 	{
-		return 'principals/' . $this->UserPublicId;
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId;
 	}
 	
     /**
@@ -150,7 +150,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 	
 	public function getChild($name) 
 	{
-		$aSharedFile = $this->pdo->getSharedFileByUid('principals/' . $this->UserPublicId, $name);
+		$aSharedFile = $this->pdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
 
 		return $this->populateItem($aSharedFile);
     }	
@@ -159,7 +159,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 	{
 		$aResult = [];
 		
-		$aSharedFiles = $this->pdo->getSharedFilesForUser('principals/' . $this->UserPublicId);
+		$aSharedFiles = $this->pdo->getSharedFilesForUser(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId);
 
 		foreach ($aSharedFiles as $aSharedFile)
 		{

@@ -22,8 +22,7 @@ trait NodeTrait
         
 	public function getRelativePath() 
 	{
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-        list($dir,) = \Sabre\Uri\split($this->getPath());
+        list($dir) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
             $this->getRootPath(), 
@@ -39,6 +38,18 @@ trait NodeTrait
 
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
 		$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
-	}      
+	}     
+	
+	public function checkFileName($name)
+	{
+		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+
+        $path = $this->path . '/' . trim($name, '/');
+
+        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
+        if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
+		
+		return $path;
+	}
 
 }

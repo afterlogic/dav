@@ -137,7 +137,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 			);
 			if ($oAccount instanceof \CAccount) {
 				
-	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . '/' . $oAccount->Email;
+	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oAccount->Email;
 			}
 		}
 		

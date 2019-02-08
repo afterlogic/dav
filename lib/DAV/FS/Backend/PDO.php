@@ -65,8 +65,8 @@ SQL
 				'principaluri' => $row['principaluri'],
 				'storage' => $row['storage'],
 				'path' => $row['path'],
-				'access' => $row['access'],
-				'isdir' => $row['isdir'],
+				'access' => (int) $row['access'],
+				'isdir' => (bool) $row['isdir'],
 			];
 		}
 		
@@ -110,8 +110,8 @@ SQL
 				'principaluri' => $row['principaluri'],
 				'storage' => $row['storage'],
 				'path' => $row['path'],
-				'access' => $row['access'],
-				'isdir' => $row['isdir'],
+				'access' => (int) $row['access'],
+				'isdir' => (bool) $row['isdir'],
 			];
 		}
 		
@@ -155,8 +155,8 @@ SQL
 				'principaluri' => $row['principaluri'],
 				'storage' => $row['storage'],
 				'path' => $row['path'],
-				'access' => $row['access'],
-				'isdir' => $row['isdir'],
+				'access' => (int) $row['access'],
+				'isdir' => (bool) $row['isdir'],
 			];
 		}
 		
@@ -192,7 +192,7 @@ SQL
 		{
 			$aResult[] = [
 				'principaluri' => $row['principaluri'],
-				'access' => $row['access'],
+				'access' => (int) $row['access'],
 			];
 		}
 		
