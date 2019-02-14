@@ -90,14 +90,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
      */
     public function setName($name) 
     {
-        if ($this->inRoot)
+        if (!$this->inRoot)
         {
-            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            $pdo->updateSharedFileName($this->principalUri, $this->getId(), $name);      
+            parent::setName($name);
         }
         else
         {
-            parent::setName($name);
+            throw new \Sabre\DAV\Exception\Conflict();            
         }
     }    
 }

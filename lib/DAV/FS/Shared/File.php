@@ -110,22 +110,13 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     public function setName($name) 
     {
-        if ($this->inRoot)
+        if (!$this->inRoot)
         {
-            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-
-            if (!$pdo->getSharedFileByUid($this->principalUri, $name))
-            {
-                $pdo->updateSharedFileName($this->principalUri, $this->getId(), $name);      
-            }
-            else
-            {
-                throw new \Sabre\DAV\Exception\Conflict();
-            }
+            parent::setName($name);
         }
         else
         {
-            parent::setName($name);
+            throw new \Sabre\DAV\Exception\Conflict();            
         }
     }
 

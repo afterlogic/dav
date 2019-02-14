@@ -39,7 +39,8 @@ trait NodeTrait
                 'protected' => true,
             ],
         ];
-        if ($this->inRoot || $this->access === 1) {
+
+        if ($this->access === 1) {
             $acl[] = [
                 'privilege' => '{DAV:}write',
                 'principal' => $this->getOwner(),
