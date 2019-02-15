@@ -27,7 +27,7 @@ class PDO
 	public function __construct() 
 	{
 		$this->pdo = \Aurora\System\Api::GetPDO();
-		$this->dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('DBPrefix');
+		$this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 		$this->sharedFilesTableName = $this->dBPrefix.'adav_sharedfiles';
 	}
 	

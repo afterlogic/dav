@@ -20,7 +20,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	{
 		parent::__construct(\Aurora\System\Api::GetPDO());
 		
-		$this->dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('DBPrefix');
+		$this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 		
 		$this->calendarTableName = $this->dBPrefix.Constants::T_CALENDARS;
 		$this->calendarChangesTableName = $this->dBPrefix.Constants::T_CALENDARCHANGES;

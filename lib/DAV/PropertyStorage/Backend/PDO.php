@@ -13,7 +13,7 @@ class PDO extends \Sabre\DAV\PropertyStorage\Backend\PDO
 	{
 		parent::__construct(\Aurora\System\Api::GetPDO());
 		
-		$this->dBPrefix = \Aurora\System\Api::GetSettings()->GetConf('DBPrefix');
+		$this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 		$this->tableName = $this->dBPrefix.'adav_propertystorage';
 	}
 }
