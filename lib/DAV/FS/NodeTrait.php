@@ -34,7 +34,7 @@ trait NodeTrait
    public function deleteShares()
 	{
 		$oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
-		if ($oSharedFilesModule && !$oSharedFilesModule->Disabled)
+		if ($oSharedFilesModule && !$oSharedFilesModule->getConfig('Disabled'))
 		{
 			$sRelativePath =  $this->getRelativePath();
 			$sPath = (!empty($sRelativePath) ? $sRelativePath . '/' : '') . $this->getName();
