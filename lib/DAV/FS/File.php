@@ -233,9 +233,12 @@ class File extends \Sabre\DAV\FSExt\File
      */
     public function setName($name) 
     {
-        list($parentPath) = \Sabre\Uri\split($this->path);
+        list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
+        $oNode = \Afterlogic\DAV\Server::getInstance()->tree->getNodeForPath('files/'.$this->getStorage().'/'.$oldName);
+
+        var_dump($oNode); exit;
 
         // We're deleting the existing resourcedata, and recreating it
         // for the new path.

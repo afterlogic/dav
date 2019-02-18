@@ -33,11 +33,15 @@ trait NodeTrait
 
    public function deleteShares()
 	{
-        $sRelativePath =  $this->getRelativePath();
-        $sPath = (!empty($sRelativePath) ? $sRelativePath . '/' : '') . $this->getName();
+		$oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
+		if ($oSharedFilesModule && !$oSharedFilesModule->Disabled)
+		{
+			$sRelativePath =  $this->getRelativePath();
+			$sPath = (!empty($sRelativePath) ? $sRelativePath . '/' : '') . $this->getName();
 
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-		$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
+			$pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+			$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
+		}
 	}     
 	
 	public function checkFileName($name)
