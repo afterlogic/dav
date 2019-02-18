@@ -236,9 +236,14 @@ class File extends \Sabre\DAV\FSExt\File
         list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
-        $oNode = \Afterlogic\DAV\Server::getInstance()->tree->getNodeForPath('files/'.$this->getStorage().'/'.$oldName);
+        
+		$sRelativePath = $this->getRelativePath();
 
-        var_dump($oNode); exit;
+		$oldPathForShare = $sRelativePath . '/' .$oldName;
+		$newPathForShare = $sRelativePath . '/' .$newName;
+
+		$pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+		$pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $newPathForShare);
 
         // We're deleting the existing resourcedata, and recreating it
         // for the new path.

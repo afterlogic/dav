@@ -171,6 +171,11 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 		}
 		
 		return $aResult;
-    }	
+	}	
+	
+	public function createFile($name,  $data = null) 
+	{
+		throw new \Sabre\DAV\Exception\Forbidden();
+	}
 	
 }
