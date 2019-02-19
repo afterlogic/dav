@@ -119,7 +119,7 @@ class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IAC
 			);
 			
 			$path = $sRootPath . '/' . trim($aSharedFile['path'], '/');
-					
+				
 			if ($aSharedFile['isdir'])
 			{
 				$mResult = new Directory(
