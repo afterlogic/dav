@@ -86,5 +86,41 @@ trait NodeTrait
         return $this->principalUri;
 
     }
+
+    function getETag() 
+    {
+        if (\file_exists($this->path))
+        {
+            return parent::getETag();
+        }
+        else
+        {
+            return '';
+        }
+    }
+
+    public function getSize()
+    {
+        if (\file_exists($this->path))
+        {
+            return parent::getSize();
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    function getLastModified() 
+    {
+        if (\file_exists($this->path))
+        {
+            return parent::getLastModified();
+        }
+        else
+        {
+            return 0;
+        }
+    }    
    
 }
