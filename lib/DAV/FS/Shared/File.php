@@ -12,7 +12,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     protected $principalUri;
 	protected $access;
 	protected $uid;
-	protected $inRoot;
+	public $inRoot;
 
     public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) 
     {
