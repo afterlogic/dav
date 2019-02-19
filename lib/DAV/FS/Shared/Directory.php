@@ -12,7 +12,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
     protected $principalUri;
 	protected $access;
 	protected $uid;
-	protected $inRoot;
 
     public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) 
     {

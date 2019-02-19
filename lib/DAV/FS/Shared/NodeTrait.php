@@ -6,7 +6,9 @@ namespace Afterlogic\DAV\FS\Shared;
 
 trait NodeTrait 
 {
-     /**
+	public $inRoot;
+
+    /**
      * Returns a group principal.
      *
      * This must be a url to a principal, or null if there's no owner
