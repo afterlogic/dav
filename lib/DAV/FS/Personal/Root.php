@@ -18,7 +18,7 @@ class Root extends Directory
 		{
 			$sUserPublicId = $this->getUser();
 		}
-		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($sUserPublicId);
 		
 		if ($oUser) 
 		{
@@ -48,10 +48,10 @@ class Root extends Directory
 	
 	public function getQuotaInfo() 
 	{
-		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
+		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($this->UserPublicId);
 		if ($oUser)
 		{
-			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->EntityId, $this->getName());
+			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->EntityId, $this->getName());
 			return [
 				$aQuota['Used'],
 				$aQuota['Limit']

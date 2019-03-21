@@ -42,12 +42,15 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 		{
 			foreach ($aUsers as $oUser) 
 			{
-				$principals[] = array(
-					'id' => $oUser['UUID'],
-					'uri' => 'principals/'.$oUser['PublicId'],
-//					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
-					'{DAV:}displayname' => $oUser['Name'],
-				);
+                if (!empty($oUser))
+                {
+                    $principals[] = array(
+                        'id' => $oUser['UUID'],
+                        'uri' => 'principals/'.$oUser['PublicId'],
+//    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
+                        '{DAV:}displayname' => !empty($oUser['Name']) ? $oUser['Name'] : $oUser['PublicId'],
+                    );
+                }
 			}
 		}
 

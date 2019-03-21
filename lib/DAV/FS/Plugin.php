@@ -56,7 +56,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	{
 		if ($this->oMinModule == null) 
 		{
-			$this->oMinModule = \Aurora\System\Api::GetModule('Min');
+			$this->oMinModule = \Aurora\Modules\Min\Module::getInstance();
 		}
 		return $this->oMinModule;
 	}

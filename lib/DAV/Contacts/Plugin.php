@@ -4,6 +4,8 @@
 
 namespace Afterlogic\DAV\Contacts;
 
+use Aurora\System\Managers\Eav;
+
 class Plugin extends \Sabre\DAV\ServerPlugin
 {
 
@@ -49,13 +51,18 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public function getPluginName()
     {
         return 'contacts';
-    }
+	}
+	
+	public static function isContact($uri)
+	{
+		$sUriExt = pathinfo($uri, PATHINFO_EXTENSION);
+		return ($sUriExt != null && strtoupper($sUriExt) == 'VCF');
+	}
 	
 	protected function getContact($iUserId, $sStorage, $sUID)
 	{
 		$mResult = false;
-		$oEavManager = new \Aurora\System\Managers\Eav();
-		$aEntities = $oEavManager->getEntities(
+		$aEntities = Eav::getInstance()->getEntities(
 			'Aurora\\Modules\\Contacts\\Classes\\Contact', 
 			[], 
 			0, 
@@ -113,7 +120,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserPublicId = $this->oServer->getUser();
+			$sUserPublicId = $this->oServer::getUser();
 			
 			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
@@ -145,48 +152,53 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 	
 	function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parent, &$modified) {
 		
-		if ($parent->childExists(basename($path)))
+		if (self::isContact($path))
 		{
-            throw new \Sabre\DAV\Exception\Conflict();
-			
-			return false;
+			if ($parent->childExists(basename($path)))
+			{
+				throw new \Sabre\DAV\Exception\Conflict();
+				
+				return false;
+			}
 		}
-
 	}	
 	
 	function afterCreateFile($sPath, \Sabre\DAV\ICollection $oParent)
 	{
-		$aPathInfo = pathinfo($sPath);
-		$sUUID = $aPathInfo['filename'];
-		$oNode = $oParent->getChild($aPathInfo['basename']);
-		
-		$sStorage = $this->getStorage($oParent->getName());
-		
-		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
+		if (self::isContact($sPath))
 		{
-			$iUserId = 0;
-			$sUserPublicId = $this->oServer->getUser();
-			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-			if ($oCoreDecorator)
-			{
-				$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
-				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-				{
-					$iUserId = $oUser->EntityId;
-				}
-			}
+			$aPathInfo = pathinfo($sPath);
+			$sUUID = $aPathInfo['filename'];
+			$oNode = $oParent->getChild($aPathInfo['basename']);
 			
-			if ($iUserId > 0) 
+			$sStorage = $this->getStorage($oParent->getName());
+			
+			if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 			{
-				\Aurora\System\Api::setUserId($iUserId);
-				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
-				if ($oContactDb)
+				$iUserId = 0;
+				$sUserPublicId = $this->oServer->getUser();
+				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
+				if ($oCoreDecorator)
 				{
-					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+					$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
+					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+					{
+						$iUserId = $oUser->EntityId;
+					}
 				}
-				else
+				
+				if ($iUserId > 0) 
 				{
-					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+					\Aurora\System\Api::setUserId($iUserId);
+					$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
+					if ($oContactDb)
+					{
+						$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+					}
+					else
+					{
+						$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+					}
 				}
 			}
 		}

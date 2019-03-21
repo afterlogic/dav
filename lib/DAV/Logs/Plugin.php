@@ -53,18 +53,17 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     {
 		$aHeaders = $this->server->httpRequest->getHeaders();
 
-    	\Aurora\System\Api::Log($sMethod . ' ' . $path, \ELogLevel::Full, 'sabredav-');
-    	\Aurora\System\Api::LogObject($aHeaders, \ELogLevel::Full, 'sabredav-');
+    	\Aurora\System\Api::Log($sMethod . ' ' . $path, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+    	\Aurora\System\Api::LogObject($aHeaders, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 
-		$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
-		$bLogBody = (bool) $oDavModule->getConfig('LogBody', false);
+		$bLogBody = (bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false);
 		if ($bLogBody)
 		{
 			$body = $this->server->httpRequest->getBodyAsString(); 		
 			$this->server->httpRequest->setBody($body);
-			\Aurora\System\Api::LogObject($body, \ELogLevel::Full, 'sabredav-');
+			\Aurora\System\Api::LogObject($body, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 		}
-		\Aurora\System\Api::Log('', \ELogLevel::Full, 'sabredav-');
+		\Aurora\System\Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 
     	return;
     }

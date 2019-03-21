@@ -19,6 +19,11 @@ class Server extends \Sabre\DAV\Server
 			$oInstance = new self(); 
 		} 
 		return $oInstance; 
+	}
+	
+	public function __invoke()
+	{
+		return self::getInstance();
 	}	
 	
 	protected function isModuleEnabled($sModule)
@@ -199,10 +204,11 @@ class Server extends \Sabre\DAV\Server
 			);				
 
 			$oRoot = new \Afterlogic\DAV\FS\Root();
-			if (count($oRoot->getChildren()) > 0)
-			{
+			
+			 if ($oRoot->getChildrenCount() > 0)
+			 {
 				$rootNode->addChild($oRoot);
-			}
+			 }
 		}
 	}
 	
@@ -291,5 +297,25 @@ class Server extends \Sabre\DAV\Server
 		}
 		
 		return $mPrincipal;
+	}
+
+	public static function getTenantName()
+	{
+		$sTanantName = null;
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId(
+			self::getUser()
+		);
+		if ($oUser)
+		{
+			$oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantById(
+				$oUser->IdTenant
+			);
+			if ($oTenant)
+			{
+				$sTanantName = $oTenant->Name;
+			}
+		}
+
+		return $sTanantName;
 	}
 }

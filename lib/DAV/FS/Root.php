@@ -9,26 +9,26 @@ class Root extends \Sabre\DAV\Collection {
 		return 'files';
 	}
 
+	public function getChildrenCount() 
+	{
+		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
+
+		return count($aStorages);
+	}
+
 	public function getChildren() 
 	{
 		$aChildren = [];
+		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
 
-		$oPersonalFiles = \Aurora\System\Api::GetModule('PersonalFiles'); 
-		if ($oPersonalFiles && !$oPersonalFiles->getConfig('Disabled', false)) 
+		foreach ($aStorages as $sStorage)
 		{
-			$aChildren[] = new Personal\Root();
-		}
+			$sClass = \implode(
+				'\\',
+				['Afterlogic', 'DAV', 'FS', \ucfirst($sStorage), 'Root']
+			);
 
-		$oCorpFiles = \Aurora\System\Api::GetModule('CorporateFiles'); 
-		if ($oCorpFiles && !$oCorpFiles->getConfig('Disabled', false)) 
-		{
-			$aChildren[] = new Corporate\Root();
-		}
-
-		$oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles'); 
-		if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false)) 
-		{
-			$aChildren[] = new Shared\Root();
+			$aChildren[] = new $sClass();
 		}
 			
 		return $aChildren;

@@ -11,7 +11,7 @@ class Backend
 	public static function __callStatic($sMethod, $aArgs)
 	{
 		$oResult = null;
-		if (!method_exists('\Afterlogic\DAV\Backend', $sMethod)) {
+		if (!method_exists('Backend', $sMethod)) {
 			
 			$oResult = self::getBackend(strtolower($sMethod));
 		}
@@ -24,28 +24,28 @@ class Backend
 			$oBackend = null;
 			switch ($sName) {
 				case 'auth':
-					$oBackend = \Afterlogic\DAV\Auth\Backend::getInstance();
+					$oBackend = Auth\Backend::getInstance();
 					break;
 				case 'principal':
-					$oBackend = new \Afterlogic\DAV\Principal\Backend\PDO();
+					$oBackend = new Principal\Backend\PDO();
 					break;
 				case 'caldav':
-					$oBackend = new \Afterlogic\DAV\CalDAV\Backend\PDO();
+					$oBackend = new CalDAV\Backend\PDO();
 					break;
 				case 'carddav':
-					$oBackend = new \Afterlogic\DAV\CardDAV\Backend\PDO();
+					$oBackend = new CardDAV\Backend\PDO();
 					break;
 				case 'carddav-owncloud':
-					$oBackend = new \Afterlogic\DAV\CardDAV\Backend\OwnCloudPDO();
+					$oBackend = new CardDAV\Backend\OwnCloudPDO();
 					break;
 				case 'lock':
-					$oBackend = new \Afterlogic\DAV\Locks\Backend\PDO();
+					$oBackend = new Locks\Backend\PDO();
 					break;
 				case 'reminders':
-					$oBackend = new \Afterlogic\DAV\Reminders\Backend\PDO();
+					$oBackend = new Reminders\Backend\PDO();
 					break;
 				case 'fs':
-					$oBackend = new \Afterlogic\DAV\FS\Backend\PDO();
+					$oBackend = new FS\Backend\PDO();
 					break;
 			}
 			if (isset($oBackend)) {

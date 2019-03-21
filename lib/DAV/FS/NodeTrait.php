@@ -2,22 +2,46 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Afterlogic\DAV\Server;
+
 trait NodeTrait
 {
-    public function getRootPath()
-	{
-		$sPath = null;
+	/**
+	 *
+	 * @var [string]
+	 */
+	protected $rootPath = null;
 
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-		$oServer->setUser($owner);
-		$oNode = $oServer->tree->getNodeForPath('files/'. $this->getStorage());
-		if ($oNode)
+	/**
+	 * @var string $storage
+	 */
+	protected $storage = null;
+
+	/**
+	 * @var string $UserPublicId
+	 */
+    protected $UserPublicId = null;		
+
+	
+	public function getStorage() 
+	{
+    	return $this->storage;
+	}
+	
+	public function getRootPath()
+	{
+		if ($this->rootPath === null)
 		{
-			$sPath = $oNode->getPath();
+			list(, $owner) = \Sabre\Uri\split($this->getOwner());
+			Server::getInstance()->setUser($owner);
+			$oNode = Server::getInstance()->tree->getNodeForPath('files/'. $this->getStorage());
+
+			if ($oNode)
+			{
+				$this->rootPath = $oNode->getPath();
+			}
 		}
-		
-		return $sPath;
+		return $this->rootPath;
     }  
         
 	public function getRelativePath() 
@@ -39,7 +63,7 @@ trait NodeTrait
 			$sRelativePath =  $this->getRelativePath();
 			$sPath = (!empty($sRelativePath) ? $sRelativePath . '/' : '') . $this->getName();
 
-			$pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+			$pdo = new Backend\PDO();
 			$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
 		}
 	}     
@@ -54,6 +78,40 @@ trait NodeTrait
         if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
 		
 		return $path;
+	}
+
+    public function getDisplayName()
+	{
+		return $this->getName();
+	}
+    
+    public function getId()
+	{
+		return $this->getName();
+    }
+    
+    public function getPath() 
+    {
+        return $this->path;
+    }
+
+	public function setPath($path)
+	{
+		$this->path = $path;
+	}	
+	
+    public function getOwner()
+	{
+        if ($this->UserPublicId === null) 
+        {
+			$this->UserPublicId = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
+		}
+		return $this->UserPublicId;
+	}	
+
+	public function getUser()
+	{
+		return $this->getOwner();
 	}
 
 }
