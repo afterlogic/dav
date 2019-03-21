@@ -38,7 +38,7 @@ class Root extends Directory
 
 		if (empty($sUserPublicId))
 		{
-			$sUserPublicId = $this->getUser();
+			$sUserPublicId =  $this->getUser();
 		}
 
 		$path = '/' . $sUserPublicId;

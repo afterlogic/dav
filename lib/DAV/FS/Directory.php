@@ -30,15 +30,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory
 		parent::__construct($path);
 	}
 
-	public function getUser()
-	{
-		if ($this->UserPublicId === null) 
-		{
-			$this->UserPublicId = \Afterlogic\DAV\Server::getUser();
-		}
-		return $this->UserPublicId;
-	}
-	
 	public function getUserObject()
 	{
 		if ($this->UserObject === null) 

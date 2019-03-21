@@ -102,16 +102,16 @@ trait NodeTrait
 	
     public function getOwner()
 	{
-        if ($this->UserPublicId === null) 
-        {
-			$this->UserPublicId = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
-		}
-		return $this->UserPublicId;
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->getUser();
 	}	
 
 	public function getUser()
 	{
-		return $this->getOwner();
+        if ($this->UserPublicId === null) 
+        {
+			$this->UserPublicId = \Afterlogic\DAV\Server::getUser();
+		}
+		return $this->UserPublicId;
 	}
 
 }

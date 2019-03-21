@@ -64,17 +64,28 @@ class File extends \Afterlogic\DAV\FS\File
 	
 	public function get() 
 	{
-        $aArgs = [
-            'Bucket' => $this->bucket,
-            'Key' => $this->path,
-        ];
-        $cmd = $this->client->getCommand('GetObject', $aArgs);
-        $request = $this->client->createPresignedRequest($cmd, '+5 minutes');	
+        $request = $this->client->createPresignedRequest(
+            $this->client->getCommand(
+                'GetObject', 
+                [
+                    'Bucket' => $this->bucket,
+                    'Key' => $this->path,
+                ]
+            ), 
+            '+5 minutes'
+        );	
         
+        $bNeedToOpen = false;
         $aPathInfo = pathinfo($this->path);
-        $bIsUrl = (isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url');
 
-        if (strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || $bIsUrl)
+        if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') || 
+            strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || 
+            (string) \Aurora\System\Application::GetPathItemByIndex(2, '') === 'thumb')
+        {
+            $bNeedToOpen = true;            
+        }
+
+        if ($bNeedToOpen)
         {
             return fopen((string) $request->getUri(), 'rb');		
         }
