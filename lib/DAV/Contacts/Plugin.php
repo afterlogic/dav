@@ -120,8 +120,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserPublicId = $this->oServer::getUser();
-			
+			$sUserPublicId = \Afterlogic\DAV\Server::getUser();
+
 			$oCoreDecorator = \Aurora\System\Api::GetModuleDecorator('Core');
 			if ($oCoreDecorator)
 			{
@@ -176,7 +176,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 			{
 				$iUserId = 0;
-				$sUserPublicId = $this->oServer->getUser();
+				$sUserPublicId = \Sabre\DAV\Server::getUser();
 				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 				if ($oCoreDecorator)
 				{
@@ -209,7 +209,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
 			$iUserId = 0;
-			$sUserPublicId = $this->oServer->getUser();
+			$sUserPublicId = \Sabre\DAV\Server::getUser();
 			
 			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
 			if ($oCoreDecorator)
