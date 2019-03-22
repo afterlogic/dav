@@ -61,10 +61,10 @@ class File extends \Afterlogic\DAV\FS\File
             return false;
         }
     }
-	
-	public function get() 
-	{
-        $request = $this->client->createPresignedRequest(
+
+    protected function getObject()
+    {
+        return $this->client->createPresignedRequest(
             $this->client->getCommand(
                 'GetObject', 
                 [
@@ -74,25 +74,48 @@ class File extends \Afterlogic\DAV\FS\File
             ), 
             '+5 minutes'
         );	
-        
-        $bNeedToOpen = false;
-        $aPathInfo = pathinfo($this->path);
-
-        if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') || 
-            strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || 
-            (string) \Aurora\System\Application::GetPathItemByIndex(2, '') === 'thumb')
+    }
+    
+    public function getUrl()
+    {
+        $sUrl = null;
+        $oObject = $this->getObject();
+        if ($oObject)
         {
-            $bNeedToOpen = true;            
+            $sUrl = (string) $oObject->getUri();
         }
 
-        if ($bNeedToOpen)
+        return $sUrl;
+    }
+
+    public function getBody()
+    {
+        $mResult = null;
+        $sUrl = $this->getUrl();
+        if (!empty($sUrl))
         {
-            return fopen((string) $request->getUri(), 'rb');		
+            $mResult = fopen($sUrl, 'rb');		
         }
-        else
+
+        return $mResult;
+    }
+
+	public function get() 
+	{
+        $sUrl = $this->getUrl();
+        if (!empty($sUrl))
         {
-            header('Location: ' . (string) $request->getUri());
-            exit;        
+            $aPathInfo = pathinfo($this->path);
+                        
+            if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') || 
+                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY')
+            {
+                return fopen($sUrl, 'rb');		
+            }
+            else
+            {
+                \Aurora\System\Api::Location($sUrl);
+            }
         }
 	}    
 
