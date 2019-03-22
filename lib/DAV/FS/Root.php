@@ -23,9 +23,18 @@ class Root extends \Sabre\DAV\Collection {
 
 		foreach ($aStorages as $sStorage)
 		{
+			$aClassPath = ['Afterlogic', 'DAV', 'FS'];
+
+			$aStoragePath = \explode('.', $sStorage);
+			foreach ($aStoragePath as $sPathItem)
+			{
+				$aClassPath[] = \ucfirst($sPathItem);
+			}
+			$aClassPath[] = 'Root';
+
 			$sClass = \implode(
 				'\\',
-				['Afterlogic', 'DAV', 'FS', \ucfirst($sStorage), 'Root']
+				$aClassPath
 			);
 
 			$aChildren[] = new $sClass();

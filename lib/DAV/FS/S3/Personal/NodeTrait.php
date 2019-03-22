@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\FS\S3;
+namespace Afterlogic\DAV\FS\S3\Personal;
 
 trait NodeTrait 
 {

@@ -2,7 +2,7 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS\Corporate;
+namespace Afterlogic\DAV\FS\Local\Corporate;
 
 class Root extends Directory 
 {

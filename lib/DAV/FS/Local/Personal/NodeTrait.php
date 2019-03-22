@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\FS\Personal;
+namespace Afterlogic\DAV\FS\Local\Personal;
 
 trait NodeTrait 
 {

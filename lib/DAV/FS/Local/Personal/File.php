@@ -2,7 +2,7 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS\Personal;
+namespace Afterlogic\DAV\FS\Local\Personal;
 
 class File extends \Afterlogic\DAV\FS\File
 {

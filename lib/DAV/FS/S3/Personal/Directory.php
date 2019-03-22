@@ -2,7 +2,7 @@
 
 /* -AFTERLOGIC LICENSE HEADER- */
 
-namespace Afterlogic\DAV\FS\S3;
+namespace Afterlogic\DAV\FS\S3\Personal;
 
 use Aws\Common\Exception\MultipartUploadException;
 use Aws\S3\MultipartUploader;
