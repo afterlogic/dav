@@ -107,12 +107,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$sPath = null;
 
 		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$sUser = $oServer->getUser();
 		$oServer->setUser($sUserPublicId);
 		$oNode = $oServer->tree->getNodeForPath('files/'. $sStorage);
 		if ($oNode)
 		{
 			$sPath = $oNode->getPath();
 		}
+		$oServer->setUser($sUser);
 
 		return $sPath;
 	}

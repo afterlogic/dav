@@ -4,8 +4,11 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class Root extends \Afterlogic\DAV\FS\Personal\Root implements \Sabre\DAVACL\IACL {
+class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 	
+    use NodeTrait;    
+//    use \Afterlogic\DAV\FS\NodeTrait, NodeTrait;    
+
 	protected $pdo = null;
 	
 	public function __construct() {

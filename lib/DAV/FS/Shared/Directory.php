@@ -6,7 +6,7 @@ namespace Afterlogic\DAV\FS\Shared;
 
 class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL 
 {
-    use NodeTrait;
+    use NodeTrait;    
     
     protected $owner;
     protected $principalUri;
@@ -23,6 +23,12 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
 
         parent::__construct($storage, $path);
     }
+
+    // public function getOwner() {
+
+    //     return $this->principalUri;
+
+    // }
 
     public function getAccess() 
     {

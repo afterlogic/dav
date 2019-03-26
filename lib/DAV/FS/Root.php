@@ -4,6 +4,8 @@ namespace Afterlogic\DAV\FS;
 
 class Root extends \Sabre\DAV\Collection {
 
+	use NodeTrait;
+
 	public function getName() 
 	{
 		return 'files';

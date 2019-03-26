@@ -24,10 +24,10 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         parent::__construct($storage, $path);
     }
 
-    public function getOwner() 
-    {
-        return $this->principalUri;
-    }
+    // public function getOwner() 
+    // {
+    //     return $this->principalUri;
+    // }
 
     public function getAccess() 
     {
