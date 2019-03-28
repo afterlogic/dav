@@ -9,7 +9,7 @@ use Aws\S3\MultipartUploader;
 use Aws\S3\S3Client;
 
 
-class Directory extends \Afterlogic\DAV\FS\Directory
+class Directory extends \Afterlogic\DAV\FS\S3\Directory
 {
 	use NodeTrait;
 

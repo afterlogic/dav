@@ -7,7 +7,7 @@ namespace Afterlogic\DAV\FS\S3\Personal;
 use Aws\Common\Exception\MultipartUploadException;
 use Aws\S3\MultipartUploader;
 
-class File extends \Afterlogic\DAV\FS\File
+class File extends \Afterlogic\DAV\FS\S3\File
 {
     use NodeTrait;
     use PropertyStorageTrait;
