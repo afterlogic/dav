@@ -6,7 +6,6 @@ namespace Afterlogic\DAV\FS\Local\Corporate;
 
 class Root extends Directory 
 {
-	
 	public function __construct() 
 	{
 		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE;

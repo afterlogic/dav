@@ -6,22 +6,16 @@ namespace Afterlogic\DAV\FS\Shared;
 
 class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL 
 {
-    use NodeTrait;    
-	
-	protected $owner;
-    protected $principalUri;
-	protected $access;
-	protected $uid;
+	protected $node;
 
-    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) 
+    public function __construct($node) 
     {
-        $this->owner = $owner;
-        $this->principalUri = $principalUri;
-        $this->access = $access;
-        $this->uid = $uid;
-        $this->inRoot = $inRoot;
-        
-        parent::__construct($storage, $path);
+        $this->node = $node;
+    }
+
+    public function getPath()
+    {
+        return $this->node->getPath();
     }
 
     // public function getOwner() 
@@ -31,13 +25,12 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getAccess() 
     {
-        return $this->access;
+        return $this->node->getAccess();
     }
 
     public function getName() 
     {
-        list(, $name) = \Sabre\Uri\split($this->getPath());
-        return isset($this->uid) ? $this->uid : $name;
+        return $this->node->getName();
     }	
 
     public function getId()
@@ -48,9 +41,6 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     public function getDisplayName()
 	{
         return $this->getName();
-
-//        list(, $name) = \Sabre\Uri\split($this->getPath());
-//        return $name;
 	}
 
     /**
@@ -60,14 +50,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     function getLastModified() 
     {
-        if (\file_exists($this->path))
-        {
-            return \filemtime($this->path);
-        }
-        else
-        {
-            return null;
-        }
+        return $this->node->getLastModified();
     }    
 
     /**
@@ -77,28 +60,18 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     function getSize() 
     {
-        if (\file_exists($this->path))
-        {
-            return \filesize($this->path);
-        }
-        else
-        {
-            return null;
-        }
+        return $this->node->getSize();
     }        
+
+    function get()
+    {
+        return $this->node->get();
+    }    
 
     function delete()
     {
-        if ($this->inRoot)
-        {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-
             $pdo->deleteShare($this->principalUri, $this->getId());
-        }
-        else
-        {
-            parent::delete();
-        }
     }
 
     /**
@@ -109,14 +82,12 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     public function setName($name) 
     {
-        if (!$this->inRoot)
-        {
-            parent::setName($name);
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Conflict();            
-        }
+        throw new \Sabre\DAV\Exception\Conflict();            
+    }
+
+    public function put($data)
+    {
+        return $this->node->put($data);
     }
 
 }

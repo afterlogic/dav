@@ -4,11 +4,11 @@
 
 namespace Afterlogic\DAV\FS;
 
-class File extends \Sabre\DAV\FSExt\File 
+class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL 
 {
     use NodeTrait;
     use PropertyStorageTrait;
-
+    
 	public function __construct($storage, $path)
 	{
 		$this->storage = $storage;

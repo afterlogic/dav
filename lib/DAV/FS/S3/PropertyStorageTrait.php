@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\FS\S3\Personal;
+namespace Afterlogic\DAV\FS\S3;
 
 trait PropertyStorageTrait
 {

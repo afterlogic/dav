@@ -4,7 +4,7 @@
 
 namespace Afterlogic\DAV\FS;
 
-class Directory extends \Sabre\DAV\FSExt\Directory 
+class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 {
 	use NodeTrait;
     use PropertyStorageTrait;

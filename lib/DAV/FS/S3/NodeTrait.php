@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\FS\S3\Personal;
+namespace Afterlogic\DAV\FS\S3;
 
 trait NodeTrait 
 {
@@ -27,7 +27,7 @@ trait NodeTrait
 	{
 		$mResult = false;
 
-		$sUserPublicId = \Afterlogic\DAV\Server::getUser();
+		$sUserPublicId = $this->getUser();
 
 		$sSuffix = $bIsFolder ? '/' : '';
 
@@ -83,7 +83,7 @@ trait NodeTrait
      */
     public function setName($name) 
     {
-		$sUserPublicId = \Afterlogic\DAV\Server::getUser();
+		$sUserPublicId = $this->getUser();
 
 		$path = str_replace($sUserPublicId, '', $this->path);
 

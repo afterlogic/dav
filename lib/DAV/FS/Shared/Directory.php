@@ -4,49 +4,28 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
-class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL 
+class Directory extends \Afterlogic\DAV\FS\Directory
 {
-    use NodeTrait;    
-    
-    protected $owner;
-    protected $principalUri;
-	protected $access;
-	protected $uid;
+    protected $node;
 
-    public function __construct($owner, $principalUri, $storage, $path, $access, $uid = null, $inRoot = false) 
+    public function __construct($node) 
     {
-        $this->owner = $owner;
-        $this->principalUri = $principalUri;
-        $this->access = $access;
-        $this->uid = $uid;
-        $this->inRoot = $inRoot;
-
-        parent::__construct($storage, $path);
+        $this->node = $node;
     }
 
-    // public function getOwner() {
-
-    //     return $this->principalUri;
-
-    // }
-
-    public function getAccess() 
+    public function getPath()
     {
-        return $this->access;
+        return $this->node->getPath();
     }
 
     public function getName() 
     {
-        list(, $name) = \Sabre\Uri\split($this->path);
-        return isset($this->uid) ? $this->uid : $name;
+        return $this->node->getName();
     }	
 
     public function getDisplayName()
 	{
         return $this->getName();
-
-//        list(, $name) = \Sabre\Uri\split($this->path);
-//        return $name;
 	}
 
     public function getId()
@@ -56,35 +35,18 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
 
     public function getChild($path) 
     {
-        $mResult = null;
-        
-        $path = $this->path . '/' . $path;
+        return $this->node->getChild($path);
+    }
 
-        if (!\file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
-
-		if (\is_dir($path))
-		{
-            $mResult = new self($this->owner, $this->principalUri, $this->storage, $path, $this->access);
-		}
-		else
-		{
-            $mResult = new File($this->owner, $this->principalUri, $this->storage, $path, $this->access);
-		}
-		
-        return $mResult;
+    public function getChildren()
+    {
+        return $this->node->getChildren();
     }
 
     function delete()
     {
-        if ($this->inRoot)
-        {
-            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            $pdo->deleteShare($this->principalUri, $this->getId());
-        }
-        else
-        {
-            parent::delete();
-        }
+        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+        $pdo->deleteShare($this->principalUri, $this->getId());
     }   
     
     /**
@@ -95,13 +57,17 @@ class Directory extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IA
      */
     public function setName($name) 
     {
-        if (!$this->inRoot)
-        {
-            parent::setName($name);
-        }
-        else
-        {
-            throw new \Sabre\DAV\Exception\Conflict();            
-        }
+        throw new \Sabre\DAV\Exception\Conflict();            
     }    
+
+	public function createDirectory($name) 
+	{
+        $this->node->createDirectory($name);
+    }
+
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
+	{
+        return $this->node-> createFile($name, $data, $rangeType, $offset, $extendedProps);
+    }
+    
 }

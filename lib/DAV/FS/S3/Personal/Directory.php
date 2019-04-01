@@ -11,8 +11,6 @@ use Aws\S3\S3Client;
 
 class Directory extends \Afterlogic\DAV\FS\S3\Directory
 {
-	use NodeTrait;
-
 	/**
 	 * @var [S3Client]
 	 */
@@ -63,24 +61,24 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 		}
 	}
 
-	/**
-	 * Undocumented function
-	 *
-	 * @param [type] $name
-	 * @return boolean
-	 */
-	public function isDirectory($name)
-	{
-		$this->getIterator();
-		foreach ($this->objects as $object) 
-		{
-			if (strcmp($name, basename($object['Key'])) === 0 && substr($object['Key'], -1) === '/') 
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+	// /**
+	//  * Undocumented function
+	//  *
+	//  * @param [type] $name
+	//  * @return boolean
+	//  */
+	// public function isDirectory($name)
+	// {
+	// 	$this->getIterator();
+	// 	foreach ($this->objects as $object) 
+	// 	{
+	// 		if (strcmp($name, basename($object['Key'])) === 0 && substr($object['Key'], -1) === '/') 
+	// 		{
+	// 			return true;
+	// 		}
+	// 	}
+	// 	return false;
+	// }
 
 	public function Search($sPattern, $sPath = null) 
 	{
@@ -232,7 +230,7 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
             return false;
         }
 
-		$sUserPublicId = \Afterlogic\DAV\Server::getUser();
+		$sUserPublicId = $this->getUser();
 		$fromPath = str_replace($sUserPublicId, '', $sourceNode->getPath());
 		$toPath = rtrim(str_replace($sUserPublicId, '', $this->getPath()), '/');
 

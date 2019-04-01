@@ -4,10 +4,8 @@
 
 namespace Afterlogic\DAV\FS\Local\Personal;
 
-class Directory extends \Afterlogic\DAV\FS\Directory 
+class Directory extends \Afterlogic\DAV\FS\Local\Directory 
 {
-	use NodeTrait;
-	
 	public function __construct($path) 
 	{
 		parent::__construct(\Aurora\System\Enums\FileStorageType::Personal, $path);

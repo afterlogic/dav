@@ -9,9 +9,6 @@ use Aws\S3\MultipartUploader;
 
 class File extends \Afterlogic\DAV\FS\S3\File
 {
-    use NodeTrait;
-    use PropertyStorageTrait;
-    
 	protected $client;
 	protected $bucket;
 	protected $object;
