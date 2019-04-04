@@ -17,7 +17,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
 		}
 		
-		return 'principals/' . $sTenantPrincipal;
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
 	}
 
 

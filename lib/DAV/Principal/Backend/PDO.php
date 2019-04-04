@@ -46,7 +46,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
                 {
                     $principals[] = array(
                         'id' => $oUser['UUID'],
-                        'uri' => 'principals/'.$oUser['PublicId'],
+                        'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$oUser['PublicId'],
 //    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
                         '{DAV:}displayname' => !empty($oUser['Name']) ? $oUser['Name'] : $oUser['PublicId'],
                     );
@@ -71,7 +71,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         list(, $sUsername) = \Sabre\Uri\split($path);
 		return array(
 			'id' => $sUsername,
-			'uri' => 'principals/'.$sUsername,
+			'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$sUsername,
 //			'{http://sabredav.org/ns}email-address' => $sUsername,
 			'{DAV:}displayname' => $sUsername,
 		);
@@ -134,13 +134,12 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
 			
-			$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
-			$oAccount = $oUsersManager->getAccountByEmail(
-					$searchProperties['{http://sabredav.org/ns}email-address']
-			);
-			if ($oAccount instanceof \CAccount) {
-				
-	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oAccount->Email;
+			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
+                $searchProperties['{http://sabredav.org/ns}email-address']
+            );
+            if ($oUser instanceof \Aurora\Modules\Core\Classes\User) 
+            {
+	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 			}
 		}
 		

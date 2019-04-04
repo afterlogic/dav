@@ -63,7 +63,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 	{
 		$mResult = false;
 		$aEntities = Eav::getInstance()->getEntities(
-			'Aurora\\Modules\\Contacts\\Classes\\Contact', 
+			\Aurora\Modules\Contacts\Classes\Contact::class, 
 			[], 
 			0, 
 			1,
@@ -117,7 +117,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterUnbind($sPath)
     {
-		if ($this->oContactsDecorator) 
+		if ($this->oContactsDecorator && self::isContact($sPath)) 
 		{
 			$iUserId = 0;
 			$sUserPublicId = \Afterlogic\DAV\Server::getUser();

@@ -99,7 +99,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
         $aCards = [];
 
 		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
-			'Aurora\Modules\Contacts\Classes\Contact',
+			\Aurora\Modules\Contacts\Classes\Contact::class,
 			[
 				'LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'
 			], 
@@ -146,12 +146,12 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
     public function getCTag() {
 
 		$iResult = \Aurora\System\Managers\Eav::getInstance()->getEntitiesCount(
-			'Aurora\Modules\Contacts\Classes\Contact',
+			\Aurora\Modules\Contacts\Classes\Contact::class,
 			['Storage' => 'team']
 		);
 		
 		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
-			'Aurora\Modules\Contacts\Classes\Contact',
+			\Aurora\Modules\Contacts\Classes\Contact::class,
 			[
 				'DateModified'
 			], 

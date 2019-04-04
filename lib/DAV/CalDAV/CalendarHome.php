@@ -4,34 +4,28 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
-
-	public function getName() {
-		
+class CalendarHome  extends \Sabre\CalDAV\CalendarHome
+{
+	public function getName() 
+	{
 		return 'calendars';
-		
 	}
 	
-	public function __construct(\Sabre\CalDAV\Backend\BackendInterface $caldavBackend, $principalInfo = null) {
-		
+	public function __construct(\Sabre\CalDAV\Backend\BackendInterface $caldavBackend, $principalInfo = null) 
+	{
 		parent::__construct($caldavBackend, $principalInfo);
 	}
 	
-	public function init() {
-		
+	public function init() 
+	{
 		if (empty($this->principalInfo))
 		{
-			$sUserPublicId = \Afterlogic\DAV\Server::getUser();
-			if (!empty($sUserPublicId))
-			{
-				$this->principalInfo = \Afterlogic\DAV\Server::getPrincipalInfo($sUserPublicId);
-			}
-			
+			$this->principalInfo = \Afterlogic\DAV\Server::getCurrentPrincipalInfo();
 		}
 	}
 	
-	public function getACL() {
-		
+	public function getACL() 
+	{
 		$this->init();
 		return parent::getACL();
 	}
@@ -46,7 +40,7 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
 		}
 		
-		return 'principals/' . $sTenantPrincipal;
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
 	}
 	
 	protected function allowSharing()
@@ -55,31 +49,78 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 		return $oCorporateCalendar && $oCorporateCalendar->getConfig('AllowShare');
 	}
 
+	protected function initCalendar($calendar, &$bHasDefault)
+	{
+		$oCalendar = null;
+		
+		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
+		{
+			$oCalendar = new Shared\Calendar($this->caldavBackend, $calendar);
+			if (!$bHasDefault && $oCalendar->isOwned() && $oCalendar->isDefault())
+			{
+				$bHasDefault = true;
+			}
+		} 
+		else 
+		{
+			$oCalendar = new Calendar($this->caldavBackend, $calendar);			
+			if (!$bHasDefault && $oCalendar->isDefault())
+			{
+				$bHasDefault = true;
+			}
+		}
+
+		return $oCalendar;
+	}
+
 	protected function _getChildren()
 	{
 		$aChildren = [];
 		$calendars = $this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']);
-        foreach ($calendars as $calendar) {
-            if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) {
-                $aChildren[] = new Shared\Calendar($this->caldavBackend, $calendar);
-            } else {
-                $aChildren[] = new Calendar($this->caldavBackend, $calendar);
-            }
-        }
+		$bHasDefault = false;
+		foreach ($calendars as $calendar) 
+		{
+			$aChildren[] = $this->initCalendar($calendar, $bHasDefault);
+		}
 
-        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
+		if (!$bHasDefault)
+		{
+			$aCreateCalendarResult = $this->caldavBackend->createCalendar(
+				$this->principalInfo['uri'], 
+				\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID, 
+				[
+					'{DAV:}displayname' => \Aurora\Modules\Calendar\Module::getInstance()->i18n('CALENDAR_DEFAULT_NAME'),
+					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR
+				]
+			);
+
+			if (is_array($aCreateCalendarResult) && isset($aCreateCalendarResult[0]))
+			{
+				$calendar = $this->caldavBackend->getParentCalendar((int) $aCreateCalendarResult[0]);	
+				if ($calendar)
+				{
+					$aChildren[] = $this->initCalendar($calendar, $bHasDefault);
+				}
+			}
+		}
+
+		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) 
+		{
             $aChildren[] = new \Sabre\CalDAV\Schedule\Inbox($this->caldavBackend, $this->principalInfo['uri']);
             $aChildren[] = new \Sabre\CalDAV\Schedule\Outbox($this->principalInfo['uri']);
         }
 
         // We're adding a notifications node, if it's supported by the backend.
-        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport) {
+		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport) 
+		{
             $aChildren[] = new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
         }
 
         // If the backend supports subscriptions, we'll add those as well,
-        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) {
-            foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) {
+		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) 
+		{
+			foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) 
+			{
                 $aChildren[] = new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
             }
 		}
@@ -105,7 +146,7 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 					$oUser = \Aurora\System\Api::getAuthenticatedUser();
 					if ($oUser)
 					{
-						$calendar['principaluri'] = 'principals/' . $oUser->PublicId;
+						$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 					}
 				}
 
@@ -194,8 +235,8 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
      * @param string $name
      * @return Calendar
      */
-    function getChild($name) {
-		
+	function getChild($name) 
+	{
 		$this->init();
 		$oChild = false;
 		try
@@ -221,7 +262,7 @@ class CalendarRoot  extends \Sabre\CalDAV\CalendarHome{
 							$oUser = \Aurora\System\Api::getAuthenticatedUser();
 							if ($oUser)
 							{
-								$calendar['principaluri'] = 'principals/' . $oUser->PublicId;
+								$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 							}
 
 							$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);

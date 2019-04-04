@@ -13,9 +13,8 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar {
 
     use \Afterlogic\DAV\CalDAV\CalendarTrait;
 
-    public function getProperties($requestedProperties)
+    public function isOwned()
     {
-        return $this->_getProperties($this->calendarInfo, $requestedProperties);
+        return $this->getShareAccess() === \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER;
     }
-
 }

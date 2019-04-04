@@ -85,7 +85,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	
 	public function afterCreateFile($uri, \Sabre\DAV\ICollection $parent)
 	{
-		if (Backend\PDO::isEvent($uri)) {
+		if (Backend\PDO::isEvent($uri)) 
+		{
 			$node = $parent->getChild(Backend\PDO::getEventUri($uri));
 			if ($node)
 			{

@@ -39,7 +39,7 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
-			$sPrincipalUri = 'principals/' . $oUser->PublicId;
+			$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 		}
 
         switch ($this->getShareAccess()) {
@@ -122,7 +122,7 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
-			$sPrincipalUri = 'principals/' . $oUser->PublicId;
+			$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 		}
 
 		switch ($this->getShareAccess()) {

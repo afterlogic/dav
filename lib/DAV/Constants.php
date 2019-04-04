@@ -28,6 +28,7 @@ class Constants
 	const GLOBAL_CONTACTS = 'Global Contacts';
 	const CALENDAR_DEFAULT_NAME = 'My calendar';
 	const CALENDAR_DEFAULT_COLOR = '#f09650';
+	const CALENDAR_DEFAULT_UUID = 'MyCalendar';
 
 	const TASKS_DEFAULT_NAME = 'My tasks';
 	const TASKS_DEFAULT_COLOR = '#f68987';

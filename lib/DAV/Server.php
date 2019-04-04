@@ -154,7 +154,7 @@ class Server extends \Sabre\DAV\Server
 			);
 
 			$rootNode->addChild(
-				new CalDAV\CalendarRoot(
+				new CalDAV\CalendarHome(
 					Backend::Caldav()
 				)
 			);
@@ -297,6 +297,22 @@ class Server extends \Sabre\DAV\Server
 		}
 		
 		return $mPrincipal;
+	}
+
+	/**
+	 *
+	 * @return array
+	 */
+	public static function getCurrentPrincipalInfo()
+	{
+		$principalInfo = [];
+		$sUserPublicId = \Afterlogic\DAV\Server::getUser();
+		if (!empty($sUserPublicId))
+		{
+			$principalInfo = self::getPrincipalInfo($sUserPublicId);
+		}
+
+		return $principalInfo;
 	}
 
 	public static function getTenantName()

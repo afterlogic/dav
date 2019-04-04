@@ -39,7 +39,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			$properties[$sOrderProp] = 1;
 		}
 		
-		parent::createCalendar($principalUri, $calendarUri, $properties);
+		return parent::createCalendar($principalUri, $calendarUri, $properties);
 	}
 
 	public function deletePrincipalCalendars($principalUri)
@@ -65,7 +65,7 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
 		}
 		
-		return 'principals/' . $sTenantPrincipal;
+		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
 	}	
 	
     public function getPublicCalendar($calendarId) {
@@ -223,7 +223,7 @@ SQL
 		if ($oUser)
 		{
 			$stmt = $this->pdo->prepare('UPDATE ' . $this->calendarInstancesTableName . ' SET `public` = ? WHERE principaluri = ? AND uri = ?');
-			$bResult =  $stmt->execute([(int)$value, 'principals/' . $oUser->PublicId, $calendarUri]);
+			$bResult =  $stmt->execute([(int)$value, \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId, $calendarUri]);
 		}
 		
 		return $bResult;
@@ -244,7 +244,7 @@ SQL
 		if ($oUser)
 		{
 			$stmt = $this->pdo->prepare('SELECT public FROM ' . $this->calendarInstancesTableName . ' WHERE principaluri = ? AND uri = ?');
-			$stmt->execute(['principals/' . $oUser->PublicId, $calendarUri]);
+			$stmt->execute([\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId, $calendarUri]);
 			$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 			if ($row)
 			{
