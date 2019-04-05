@@ -85,19 +85,7 @@ class File extends \Afterlogic\DAV\FS\S3\File
         return $sUrl;
     }
 
-    public function getBody()
-    {
-        $mResult = null;
-        $sUrl = $this->getUrl();
-        if (!empty($sUrl))
-        {
-            $mResult = fopen($sUrl, 'rb');		
-        }
-
-        return $mResult;
-    }
-
-	public function get() 
+	public function get($bRedirectToUrl = true) 
 	{
         $sUrl = $this->getUrl();
         if (!empty($sUrl))
@@ -105,7 +93,7 @@ class File extends \Afterlogic\DAV\FS\S3\File
             $aPathInfo = pathinfo($this->path);
                         
             if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') || 
-                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY')
+                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl)
             {
                 return fopen($sUrl, 'rb');		
             }

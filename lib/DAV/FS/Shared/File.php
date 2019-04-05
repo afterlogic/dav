@@ -63,9 +63,9 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         return $this->node->getSize();
     }        
 
-    function get()
+    function get($bRedirectToUrl = true)
     {
-        return $this->node->get();
+        return $this->node->get($bRedirectToUrl);
     }    
 
     function delete()

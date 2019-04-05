@@ -13,7 +13,12 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
 	{
 		$this->storage = $storage;
 		parent::__construct($path);
-	}
+    }
+    
+    public function get($bRedirectToUrl = false)
+    {
+        return parent::get();
+    }
     
     public function getDirectory() 
     {
