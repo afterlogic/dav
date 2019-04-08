@@ -57,15 +57,14 @@ class Utils
 	public static function ValidateClient($sClient)
 	{
 		$bIsSync = false;
-		if (isset($GLOBALS['server']) && $GLOBALS['server'] instanceof \Sabre\DAV\Server) {
-			$aHeaders = $GLOBALS['server']->httpRequest->getHeaders();
-			if (isset($aHeaders['user-agent'])) {
-				$sUserAgent = $aHeaders['user-agent'];
-				if (strpos(strtolower($sUserAgent), 'afterlogic ' . strtolower($sClient)) !== false) {
-					$bIsSync = true;
-				}
-			}
+
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+
+		$sUserAgent = $oServer->httpRequest->getHeader('user-agent');
+		if (isset($sUserAgent) && strpos(strtolower($sUserAgent), 'afterlogic ' . strtolower($sClient)) !== false) {
+			$bIsSync = true;
 		}
+
 		return $bIsSync;
 	}
 	//GetAccountByLogin

@@ -22,18 +22,34 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 		{
 			$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
 
-			$bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
-
 			$bIsMobileSync = false;
-			$bIsOutlookSync = false;
+			$bIsOutlookSyncAllowed = false;
 			$bIsDemo = false;
 
-//				if ($mResult !== false) {
+            if ($mResult !== false) 
+            {
 
-//					$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
+                $bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
+                $oOutlookSyncWebclientModule = \Aurora\Api::GetModule('OutlookSyncWebclient');
+                $bIsOutlookSyncAllowed = ($oOutlookSyncWebclientModule && !$oOutlookSyncWebclientModule->getConfig('Disabled', false));
+                if ($bIsOutlookSyncClient && !$bIsOutlookSyncAllowed)
+                {
+                    $mResult = false;
+                }
 
-//					return true;
+
+                $oMobileSyncModule = \Aurora\Api::GetModule('MobileSync');
+                $bIsMobileSyncAllowed = ($oMobileSyncModule && !$oMobileSyncModule->getConfig('Disabled', false));
+
+                if (!$bIsMobileSyncAllowed)
+                {
+                    $mResult = false;
+                }
+    
+
 /*					
+    			$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
+
 				$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
 				$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
 
@@ -43,7 +59,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 				);
 * 
 */
-//				}
+			}
 /*
 			if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
 					(($bIsMobileSync && !$bIsOutlookSyncClient) || 
@@ -51,7 +67,6 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 					$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
 				return true;
 			}
- * 
  */
 		}
 
