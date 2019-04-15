@@ -59,24 +59,34 @@ class File extends \Afterlogic\DAV\FS\S3\File
         }
     }
 
-    protected function getObject()
+    protected function getObject($bWithContentDisposition = false)
     {
+        $fileName = \basename($this->path);
+
+        $aArgs = [
+            'Bucket' => $this->bucket,
+            'Key' => $this->path,
+            'ResponseContentType' => \Aurora\System\Utils::MimeContentType($fileName)
+        ];
+
+        if ($bWithContentDisposition)
+        {
+            $aArgs['ResponseContentDisposition'] = "attachment; filename=". $fileName;
+        }
+
         return $this->client->createPresignedRequest(
             $this->client->getCommand(
                 'GetObject', 
-                [
-                    'Bucket' => $this->bucket,
-                    'Key' => $this->path,
-                ]
+                $aArgs
             ), 
             '+5 minutes'
         );	
     }
     
-    public function getUrl()
+    public function getUrl($bWithContentDisposition = false)
     {
         $sUrl = null;
-        $oObject = $this->getObject();
+        $oObject = $this->getObject($bWithContentDisposition);
         if ($oObject)
         {
             $sUrl = (string) $oObject->getUri();
@@ -103,7 +113,18 @@ class File extends \Afterlogic\DAV\FS\S3\File
                 exit;
             }
         }
+    }    
+    
+	public function getWithContentDisposition() 
+	{
+        $sUrl = $this->getUrl(true);
+        if (!empty($sUrl))
+        {
+            \Aurora\System\Api::Location($sUrl);
+            exit;
+        }
 	}    
+
 
     /**
      * Returns the last modification time, as a unix timestamp

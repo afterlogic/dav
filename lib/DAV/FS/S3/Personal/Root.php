@@ -31,6 +31,31 @@ class Root extends Directory
 			$client->createBucket([
 				'Bucket' => $sBucket
 			]);
+			$client->putBucketCors([
+				'Bucket' => $sBucket,
+				'CORSConfiguration' => [
+					'CORSRules' => [
+						[
+							'AllowedHeaders' => [
+								'*',
+							],
+							'AllowedMethods' => [
+								'GET',
+								'PUT',
+								'POST',
+								'DELETE',
+								'HEAD'
+							],
+							'AllowedOrigins' => [
+								(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"
+							],
+							'MaxAgeSeconds' => 0,
+						],
+					],
+				],
+				'ContentMD5' => '',
+			]);				
+
 		}
 
 		$endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
