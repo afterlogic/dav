@@ -49,25 +49,25 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		return $oCorporateCalendar && $oCorporateCalendar->getConfig('AllowShare');
 	}
 
-	protected function initCalendar($calendar, &$bHasDefault)
+	protected function initCalendar($calendar/*, &$bHasDefault*/)
 	{
 		$oCalendar = null;
 		
 		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) 
 		{
 			$oCalendar = new Shared\Calendar($this->caldavBackend, $calendar);
-			if (!$bHasDefault && $oCalendar->isOwned() && $oCalendar->isDefault())
-			{
-				$bHasDefault = true;
-			}
+			// if (!$bHasDefault && $oCalendar->isOwned() && $oCalendar->isDefault())
+			// {
+			// 	$bHasDefault = true;
+			// }
 		} 
 		else 
 		{
 			$oCalendar = new Calendar($this->caldavBackend, $calendar);			
-			if (!$bHasDefault && $oCalendar->isDefault())
-			{
-				$bHasDefault = true;
-			}
+			// if (!$bHasDefault && $oCalendar->isDefault())
+			// {
+			// 	$bHasDefault = true;
+			// }
 		}
 
 		return $oCalendar;
@@ -82,6 +82,17 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		{
 			$aChildren[] = $this->initCalendar($calendar, $bHasDefault);
 		}
+
+		
+		$bCountOwnCalendars = 0;
+		foreach ($aChildren as $oCalendar)
+		{
+			if ($oCalendar instanceof Calendar || ($oCalendar instanceof Shared\Calendar && $oCalendar->isOwned()))
+			{
+				$bCountOwnCalendars++;
+			}
+		}
+		$bHasDefault = ($bCountOwnCalendars > 0);
 
 		if (!$bHasDefault)
 		{

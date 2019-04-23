@@ -173,8 +173,12 @@ trait PropertyStorageTrait
         $oldPathForShare = $sRelativePath . '/' .$oldName;
         $newPathForShare = $sRelativePath . '/' .$newName;
 
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+        $oSharedFiles =  \Aurora\System\Api::GetModule('SharedFiles');
+        if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
+        {
+            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+        }
 
         // We're deleting the existing resourcedata, and recreating it
         // for the new path.
