@@ -1,13 +1,18 @@
 <?php
+/**
+ * This code is licensed under AGPLv3 license or Afterlogic Software License
+ * if commercial version of the product was purchased.
+ * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
+ */
 
 namespace Afterlogic\DAV\CalDAV;
 
 /**
  * This object represents a CalDAV calendar.
- *
- * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
- * @author Evert Pot (http://evertpot.com/)
- * @license http://sabre.io/license/ Modified BSD License
+ * 
+ * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
+ * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
+ * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class Calendar extends \Sabre\CalDAV\Calendar {
 
@@ -17,5 +22,4 @@ class Calendar extends \Sabre\CalDAV\Calendar {
     {
         return $this->_getProperties($this->calendarInfo, $requestedProperties);
     }
-
 }
