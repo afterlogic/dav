@@ -37,6 +37,8 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
             if ($mResult !== false) 
             {
 
+                $mResult = true;
+
                 $bIsOutlookSyncClient = \Afterlogic\DAV\Utils::ValidateClient('outlooksync');
                 $oOutlookSyncWebclientModule = \Aurora\Api::GetModule('OutlookSyncWebclient');
                 $bIsOutlookSyncAllowed = ($oOutlookSyncWebclientModule && !$oOutlookSyncWebclientModule->getConfig('Disabled', false));
@@ -54,6 +56,9 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
                     $mResult = false;
                 }
     
+
+                \Aurora\System\Api::Log($mResult, \Aurora\System\Enums\LogLevel::Full, 'mobile-sync-');
+
 
 /*					
     			$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
