@@ -96,7 +96,7 @@ class Server extends \Sabre\DAV\Server
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
 		/* Logs Plugin */
-//                $this->addPlugin(new Logs\Plugin());
+    $this->addPlugin(new Logs\Plugin());
 		
 	}
 	
@@ -185,10 +185,11 @@ class Server extends \Sabre\DAV\Server
 				);
 			}
 
-	/*
 			$this->addPlugin(
 				new \Sabre\CalDAV\Schedule\Plugin()
 			);
+
+/*			
 			$this->addPlugin(
 				new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host')
 			);
