@@ -151,7 +151,7 @@ class Root extends Directory
 
 		if ($oUser)
 		{
-			$sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitInMb'} * 1024 * 1024;
+			$sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
 		}
 
  		return [
