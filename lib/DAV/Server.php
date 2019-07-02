@@ -96,7 +96,7 @@ class Server extends \Sabre\DAV\Server
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
 		/* Logs Plugin */
-    $this->addPlugin(new Logs\Plugin());
+//    $this->addPlugin(new Logs\Plugin());
 		
 	}
 	
