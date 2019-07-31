@@ -329,7 +329,7 @@ class Server extends \Sabre\DAV\Server
 		);
 		if ($oUser)
 		{
-			$oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantById(
+			$oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantUnchecked(
 				$oUser->IdTenant
 			);
 			if ($oTenant)

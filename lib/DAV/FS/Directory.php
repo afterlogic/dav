@@ -58,7 +58,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 			$oUser = $this->getUserObject();
 			if ($oUser)
 			{
-				$this->oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantById($oUser->IdTenant);
+				$this->oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantUnchecked($oUser->IdTenant);
 			}
 		}
 		
