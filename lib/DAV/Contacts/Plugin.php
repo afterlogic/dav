@@ -67,7 +67,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		return ($sUriExt != null && strtoupper($sUriExt) == 'VCF');
 	}
 	
-	protected function getContact($iUserId, $sStorage, $sUID)
+	protected function getContactFromDB($iUserId, $sStorage, $sUID)
 	{
 		$mResult = false;
 		$aEntities = Eav::getInstance()->getEntities(
@@ -89,6 +89,26 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		return $mResult;
 	}
 	
+	protected function getGroupFromDB($iUserId, $sUID)
+	{
+		$mResult = false;
+		$aEntities = Eav::getInstance()->getEntities(\Aurora\Modules\Contacts\Classes\Group::class, 
+			[], 
+			0, 
+			1,
+			[
+				'IdUser' => $iUserId,
+				'DavContacts::UID' => $sUID
+			]
+		);
+		if (is_array($aEntities) && count($aEntities) > 0)
+		{
+			$mResult = $aEntities[0];
+		}
+		
+		return $mResult;
+	}
+
 	protected function getStorage($sStorage)
 	{
 		$sResult = 'personal';
@@ -146,12 +166,23 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				\Aurora\System\Api::setUserId($iUserId);
 
 				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
-				$oContact = $this->getContact($iUserId, $sStorage, $aPathInfo['filename']);
+				$oContact = $this->getContactFromDB($iUserId, $sStorage, $aPathInfo['filename']);
 				if ($oContact)
 				{
 					$this->oContactsDecorator->DeleteContacts(
+						$sStorage,
 						array($oContact->UUID)
 					);
+				}
+				else
+				{
+					$oGroup = $this->getGroupFromDB($iUserId, $aPathInfo['filename']);
+					if ($oGroup)
+					{
+						$this->oContactsDecorator->DeleteGroup(
+							$oGroup->UUID
+						);
+					}
 				}
 			}
 		}
@@ -176,94 +207,95 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		if (self::isContact($sPath))
 		{
 			$aPathInfo = pathinfo($sPath);
-			$sUUID = $aPathInfo['filename'];
 			$oNode = $oParent->getChild($aPathInfo['basename']);
-			
 			$sStorage = $this->getStorage($oParent->getName());
-			
-			if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
-			{
-				$iUserId = 0;
-				$sUserPublicId = \Afterlogic\DAV\Server::getUser();
-				$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-				if ($oCoreDecorator)
-				{
-					$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
-					if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-					{
-						$iUserId = $oUser->EntityId;
-					}
-				}
-				
-				if ($iUserId > 0) 
-				{
-					\Aurora\System\Api::setUserId($iUserId);
-					$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
-					if ($oContactDb)
-					{
-						$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
-					}
-					else
-					{
-						$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
-					}
-				}
-			}
+
+			$this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
 		}
 	}
 
 	function afterWriteContent($sPath, \Sabre\DAV\IFile $oNode)
 	{
+		$aPathInfo = pathinfo($sPath);
+		$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
+		$this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
+	}
+
+	protected function updateOrCreateContactItem($sPath, \Sabre\DAV\IFile $oNode, $sStorage)
+	{
+		$aPathInfo = pathinfo($sPath);
+		
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
+			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
+				\Afterlogic\DAV\Server::getUser()
+			);
+
 			$iUserId = 0;
-			$sUserPublicId = \Afterlogic\DAV\Server::getUser();
-			
-			$oCoreDecorator = \Aurora\Modules\Core\Module::Decorator();
-			if ($oCoreDecorator)
+			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
 			{
-				$oUser = $oCoreDecorator->GetUserByPublicId($sUserPublicId);
-				if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-				{
-					$iUserId = $oUser->EntityId;
-				}
+				$iUserId = $oUser->EntityId;
 			}
 			
 			if ($iUserId > 0) 
 			{
 				\Aurora\System\Api::setUserId($iUserId);
 
-				$sName = $oNode->getName();
-				$aNamePathInfo = pathinfo($sName);
-				$sUUID = $aNamePathInfo['filename'];
+				$sFileName = $aPathInfo['filename'];
 
-				$aPathInfo = pathinfo($sPath);
-				
-				$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
-				
-				$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
-
-				if (!isset($oContactDb)) 
+				$oContactDb = $this->getContactFromDB($iUserId, $sStorage, $sFileName);
+				if ($oContactDb)
 				{
-					$oVCard = \Sabre\VObject\Reader::read(
-						$oNode->get(), 
-						\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
-					);
-
-					if ($oVCard && $oVCard->UID)
-					{
-						$sUUID = (string) $oVCard->UID;
-						$oContactDb = $this->getContact($iUserId, $sStorage, $sUUID);
-					}
+					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sFileName, $sStorage);
 				}
+				else
+				{
+					$oGroupDb = $this->getGroupFromDB($iUserId, $sFileName);
+					if ($oGroupDb)
+					{
+						$this->oDavContactsDecorator->UpdateGroup($iUserId, $oNode->get(), $sFileName);
+					}
+					else 
+					{
+						$sData = $oNode->get();
+						$oVCard = \Sabre\VObject\Reader::read(
+							$sData, 
+							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
+						);
+						if ($oVCard && $oVCard->UID)
+						{
+							$oVCard = $oVCard->convert(\Sabre\VObject\Document::VCARD40);
+//							$sUUID = \str_replace('urn:uuid:', '', (string) $oVCard->UID);
 
-				if ($oContactDb instanceof \Aurora\Modules\Contacts\Classes\Contact) 
-				{
-					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sUUID, $oContactDb->Storage);
-				} 
-				else 
-				{
-					$this->oDavContactsDecorator->CreateContact($iUserId, $oNode->get(), $sUUID, $sStorage);
+							$sUUID = $sFileName;
+
+							$bIsGroup = (isset($oVCard->KIND) && strtoupper((string) $oVCard->KIND) === 'GROUP');
+							if ($bIsGroup)
+							{
+								$oGroupDb = $this->getGroupFromDB($iUserId, $sUUID);
+								if ($oGroupDb)
+								{
+									$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUUID);
+								}
+								else 
+								{
+									$this->oDavContactsDecorator->CreateGroup($iUserId, $sData, $sUUID);
+								}
+							}
+							else
+							{
+								$oContactDb = $this->getContactFromDB($iUserId, $sStorage, $sUUID);
+								if ($oContactDb)
+								{
+									$this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sUUID, $sStorage);
+								}
+								else 
+								{
+									$this->oDavContactsDecorator->CreateContact($iUserId, $sData, $sUUID, $sStorage);
+								}
+							}
+						}
+					}
 				}
 			}
 		}
