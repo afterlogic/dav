@@ -85,59 +85,5 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 
 		return $mResult;
 	}
-	
-    /**
-     * When this method is called, the backend must check if authentication was
-     * successful.
-     *
-     * The returned value must be one of the following
-     *
-     * [true, "principals/username"]
-     * [false, "reason for failure"]
-     *
-     * If authentication was successful, it's expected that the authentication
-     * backend returns a so-called principal url.
-     *
-     * Examples of a principal url:
-     *
-     * principals/admin
-     * principals/user1
-     * principals/users/joe
-     * principals/uid/123457
-     *
-     * If you don't use WebDAV ACL (RFC3744) we recommend that you simply
-     * return a string such as:
-     *
-     * principals/users/[username]
-     *
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     * @return array
-     */
-    public function check(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response) {
 
-        $auth = new \Sabre\HTTP\Auth\Basic(
-            $this->realm,
-            $request,
-            $response
-        );
-
-        $userpass = $auth->getCredentials($request);
-        if (!$userpass) 
-		{
-            return [false, "No 'Authorization: Basic' header found. Either the client didn't send one, or the server is mis-configured"];
-        }
-        $mValidateResult = $this->validateUserPass($userpass[0], $userpass[1]);
-		if (!$mValidateResult) 
-		{
-            return [false, "Username or password was incorrect"];
-        }
-		else
-		{
-			$mValidateResult = $userpass[0];
-		}
-		
-        return [true, $this->principalPrefix . $mValidateResult];
-
-    }	
 }
