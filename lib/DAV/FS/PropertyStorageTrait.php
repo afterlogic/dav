@@ -18,13 +18,13 @@ trait PropertyStorageTrait
     public function getProperty($sName)
     {
         $aData = $this->getResourceData();
-        return isset($aData[$sName]) ? $aData[$sName] : null;
+        return isset($aData['properties'][$sName]) ? $aData['properties'][$sName] : null;
     }
 
     public function setProperty($sName, $mValue)
     {
         $aData = $this->getResourceData();
-        $aData[$sName] = $mValue;
+        $aData['properties'][$sName] = $mValue;
         $this->putResourceData($aData);
     }	
 

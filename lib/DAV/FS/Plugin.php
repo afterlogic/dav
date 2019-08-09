@@ -7,12 +7,20 @@
 
 namespace Afterlogic\DAV\FS;
 
+use function GuzzleHttp\json_encode;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class Plugin extends \Sabre\DAV\ServerPlugin {
+
+	/**
+	 *
+	 * @var \Sabre\DAV\Server $server
+	 */
+	protected $server = null;
 
     /**
      * @var string $sUserPublicId
@@ -93,6 +101,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
         $server->on('propFind', [$this, 'propFind'], 30);
 		$server->on('method:MOVE', [$this, 'move'], 30);   
+		$server->on('method:GET', [$this, 'methodGet'], 10);   
+		$server->on('afterMethod:PUT', [$this, 'afterMethodPut'], 10);  
+		$this->server = $server;
 	}
 
     /**
@@ -223,6 +234,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			}
 
         });
+
+		$propFind->handle('{DAV:}extended-props', function() use ($node) {
+			if ($node instanceof \Afterlogic\DAV\FS\File)
+			{
+				 return $node->getProperty('ExtendedProps');
+			}
+
+        });
 	}
 
 	/**
@@ -234,4 +253,39 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		return true;
 	}
 
+	function methodGet($request, $response) 
+	{
+		$node = $this->server->tree->getNodeForPath($request->getPath());
+		if ($node instanceof \Afterlogic\DAV\FS\File)
+		{
+			$aExtendedProps = $node->getProperty('ExtendedProps');
+			if (is_array($aExtendedProps))
+			{
+				foreach ($aExtendedProps as $key => $value)	
+				{
+					$response->setHeader('ExtendedProps-' . $key, $value);
+				}
+			}
+		}
+	}
+
+	function afterMethodPut($request, $response)
+	{
+		$node = $this->server->tree->getNodeForPath($request->getPath());
+		if ($node instanceof \Afterlogic\DAV\FS\File)
+		{
+			$aExtendedProps[] = [];
+			foreach ($request->getHeaders() as $sKey => $aHeader)
+			{
+				if (\strtolower(\substr($sKey, 0, 14)) === 'extendedprops-')
+				{
+					$aExtendedProps[\substr($sKey, 14)] = $aHeader[0];
+				}
+			}
+			if (count($aExtendedProps) > 0)
+			{
+				$node->setProperty('ExtendedProps', $aExtendedProps);
+			}
+		}
+	}
 }
