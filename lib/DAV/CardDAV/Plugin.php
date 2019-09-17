@@ -7,6 +7,9 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -25,4 +28,28 @@ class Plugin extends \Sabre\CardDAV\Plugin {
         return self::ADDRESSBOOK_ROOT;
 
     }
+
+    /**
+     * This event is triggered after GET requests.
+     *
+     * This is used to transform data into jCal, if this was requested.
+     *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @return void
+     */
+    function httpAfterGet(RequestInterface $request, ResponseInterface $response) {
+        try
+        {
+            parent::httpAfterGet($request, $response);
+        }
+        catch (\Exception $oEx)
+        {
+            $mBody = $response->getBody();
+            if (is_resource($mBody))
+            {
+                \rewind($mBody);
+            }
+        }
+    }    
 }

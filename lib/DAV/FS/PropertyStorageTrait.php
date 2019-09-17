@@ -142,20 +142,22 @@ trait PropertyStorageTrait
     {
         $path = $this->getResourceInfoPath();
 
-        $handle1 = @fopen($path,'r');
-
         $data = [];
-        if (is_resource($handle1))
+        if (file_exists($path))
         {
-            $data = '';
-            rewind($handle1);
-            // Reading data until the eof
-            while(!feof($handle1)) 
+            $handle1 = @fopen($path,'r');
+            if (is_resource($handle1))
             {
-                $data.=fread($handle1,8192);
+                $data = '';
+                rewind($handle1);
+                // Reading data until the eof
+                while(!feof($handle1)) 
+                {
+                    $data.=fread($handle1,8192);
+                }
+                $data = unserialize($data);
+                fclose($handle1);
             }
-            $data = unserialize($data);
-            fclose($handle1);
         }
 
         $handle2 = fopen($path,'w');

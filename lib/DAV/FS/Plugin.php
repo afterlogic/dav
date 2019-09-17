@@ -235,13 +235,19 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
         });
 
+		if ($node instanceof \Afterlogic\DAV\FS\File)
+		{
+			$propFind->set('{DAV:}extended-props', $node->getProperty('ExtendedProps'));
+		}
+/*
 		$propFind->handle('{DAV:}extended-props', function() use ($node) {
 			if ($node instanceof \Afterlogic\DAV\FS\File)
 			{
 				 return $node->getProperty('ExtendedProps');
 			}
 
-        });
+		});
+*/
 	}
 
 	/**
@@ -261,10 +267,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			$aExtendedProps = $node->getProperty('ExtendedProps');
 			if (is_array($aExtendedProps))
 			{
+				$aHeaderValues = [];
 				foreach ($aExtendedProps as $key => $value)	
 				{
-					$response->setHeader('ExtendedProps-' . $key, $value);
+					if (!is_array($value))
+					{
+						$aHeaderValues[] = $key . "=" . '"' . $value . '"';
+					}
 				}
+				$response->setHeader('Extended-Props', \implode("; ", $aHeaderValues));
 			}
 		}
 	}
@@ -277,9 +288,14 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			$aExtendedProps[] = [];
 			foreach ($request->getHeaders() as $sKey => $aHeader)
 			{
-				if (\strtolower(\substr($sKey, 0, 14)) === 'extendedprops-')
+				if (\strtolower($sKey) === 'extended-props')
 				{
-					$aExtendedProps[\substr($sKey, 14)] = $aHeader[0];
+					$aValues = \explode(";", $aHeader[0]);
+					foreach ($aValues as $sValue)
+					{
+						list($sKeyValue, $sValue) = \explode("=", \trim($sValue));
+						$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
+					}
 				}
 			}
 			if (count($aExtendedProps) > 0)
