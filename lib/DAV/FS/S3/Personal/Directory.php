@@ -223,10 +223,10 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 
     public function delete() 
     {
-        $res = $this->client->deleteObject([
-            'Bucket' => $this->bucket,
-            'Key' => rtrim($this->path, '/') . '/'
-        ]);	
+        $res = $this->client->deleteMatchingObjects(
+            $this->bucket,
+            rtrim($this->path, '/') . '/'
+        );	
 	}	
 
 	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode) 

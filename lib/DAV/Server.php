@@ -199,7 +199,8 @@ class Server extends \Sabre\DAV\Server
 	
 	protected function initFiles()
 	{
-		if ($this->isModuleEnabled('Files') && $this->isModuleEnabled('MobileSync'))
+		$sHeader = $this->httpRequest->getHeader('X-Client');
+		if ($this->isModuleEnabled('Files') && ($this->isModuleEnabled('MobileSync') || $sHeader === 'WebClient'))
 		{
 			$rootNode = $this->tree->getNodeForPath('');
 

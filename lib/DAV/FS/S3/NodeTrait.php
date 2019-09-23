@@ -41,45 +41,106 @@ trait NodeTrait
 
 		$sSuffix = $bIsFolder ? '/' : '';
 
-		$sFullFromPath = $this->bucket . '/' . $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix;
+		$sFullFromPath = $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix;
 		$sFullToPath = $sUserPublicId . $sToPath.'/'.$sNewName. $sSuffix;
 
-		$oObject = $this->client->HeadObject([
-			'Bucket' => $this->bucket,
-			'Key' => $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix
-		]);
-		
-		$aMetadata = [];
-		$sMetadataDirective = 'COPY';
-		if ($oObject)
+		if ($bIsFolder)
 		{
-			$aMetadata = $oObject->get('Metadata');
-			$sMetadataDirective = 'REPLACE';
-		}
+			$objects = $this->client->getIterator('ListObjects', array(
+				"Bucket" => $this->bucket,
+				"Prefix" => $sFullFromPath //must have the trailing forward slash "/"
+			));	
 
-		if (is_array($aUpdateMetadata))
-		{
-			$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
-		}
+			$aKeys = [];
+			$batchHeadObject = [];
+			foreach ($objects as $object)
+			{
+				$aKeys[$object['ETag']] = $object['Key'];
+				$batchHeadObject[] = $this->client->getCommand('HeadObject', [
+					'Bucket'     => $this->bucket,
+					'Key' => $object['Key']
+				]);
+			}
+			
+			$aSubMetadata = [];
+			$HeadObjectResults = \Aws\CommandPool::batch($this->client, $batchHeadObject);
+			foreach($HeadObjectResults as $result) 
+			{
+				if ($result instanceof \Aws\ResultInterface) 
+				{
+					$aSubMetadata[$result['ETag']] = $result->get('Metadata');
+				}
+			}
 
-		$res = $this->client->copyObject([
-			'Bucket' => $this->bucket,
-			'Key' => $sFullToPath,
-			'CopySource' => $sFullFromPath,
-			'Metadata' => $aMetadata,
-			'MetadataDirective' => $sMetadataDirective
-		]);
-
-		if ($res)	
-		{
+			$batchCopyObject = [];
+			foreach ($aKeys as $sETag => $sKey) 
+			{
+				$sNewKey = \str_replace($sFullFromPath, $sFullToPath, $sKey);
+				$batchCopyObject[] = $this->client->getCommand('CopyObject', [
+					'Bucket'     => $this->bucket,
+					'Key'        => $sNewKey,
+					'CopySource' => $this->bucket . "/" . $sKey,
+					'Metadata' => $aSubMetadata[$sETag],
+					'MetadataDirective' => 'REPLACE'
+				]);				
+			}
+			try 
+			{
+				\Aws\CommandPool::batch($this->client, $batchCopyObject);
+				$mResult = true;
+			} 
+			catch (\Exception $e) 
+			{
+				$mResult = false;
+			}	
+			
 			if ($bMove)
 			{
-				$res = $this->client->deleteObject([
-					'Bucket' => $this->bucket,
-					'Key' => $sUserPublicId . $sFromPath.'/'.$sOldName . $sSuffix
-				]);					
+				// 3. Delete the objects.
+				$this->client->deleteObjects([
+					'Bucket'  => $this->bucket,
+					'Delete' => [
+						'Objects' => array_map(function($sKey) {return ['Key' => $sKey];}, $aKeys)
+					],
+				]);
 			}
-			$mResult = true;
+		}
+		else
+		{
+			$oObject = $this->client->HeadObject([
+				'Bucket' => $this->bucket,
+				'Key' => $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix
+			]);
+			
+			$aMetadata = [];
+			$sMetadataDirective = 'COPY';
+			if ($oObject)
+			{
+				$aMetadata = $oObject->get('Metadata');
+				$sMetadataDirective = 'REPLACE';
+			}
+	
+			if (is_array($aUpdateMetadata))
+			{
+				$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
+			}
+	
+			$res = $this->client->copyObject([
+				'Bucket' => $this->bucket,
+				'Key' => $sFullToPath,
+				'CopySource' => $this->bucket . '/' . $sFullFromPath,
+				'Metadata' => $aMetadata,
+				'MetadataDirective' => $sMetadataDirective
+			]);
+			if ($res)	
+			{
+				$this->client->deleteObject([
+					'Bucket' => $this->bucket,
+					'Key' => $sFullFromPath
+				]);					
+
+				$mResult = true;
+			}
 		}
 
 		return $mResult;
