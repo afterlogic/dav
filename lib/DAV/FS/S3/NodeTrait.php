@@ -41,8 +41,8 @@ trait NodeTrait
 
 		$sSuffix = $bIsFolder ? '/' : '';
 
-		$sFullFromPath = $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix;
-		$sFullToPath = $sUserPublicId . $sToPath.'/'.$sNewName. $sSuffix;
+		$sFullFromPath = $sUserPublicId . \rtrim($sFromPath, '/')  . '/' . $sOldName . $sSuffix;
+		$sFullToPath = $sUserPublicId .  \rtrim($sToPath, '/') . '/' . $sNewName. $sSuffix;
 
 		if ($bIsFolder)
 		{
@@ -109,7 +109,7 @@ trait NodeTrait
 		{
 			$oObject = $this->client->HeadObject([
 				'Bucket' => $this->bucket,
-				'Key' => $sUserPublicId . $sFromPath . '/' . $sOldName . $sSuffix
+				'Key' => $sFullFromPath
 			]);
 			
 			$aMetadata = [];
@@ -132,7 +132,7 @@ trait NodeTrait
 				'Metadata' => $aMetadata,
 				'MetadataDirective' => $sMetadataDirective
 			]);
-			if ($res)	
+			if ($res && $bMove)	
 			{
 				$this->client->deleteObject([
 					'Bucket' => $this->bucket,

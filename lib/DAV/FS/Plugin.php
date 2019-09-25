@@ -285,7 +285,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$node = $this->server->tree->getNodeForPath($request->getPath());
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$aExtendedProps[] = [];
+			$aExtendedProps = [];
 			foreach ($request->getHeaders() as $sKey => $aHeader)
 			{
 				if (\strtolower($sKey) === 'extended-props')
@@ -300,7 +300,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			}
 			if (count($aExtendedProps) > 0)
 			{
-				$node->setProperty('ExtendedProps', $aExtendedProps);
+				$node->setProperty('ExtendedProps', \json_encode($aExtendedProps));
 			}
 		}
 	}

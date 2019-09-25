@@ -181,6 +181,8 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
             rewind($rData);					
         }
 
+		$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+
         // Prepare the upload parameters.
         $uploader = new MultipartUploader($this->client, $rData, [
             'Bucket' => $this->bucket,

@@ -30,7 +30,7 @@ trait PropertyStorageTrait
 
             if (isset($aMetadata[\strtolower($sName)]))
             {
-                $prop = \json_decode($aMetadata[\strtolower($sName)]);
+                $prop = \json_decode($aMetadata[\strtolower($sName)], true);
             }
         }
         catch(\Exception $oEx){}
@@ -40,7 +40,9 @@ trait PropertyStorageTrait
 
     public function setProperty($sName, $mValue)
     {
-        list($path, $name) = \Sabre\Uri\split($this->path);
+		$sUserPublicId = $this->getUser();
+		$path = str_replace($sUserPublicId, '', $this->path);
+        list($path, $name) = \Sabre\Uri\split($path);
         $path = \rtrim($path, '/') . '/';
 
         $aUpdateMetadata[\strtolower($sName)] = $mValue;
