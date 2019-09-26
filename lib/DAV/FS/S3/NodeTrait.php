@@ -21,7 +21,7 @@ trait NodeTrait
 
 	public function getStorage()
 	{
-		return 'personal';
+		return $this->storage;
 	}
 
 	protected function updateUsedSpace()
