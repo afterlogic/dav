@@ -69,6 +69,10 @@ trait NodeTrait
 				if ($result instanceof \Aws\ResultInterface) 
 				{
 					$aSubMetadata[$result['ETag']] = $result->get('Metadata');
+					if (!$bMove)
+					{
+						$aSubMetadata[$result['ETag']]['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+					}
 				}
 			}
 
@@ -124,7 +128,11 @@ trait NodeTrait
 			{
 				$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
 			}
-	
+			if (!$bMove)
+			{
+				$aMetadata['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+			}
+
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
 				'Key' => $sFullToPath,

@@ -88,7 +88,7 @@ class File extends \Afterlogic\DAV\FS\File
                 'GetObject', 
                 $aArgs
             ), 
-            '+30 minutes'
+            '+30 second'
         );	
     }
     

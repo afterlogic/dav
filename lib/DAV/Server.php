@@ -49,6 +49,7 @@ class Server extends \Sabre\DAV\Server
 		self::$exposeVersion = false;
 
 		$this->httpResponse->setHeader("X-Server", Constants::DAV_SERVER_NAME);
+		$this->httpResponse->setHeader('Cache-Control', 'no-cache');
 
 		/* Authentication Plugin */
 		$this->addPlugin(
