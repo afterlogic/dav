@@ -64,7 +64,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		{
 			# list objects at given path when building the Directory.
 			# going that avoids listing several times
-			$this->objects = $this->client->getIterator('ListObjects', [
+			$this->objects = $this->client->getIterator('ListObjectsV2', [
 				'Bucket' => $this->bucket,
 				'Prefix' => rtrim($this->path, '/') . '/'
 			]);
@@ -164,7 +164,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		$this->getIterator(true);
 		foreach ($this->objects as $object) 
 		{
-			if (strcmp($name, basename($object['Key'])) === 0 || strcmp($name . '/', basename($object['Key'])) === 0) 
+			list($filePath,) = \Sabre\Uri\split($object['Key']);
+
+			if ($filePath === \rtrim($this->path, '/') && (strcmp($name, \basename($object['Key'])) === 0 || strcmp($name . '/', \basename($object['Key'])) === 0)) 
 			{
 				if (substr($object['Key'], -1) === '/')
 				{
