@@ -106,7 +106,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		{
 			$aCreateCalendarResult = $this->caldavBackend->createCalendar(
 				$this->principalInfo['uri'], 
-				\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID, 
+				\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID . '-' . \Sabre\DAV\UUIDUtil::getUUID(), 
 				[
 					'{DAV:}displayname' => \Aurora\Modules\Calendar\Module::getInstance()->i18n('CALENDAR_DEFAULT_NAME'),
 					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR
