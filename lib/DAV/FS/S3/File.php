@@ -80,7 +80,7 @@ class File extends \Afterlogic\DAV\FS\File
 
         if ($bWithContentDisposition)
         {
-            $aArgs['ResponseContentDisposition'] = "attachment; filename=". $fileName;
+            $aArgs['ResponseContentDisposition'] = "attachment; filename=\"". $fileName . "\"";
         }
 
         return $this->client->createPresignedRequest(
