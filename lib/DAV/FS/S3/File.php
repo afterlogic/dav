@@ -22,13 +22,14 @@ class File extends \Afterlogic\DAV\FS\File
 	protected $object;
     protected $storage;
 
-	public function __construct($object, $bucket, $client) 
+	public function __construct($object, $bucket, $client, $storage = null) 
 	{
 		$this->path = ltrim($object['Key'], '/');
 
 		$this->bucket = $bucket;
 		$this->client = $client;
 		$this->object = $object;
+		$this->storage = $storage;
 	}
 	
 	public function delete() 

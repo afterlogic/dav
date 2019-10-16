@@ -14,9 +14,11 @@ namespace Afterlogic\DAV\FS\S3\Corporate;
  */
 class Root extends \Afterlogic\DAV\FS\S3\Personal\Root 
 {
+	protected $storage = 'corporate';
+
 	public function __construct($sUser = null)
 	{
-		parent::__construct('corporate');
+		parent::__construct($this->storage);
 	}
 	
 	public function getName() 

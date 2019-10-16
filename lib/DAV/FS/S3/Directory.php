@@ -21,7 +21,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     use NodeTrait;
 
 	/**
-	 * @var [\Aws\S3\S3ClientInterface]
+	 * @var \Aws\S3\S3ClientInterface
 	 */
 	protected $client;
 
@@ -40,7 +40,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	 * @param [string] $bucket
 	 * @param [S3Client] $client
 	 */
-	public function __construct($object, $bucket, $client) 
+	public function __construct($object, $bucket, $client, $storage = null) 
 	{
 		if (is_string($object))
 		{
@@ -56,6 +56,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 		$this->bucket = $bucket;
 		$this->client = $client;
+		$this->storage = $storage;
 	}
 
 	public function getIterator($bRenew = false)
@@ -125,22 +126,22 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 					{
                         if ($this->isCorporate($item['Key']))
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\Directory($item, $this->bucket, $this->client);
+                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\Directory($item, $this->bucket, $this->client, $this->storage);
                         }
                         else
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\Directory($item, $this->bucket, $this->client);
+                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\Directory($item, $this->bucket, $this->client, $this->storage);
                         }
 					} 
 					else 
 					{
                         if ($this->isCorporate($item['Key']))
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\File($item, $this->bucket, $this->client);
+                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\File($item, $this->bucket, $this->client, $this->storage);
                         }
                         else
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\File($item, $this->bucket, $this->client);
+                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\File($item, $this->bucket, $this->client, $this->storage);
                         }
 					}
 				}
@@ -170,17 +171,17 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			{
 				if (substr($object['Key'], -1) === '/')
 				{
-					return new Directory($object, $this->bucket, $this->client);
+					return new Directory($object, $this->bucket, $this->client, $this->storage);
 				}
 				else
 				{
-					return new File($object, $this->bucket, $this->client);
+					return new File($object, $this->bucket, $this->client, $this->storage);
 				}
 			}
 		}
 
 		// if not a file nor a directory, throw an exception
-        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
+//        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
 	}
 	
 	public function createDirectory($name)

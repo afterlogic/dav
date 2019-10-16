@@ -20,7 +20,7 @@ class Root extends Directory
 {
 	protected $client = null;
 
-	public function __construct($sUserPublicId = null) 
+	public function __construct($sPrefix = null) 
 	{
 		$oModule = S3Filestorage\Module::getInstance();
 
@@ -69,14 +69,14 @@ class Root extends Directory
 		$endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
 		$this->client = $this->getS3Client($endpoint, true);
 
-		if (empty($sUserPublicId))
+		if (empty($sPrefix))
 		{
-			$sUserPublicId =  $this->getUser();
+			$sPrefix =  $this->getUser();
 		}
 
-		$path = '/' . $sUserPublicId;
+		$path = '/' . $sPrefix;
 
-		parent::__construct($path, $sBucket, $this->client);
+		parent::__construct($path, $sBucket, $this->client, $this->storage);
 	}
 
 	protected function getS3Client($endpoint, $bucket_endpoint = false)

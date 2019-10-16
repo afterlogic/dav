@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use LogicException;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -51,8 +53,21 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 		{
 			$sCurrentUser = \Afterlogic\DAV\Server::getInstance()->getUser();
 			\Afterlogic\DAV\Server::getInstance()->setUser(basename($aSharedFile['owner']));
-			$oItem = \Afterlogic\DAV\Server::getInstance()->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
-			$oItem->setAccess((int) $aSharedFile['access']);
+			$oItem = null;
+			try
+			{
+				$oItem = \Afterlogic\DAV\Server::getInstance()->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
+			}
+			catch (\Exception $oEx)
+			{
+				\Aurora\Api::LogException($oEx);
+			}
+
+			if (isset($oItem))
+			{
+				$oItem->setAccess((int) $aSharedFile['access']);
+			}
+			
 			\Afterlogic\DAV\Server::getInstance()->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
