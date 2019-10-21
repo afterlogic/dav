@@ -36,34 +36,7 @@ class Root extends Directory
 
 		if(!$client->doesBucketExist($sBucket)) 
 		{
-			$client->createBucket([
-				'Bucket' => $sBucket
-			]);
-			$client->putBucketCors([
-				'Bucket' => $sBucket,
-				'CORSConfiguration' => [
-					'CORSRules' => [
-						[
-							'AllowedHeaders' => [
-								'*',
-							],
-							'AllowedMethods' => [
-								'GET',
-								'PUT',
-								'POST',
-								'DELETE',
-								'HEAD'
-							],
-							'AllowedOrigins' => [
-								(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"
-							],
-							'MaxAgeSeconds' => 0,
-						],
-					],
-				],
-				'ContentMD5' => '',
-			]);				
-
+			$this->createBucket($client, $sBucket);
 		}
 
 		$endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
@@ -83,16 +56,11 @@ class Root extends Directory
 	{
 		$oModule = S3Filestorage\Module::getInstance();
 
-		$signature_version = 'v4';
-		if (!$bucket_endpoint)
-		{
-			$signature_version = 'v4-unsigned-body';
-		}
-
 		$sRegion = $oModule->getConfig('Region');
 		$sAccessKey = $oModule->getConfig('AccessKey');
 		$sSecretKey = $oModule->getConfig('SecretKey');
 
+		$signature_version = (!$bucket_endpoint) ? 'v4-unsigned-body' : 'v4';
 
 		return S3Client::factory([
 			'region' => $sRegion,
@@ -106,6 +74,37 @@ class Root extends Directory
 			'signature_version' => $signature_version
 		]);					
 	}	
+
+	protected function createBucket($client, $sBucket)
+	{
+		$client->createBucket([
+			'Bucket' => $sBucket
+		]);
+		$client->putBucketCors([
+			'Bucket' => $sBucket,
+			'CORSConfiguration' => [
+				'CORSRules' => [
+					[
+						'AllowedHeaders' => [
+							'*',
+						],
+						'AllowedMethods' => [
+							'GET',
+							'PUT',
+							'POST',
+							'DELETE',
+							'HEAD'
+						],
+						'AllowedOrigins' => [
+							(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"
+						],
+						'MaxAgeSeconds' => 0,
+					],
+				],
+			],
+			'ContentMD5' => '',
+		]);				
+	}
 
 	public function getName() 
 	{

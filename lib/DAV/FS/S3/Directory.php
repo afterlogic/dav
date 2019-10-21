@@ -101,6 +101,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return \substr($sPath, 0, 9) === 'corporate';
     }
 	 
+    protected function isDirectory($sPath)
+    {
+        return \substr($sPath, -1) === '/';
+    }
+
 	public function getChildren($sPattern = null) 
 	{
 		$children = [];
@@ -115,33 +120,33 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 		foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item) 
 		{
-			$sItemNameLowercase = \mb_strtolower(\urldecode(basename($item['Key'])));
+			$sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
 			 if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern))
 			 {
 				$iItemSlashesCount = substr_count($item['Key'], '/');
 				if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' || 
 					$iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern))
 				{
-					if (substr($item['Key'], -1) === '/') 
+					if ($this->isDirectory($item['Key'])) 
 					{
                         if ($this->isCorporate($item['Key']))
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\Directory($item, $this->bucket, $this->client, $this->storage);
+                            $children[] = new Corporate\Directory($item, $this->bucket, $this->client, $this->storage);
                         }
                         else
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\Directory($item, $this->bucket, $this->client, $this->storage);
+                            $children[] = new Personal\Directory($item, $this->bucket, $this->client, $this->storage);
                         }
 					} 
 					else 
 					{
                         if ($this->isCorporate($item['Key']))
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Corporate\File($item, $this->bucket, $this->client, $this->storage);
+                            $children[] = new Corporate\File($item, $this->bucket, $this->client, $this->storage);
                         }
                         else
                         {
-                            $children[] = new \Afterlogic\DAV\FS\S3\Personal\File($item, $this->bucket, $this->client, $this->storage);
+                            $children[] = new Personal\File($item, $this->bucket, $this->client, $this->storage);
                         }
 					}
 				}
