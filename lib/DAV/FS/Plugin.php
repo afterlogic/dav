@@ -99,7 +99,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	{
 		$server->on('beforeBind', [$this, 'beforeBind'], 30);
 		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
-        $server->on('propFind', [$this, 'propFind'], 30);
+        $server->on('propFind', [$this, 'propFind'], 250);
 		$server->on('method:MOVE', [$this, 'move'], 30);   
 		$server->on('method:GET', [$this, 'methodGet'], 10);   
 		$server->on('afterMethod:PUT', [$this, 'afterMethodPut'], 10);  
@@ -227,27 +227,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      */
 	function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node) 
 	{
-		$propFind->handle('{DAV:}displayname', function() use ($node) {
-			if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
-			{
-				return $node->getDisplayName();
-			}
-
-        });
+		if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
+		{
+			$propFind->handle('{DAV:}displayname', $node->getDisplayName());
+		}
 
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$propFind->set('{DAV:}extended-props', $node->getProperty('ExtendedProps'));
+			$propFind->handle('{DAV:}extended-props', $node->getProperty('ExtendedProps'));
 		}
-/*
-		$propFind->handle('{DAV:}extended-props', function() use ($node) {
-			if ($node instanceof \Afterlogic\DAV\FS\File)
-			{
-				 return $node->getProperty('ExtendedProps');
-			}
-
-		});
-*/
 	}
 
 	/**
