@@ -31,9 +31,6 @@ class Backend
 		if (!isset(self::$aBackends[$sName])) {
 			$oBackend = null;
 			switch ($sName) {
-				case 'auth':
-					$oBackend = Auth\Backend::getInstance();
-					break;
 				case 'principal':
 					$oBackend = new Principal\Backend\PDO();
 					break;
@@ -42,9 +39,6 @@ class Backend
 					break;
 				case 'carddav':
 					$oBackend = new CardDAV\Backend\PDO();
-					break;
-				case 'carddav-owncloud':
-					$oBackend = new CardDAV\Backend\OwnCloudPDO();
 					break;
 				case 'lock':
 					$oBackend = new Locks\Backend\PDO();

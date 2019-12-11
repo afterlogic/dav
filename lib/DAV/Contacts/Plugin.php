@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\Contacts;
 
+use Aurora\System\EAV\Query;
 use Aurora\System\Managers\Eav;
 
 /**
@@ -69,44 +70,33 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 	
 	protected function getContactFromDB($iUserId, $sStorage, $sUID)
 	{
-		$mResult = false;
-		$aEntities = Eav::getInstance()->getEntities(
-			\Aurora\Modules\Contacts\Classes\Contact::class, 
-			[], 
-			0, 
-			1,
-			[
+		return (new \Aurora\System\EAV\Query())
+			->select()
+			->whereType(\Aurora\Modules\Contacts\Classes\Contact::class)
+			->where([
 				'IdUser' => $iUserId,
 				'Storage' => $sStorage,
 				'DavContacts::UID' => $sUID
-			]
-		);
-		if (is_array($aEntities) && count($aEntities) > 0)
-		{
-			$mResult = $aEntities[0];
-		}
-		
-		return $mResult;
+			])
+			->offset(0)
+			->limit(1)
+			->one()
+			->exec();
 	}
 	
 	protected function getGroupFromDB($iUserId, $sUID)
 	{
-		$mResult = false;
-		$aEntities = Eav::getInstance()->getEntities(\Aurora\Modules\Contacts\Classes\Group::class, 
-			[], 
-			0, 
-			1,
-			[
+		return (new \Aurora\System\EAV\Query())
+			->select()
+			->whereType(\Aurora\Modules\Contacts\Classes\Group::class)
+			->where([
 				'IdUser' => $iUserId,
 				'DavContacts::UID' => $sUID
-			]
-		);
-		if (is_array($aEntities) && count($aEntities) > 0)
-		{
-			$mResult = $aEntities[0];
-		}
-		
-		return $mResult;
+			])
+			->offset(0)
+			->limit(1)
+			->one()
+			->exec();
 	}
 
 	protected function getStorage($sStorage)
@@ -170,8 +160,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 				if ($oContact)
 				{
 					$this->oContactsDecorator->DeleteContacts(
+						$iUserId,
 						$sStorage,
-						array($oContact->UUID)
+						[$oContact->UUID]
 					);
 				}
 				else
@@ -180,6 +171,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					if ($oGroup)
 					{
 						$this->oContactsDecorator->DeleteGroup(
+							$iUserId,
 							$oGroup->UUID
 						);
 					}
@@ -216,48 +208,46 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 	function afterWriteContent($sPath, \Sabre\DAV\IFile $oNode)
 	{
-		$aPathInfo = pathinfo($sPath);
-		$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
-		$this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
+		if ($oNode instanceof \Sabre\CardDAV\ICard)
+		{		
+			$aPathInfo = pathinfo($sPath);
+			$sStorage = $this->getStorage(basename($aPathInfo['dirname']));
+			
+			$this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
+		}
 	}
 
 	protected function updateOrCreateContactItem($sPath, \Sabre\DAV\IFile $oNode, $sStorage)
 	{
-		$aPathInfo = pathinfo($sPath);
-		
 		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
 		{
 			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
 				\Afterlogic\DAV\Server::getUser()
 			);
 
-			$iUserId = 0;
-			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-			{
-				$iUserId = $oUser->EntityId;
-			}
+			$iUserId = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oUser->EntityId : 0;
 			
 			if ($iUserId > 0) 
 			{
 				\Aurora\System\Api::setUserId($iUserId);
 
+				$sData = $oNode->get();
+
+				$aPathInfo = pathinfo($sPath);
 				$sFileName = $aPathInfo['filename'];
 
-				$oContactDb = $this->getContactFromDB($iUserId, $sStorage, $sFileName);
-				if ($oContactDb)
+				if ($this->getContactFromDB($iUserId, $sStorage, $sFileName))
 				{
-					$this->oDavContactsDecorator->UpdateContact($iUserId, $oNode->get(), $sFileName, $sStorage);
+					$this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sFileName, $sStorage);
 				}
 				else
 				{
-					$oGroupDb = $this->getGroupFromDB($iUserId, $sFileName);
-					if ($oGroupDb)
+					if ($this->getGroupFromDB($iUserId, $sFileName))
 					{
-						$this->oDavContactsDecorator->UpdateGroup($iUserId, $oNode->get(), $sFileName);
+						$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sFileName);
 					}
 					else 
 					{
-						$sData = $oNode->get();
 						$oVCard = \Sabre\VObject\Reader::read(
 							$sData, 
 							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
@@ -269,11 +259,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 							$sUUID = $sFileName;
 
-							$bIsGroup = (isset($oVCard->KIND) && strtoupper((string) $oVCard->KIND) === 'GROUP');
-							if ($bIsGroup)
+							if (isset($oVCard->KIND) && strtoupper((string) $oVCard->KIND) === 'GROUP')
 							{
-								$oGroupDb = $this->getGroupFromDB($iUserId, $sUUID);
-								if ($oGroupDb)
+								if ($this->getGroupFromDB($iUserId, $sUUID))
 								{
 									$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUUID);
 								}
@@ -284,8 +272,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 							}
 							else
 							{
-								$oContactDb = $this->getContactFromDB($iUserId, $sStorage, $sUUID);
-								if ($oContactDb)
+								if ($this->getContactFromDB($iUserId, $sStorage, $sUUID))
 								{
 									$this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sUUID, $sStorage);
 								}

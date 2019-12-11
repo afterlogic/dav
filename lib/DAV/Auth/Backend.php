@@ -14,19 +14,6 @@ namespace Afterlogic\DAV\Auth;
  */
 class Backend
 {
-	protected static $instance;
-	
-	public static function getInstance()
-	{
-        if (null === self::$instance)
-		{
-			$oDavModule = \Aurora\System\Api::GetModule('Dav'); 
-            self::$instance = ($oDavModule->getConfig('UseDigestAuth', false)) 
-					? new Backend\Digest() : new Backend\Basic();
-        }
-        return self::$instance;		
-	}
-	
 	/**
 	 * 
 	 */

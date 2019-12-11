@@ -25,9 +25,9 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	private $addressBookInfo;
 
     /**
-	 * @var int
+	 * @var string
      */
-	private $iUserId;
+	private $sUserPublicId;
 	
 	/**
      * Constructor
@@ -35,7 +35,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
     public function __construct($name, $displayname = '')
 	{
 		$this->name = $name;
-		$this->iUserId = null;
+		$this->sUserPublicId = null;
 
 		$this->addressBookInfo['{DAV:}displayname'] = (empty($displayname)) ? $name : $displayname;
     }
@@ -43,11 +43,11 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
 	public function getUser()
 	{
-		if ($this->iUserId == null) {
+		if ($this->sUserPublicId == null) {
 			
-			$this->iUserId = \Afterlogic\DAV\Server::getUser();
+			$this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
-		return $this->iUserId;
+		return $this->sUserPublicId;
 	}
 
 	/**
@@ -62,7 +62,10 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	{
 		$aPathInfo = pathinfo($name);
 		
-		$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity($aPathInfo['filename'], 'Aurora\Modules\Contacts\Classes\Contact');
+		$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity(
+			$aPathInfo['filename'], 
+			\Aurora\Modules\Contacts\Classes\Contact::class
+		);
 		if ($oContact)
 		{
 			$aName = [$oContact->LastName, $oContact->FirstName];
@@ -106,6 +109,13 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	{
         $aCards = [];
 
+		$iIdTenant = 0;
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($this->getUser());
+		if ($oUser)
+		{
+			$iIdTenant = $oUser->IdTenant;
+		}
+
 		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
 			\Aurora\Modules\Contacts\Classes\Contact::class,
 			[
@@ -113,7 +123,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			], 
 			0, 
 			0, 
-			['Storage' => 'team']
+			['Storage' => 'team', 'IdTenant' => $iIdTenant]
 		);
 		
 		if (is_array($aContacts) && count($aContacts) > 0)
@@ -220,8 +230,8 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
      */
     public function getOwner() {
 
-		$iUserId = $this->getUser();
-		return ($iUserId) ? 'principals/' . $iUserId : null;
+		$sUserPublicId = $this->getUser();
+		return ($sUserPublicId) ? 'principals/' . $sUserPublicId : null;
 
     }
 
@@ -252,11 +262,11 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
      */
     public function getACL() {
 
-		$iUserId = $this->getUser();
+		$sUserPublicId = $this->getUser();
         return [
             [
                 'privilege' => '{DAV:}read',
-                'principal' => ($iUserId) ? 'principals/' . $iUserId : null,
+                'principal' => ($sUserPublicId) ? 'principals/' . $sUserPublicId : null,
                 'protected' => true,
             ],
         ];

@@ -52,17 +52,20 @@ class Server extends \Sabre\DAV\Server
 		$this->httpResponse->setHeader('Cache-Control', 'no-cache');
 
 		/* Authentication Plugin */
-		$this->addPlugin(
-			new \Afterlogic\DAV\Auth\Plugin(Backend::Auth())
-		);
+		$oAuthPlugin = 	new \Afterlogic\DAV\Auth\Plugin(new \Afterlogic\DAV\Auth\Backend\Basic());
+		
+		$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
+		if ($oDavModule->getConfig('UseDigestAuth', false))
+		{
+			$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
+		}
+		$this->addPlugin($oAuthPlugin);
 
 		/* DAV ACL Plugin */
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
 		$aclPlugin->hideNodesFromListings = true;
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
-
-		$oDavModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav'); 
 
 		$mAdminPrincipal = $oDavModule->getConfig('AdminPrincipal', false);
 		$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
@@ -107,12 +110,7 @@ class Server extends \Sabre\DAV\Server
 		{
 			$rootNode = $this->tree->getNodeForPath('');
 			
-			$bIsOwncloud = false;
 			$rootNode->addChild(
-				($bIsOwncloud) ? 
-					new CardDAV\AddressBookRoot(
-							Backend::getBackend('carddav-owncloud')
-					) : 
 					new CardDAV\AddressBookRoot(
 							Backend::Carddav()
 					)

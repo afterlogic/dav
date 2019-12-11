@@ -101,10 +101,20 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome {
 		}
 		foreach($aAddressbooks as $addressbook) {
 			
-			$objs[] = new AddressBook(
+			if ($addressbook['uri'] === 'Collected')
+			{
+				$objs[] = new Collected\AddressBook(
 					$this->carddavBackend, 
 					$addressbook
-			);
+				);
+			}
+			else
+			{
+				$objs[] = new AddressBook(
+						$this->carddavBackend, 
+						$addressbook
+				);
+			}
 		}
 		$SharedContactsModule = \Aurora\System\Api::GetModule('SharedContacts');
 		if ($SharedContactsModule && !$SharedContactsModule->getConfig('Disabled', true)) {
