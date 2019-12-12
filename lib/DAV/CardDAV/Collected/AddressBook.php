@@ -67,16 +67,4 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         return $children;
 
     }
-    
-    /**
-     * Deletes the entire addressbook.
-     *
-     * @return void
-     */
-    function delete() {
-
-        throw new Forbidden();
-
-    }
-
 }
