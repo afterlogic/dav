@@ -186,8 +186,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		}
 
 		// if not a file nor a directory, throw an exception
-//        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
+        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
 	}
+	
 	
 	public function createDirectory($name)
 	{
