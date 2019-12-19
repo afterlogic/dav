@@ -184,7 +184,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			$iResult .= strtotime($aContacts[0]->DateModified);
 		}
 		
-		return (int) $iResult;
+		return $iResult;
 	}
 	
     public function getProperties($properties) {
