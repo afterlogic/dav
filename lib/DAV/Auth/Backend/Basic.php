@@ -56,10 +56,6 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
                     $mResult = false;
                 }
     
-
-                \Aurora\System\Api::Log($mResult, \Aurora\System\Enums\LogLevel::Full, 'mobile-sync-');
-
-
 /*					
     			$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
 

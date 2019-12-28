@@ -168,10 +168,10 @@ trait NodeTrait
 
 		list($path, $oldname) = \Sabre\Uri\split($path);
 
-		$this->copyObject($path, $path, $oldname, $name, $this->isDirectory(), true);
+		$this->copyObject($path, $path, $oldname, $name, $this->isDirectoryObject(), true);
 	}	
 	
-	public function isDirectory()
+	public function isDirectoryObject()
 	{
 		return ($this instanceof Directory);
 	}
