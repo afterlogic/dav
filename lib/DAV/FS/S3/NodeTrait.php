@@ -83,7 +83,7 @@ trait NodeTrait
 				$batchCopyObject[] = $this->client->getCommand('CopyObject', [
 					'Bucket'     => $this->bucket,
 					'Key'        => $sNewKey,
-					'CopySource' => $this->bucket . "/" . $sKey,
+					'CopySource' => $this->bucket . "/" . \Aws\S3\S3Client::encodeKey($sKey),
 					'Metadata' => $aSubMetadata[$sETag],
 					'MetadataDirective' => 'REPLACE'
 				]);				
@@ -136,7 +136,7 @@ trait NodeTrait
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
 				'Key' => $sFullToPath,
-				'CopySource' => $this->bucket . '/' . $sFullFromPath,
+				'CopySource' => $this->bucket . '/' . \Aws\S3\S3Client::encodeKey($sFullFromPath),
 				'Metadata' => $aMetadata,
 				'MetadataDirective' => $sMetadataDirective
 			]);
