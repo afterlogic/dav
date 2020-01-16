@@ -144,10 +144,9 @@ class Root extends Directory
 
 	public function getQuotaInfo()
 	{
-
-		$oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
 		$sUserSpaceLimitInMb = -1;
 
+		$oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
 		if ($oUser)
 		{
 			$sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
@@ -155,7 +154,6 @@ class Root extends Directory
 
  		return [
 			$this->getUsedSize($this->UserPublicId),
-//			S3Filestorage\Module::getInstance()->getConfig('UserSpaceLimitMb', 0) * 1024 * 1024
 			$sUserSpaceLimitInMb
 		];
     }	
