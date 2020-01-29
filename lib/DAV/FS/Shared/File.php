@@ -14,6 +14,8 @@ namespace Afterlogic\DAV\FS\Shared;
  */
 class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL 
 {
+    use PropertyStorageTrait;
+
 	protected $node;
 
     public function __construct($node) 

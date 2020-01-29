@@ -14,6 +14,8 @@ namespace Afterlogic\DAV\FS\Shared;
  */
 class Directory extends \Afterlogic\DAV\FS\Directory
 {
+    use PropertyStorageNodeTrait;
+
     protected $node;
 
     public function __construct($node) 
