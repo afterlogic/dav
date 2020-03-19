@@ -26,7 +26,7 @@ class Root extends Directory
 
 		$sBucketPrefix = $oModule->getConfig('BucketPrefix');
 
-		$sBucket = \strtolower($sBucketPrefix . \str_replace(' ', '-', Server::getTenantName()));
+		$sBucket = \strtolower($sBucketPrefix . \str_replace([' ', '.'], '-', Server::getTenantName()));
 
 		$sHost = $oModule->getConfig('Host');
 		$sRegion = $oModule->getConfig('Region');

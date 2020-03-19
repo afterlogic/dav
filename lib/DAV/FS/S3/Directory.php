@@ -276,9 +276,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		$bIsFolder = ($sourceNode instanceof Directory);
 		list($fromPath, $oldname) = \Sabre\Uri\split($fromPath);
 
-		$this->copyObject($fromPath, $toPath, $oldname, $targetName, $bIsFolder, true);
+		$this->copyObjectTo($this->getStorage(), $toPath, $targetName, true);
 
 		return true;
 
-    }	
+	}	
 }

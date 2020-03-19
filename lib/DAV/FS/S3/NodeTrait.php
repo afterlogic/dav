@@ -33,23 +33,35 @@ trait NodeTrait
 		}
 	}	
 
-	public function copyObject($sFromPath, $sToPath, $sOldName, $sNewName, $bIsFolder = false, $bMove = false, $aUpdateMetadata = null)
+	public function getPathForS3($sPath)
+	{
+		$sStorage = substr($sPath , 0,  8);
+		if ($sStorage === 'personal')
+		{
+			$sPath = substr_replace($sPath, $this->getUser(), 0, 8);
+		}
+
+		return $sPath;
+	}
+
+	public function copyObjectTo($sToStorage, $sToPath, $sNewName, $bMove = false, $aUpdateMetadata = null)
 	{
 		$mResult = false;
 
+		if ($sToStorage === 'shared') return false; // TODO:
+
 		$sUserPublicId = $this->getUser();
+		\Afterlogic\DAV\Server::getInstance()->setUser($sUserPublicId);
 
-		$sSuffix = $bIsFolder ? '/' : '';
+		$sFullFromPath = $this->getPathForS3($this->getPath());		
+		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));		
 
-		$sFullFromPath = $sUserPublicId . \rtrim($sFromPath, '/')  . '/' . $sOldName . $sSuffix;
-		$sFullToPath = $sUserPublicId .  \rtrim($sToPath, '/') . '/' . $sNewName. $sSuffix;
-
-		if ($bIsFolder)
+		if ($this->isDirectoryObject())
 		{
-			$objects = $this->client->getIterator('ListObjects', array(
+			$objects = $this->client->getIterator('ListObjectsV2', [
 				"Bucket" => $this->bucket,
 				"Prefix" => $sFullFromPath //must have the trailing forward slash "/"
-			));	
+			]);	
 
 			$aKeys = [];
 			$batchHeadObject = [];
@@ -168,7 +180,7 @@ trait NodeTrait
 
 		list($path, $oldname) = \Sabre\Uri\split($path);
 
-		$this->copyObject($path, $path, $oldname, $name, $this->isDirectoryObject(), true);
+		$this->copyObject($this->getStorage(), $path, $name, true);
 	}	
 	
 	public function isDirectoryObject()
