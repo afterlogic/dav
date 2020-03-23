@@ -180,7 +180,7 @@ trait NodeTrait
 
 		list($path, $oldname) = \Sabre\Uri\split($path);
 
-		$this->copyObject($this->getStorage(), $path, $name, true);
+		$this->copyObjectTo($this->getStorage(), $path, $name, true);
 	}	
 	
 	public function isDirectoryObject()
