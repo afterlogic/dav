@@ -101,5 +101,38 @@ class Plugin extends \Sabre\CalDAV\Plugin {
  * 
  */
 
-    }	
+    }
+
+   /**
+     * Use this method to tell the server this plugin defines additional
+     * HTTP methods.
+     *
+     * This method is passed a uri. It should only return HTTP methods that are
+     * available for the specified uri.
+     *
+     * @param string $uri
+     *
+     * @return array
+     */
+    public function getHTTPMethods($uri)
+    {
+        $uri = '/'.\ltrim($uri, '/');
+        // The MKCALENDAR is only available on unmapped uri's, whose
+        // parents extend IExtendedCollection
+        list($parent, $name) = \Sabre\Uri\split($uri);
+        if (isset($parent))
+        {
+            $node = $this->server->tree->getNodeForPath($parent);
+
+            if ($node instanceof \Sabre\DAV\IExtendedCollection) {
+                try {
+                    $node->getChild($name);
+                } catch (\Sabre\DAV\Exception\NotFound $e) {
+                    return ['MKCALENDAR'];
+                }
+            }
+        }
+
+        return [];
+    }
 }
