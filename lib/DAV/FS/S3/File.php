@@ -22,7 +22,7 @@ class File extends \Afterlogic\DAV\FS\File
 	protected $object;
     protected $storage;
 
-	public function __construct($object, $bucket, $client, $storage = null) 
+	public function __construct($object, $bucket, $client, $storage = null)
 	{
 		$this->path = ltrim($object['Key'], '/');
 
@@ -31,23 +31,23 @@ class File extends \Afterlogic\DAV\FS\File
 		$this->object = $object;
 		$this->storage = $storage;
 	}
-	
-	public function delete() 
+
+	public function delete()
 	{
         $this->client->deleteObject([
             'Bucket' => $this->bucket,
             'Key' => $this->path
-        ]);	
+        ]);
 	}
-	
-    public function put($data) 
+
+    public function put($data)
 	{
         $rData = $data;
         if (!is_resource($data))
         {
             $rData = fopen('php://memory','r+');
             fwrite($rData, $data);
-            rewind($rData);					
+            rewind($rData);
         }
 
         // Prepare the upload parameters.
@@ -57,13 +57,13 @@ class File extends \Afterlogic\DAV\FS\File
         ]);
 
         // Perform the upload.
-        try 
+        try
         {
             $uploader->upload();
 
             return true;
-        } 
-        catch (MultipartUploadException $e) 
+        }
+        catch (MultipartUploadException $e)
         {
             return false;
         }
@@ -84,15 +84,22 @@ class File extends \Afterlogic\DAV\FS\File
             $aArgs['ResponseContentDisposition'] = "attachment; filename=\"". $fileName . "\"";
         }
 
+        $oS3Filestorage = \Aurora\Modules\S3Filestorage\Module::getInstance();
+        $iPresignedLinkLifetime = 60;
+        if ($oS3Filestorage)
+        {
+            $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifeTime', $iPresignedLinkLifetime);
+        }
+
         return $this->client->createPresignedRequest(
             $this->client->getCommand(
-                'GetObject', 
+                'GetObject',
                 $aArgs
-            ), 
-            '+30 second'
-        );	
+            ),
+            '+' . $iPresignedLinkLifetime . ' minutes'
+        );
     }
-    
+
     public function getUrl($bWithContentDisposition = false)
     {
         $sUrl = null;
@@ -105,17 +112,17 @@ class File extends \Afterlogic\DAV\FS\File
         return $sUrl;
     }
 
-	public function get($bRedirectToUrl = true) 
+	public function get($bRedirectToUrl = true)
 	{
         $sUrl = $this->getUrl();
         if (!empty($sUrl))
         {
             $aPathInfo = pathinfo($this->path);
-                        
-            if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') || 
+
+            if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') ||
                 strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl)
             {
-                return fopen($sUrl, 'rb');		
+                return fopen($sUrl, 'rb');
             }
             else
             {
@@ -123,9 +130,9 @@ class File extends \Afterlogic\DAV\FS\File
                 exit;
             }
         }
-    }    
-    
-	public function getWithContentDisposition() 
+    }
+
+	public function getWithContentDisposition()
 	{
         $sUrl = $this->getUrl(true);
         if (!empty($sUrl))
@@ -133,7 +140,7 @@ class File extends \Afterlogic\DAV\FS\File
             \Aurora\System\Api::Location($sUrl);
             exit;
         }
-	}    
+	}
 
 
     /**
@@ -142,14 +149,14 @@ class File extends \Afterlogic\DAV\FS\File
      * @return int
      */
     function getLastModified() {
-        
+
         if (isset($this->object))
         {
             return $this->object['LastModified']->getTimestamp();
         }
 
-	}		
-	
+	}
+
     /**
      * Returns the last modification time, as a unix timestamp
      *
@@ -162,7 +169,7 @@ class File extends \Afterlogic\DAV\FS\File
             return $this->object['Size'];
         }
 
-    }		
+    }
 
     public function getETag()
     {
