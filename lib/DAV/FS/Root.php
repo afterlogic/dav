@@ -16,19 +16,19 @@ class Root extends \Sabre\DAV\Collection {
 
 	use NodeTrait;
 
-	public function getName() 
+	public function getName()
 	{
 		return 'files';
 	}
 
-	public function getChildrenCount() 
+	public function getChildrenCount()
 	{
 		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
 
 		return count($aStorages);
 	}
 
-	public function getChildren() 
+	public function getChildren()
 	{
 		$aChildren = [];
 		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
@@ -51,7 +51,7 @@ class Root extends \Sabre\DAV\Collection {
 
 			$aChildren[] = new $sClass();
 		}
-			
+
 		return $aChildren;
 	}
 }

@@ -26,7 +26,7 @@ trait PropertyStorageTrait
         $aData = $this->getResourceData();
         $aData['properties'][$sName] = $mValue;
         $this->putResourceData($aData);
-    }	
+    }
 
     /**
      * Updates properties on this node,
@@ -35,21 +35,21 @@ trait PropertyStorageTrait
      * @see Sabre\DAV\IProperties::updateProperties
      * @return bool|array
      */
-    public function updateProperties($properties) 
+    public function updateProperties($properties)
     {
         $resourceData = $this->getResourceData();
 
-        foreach($properties as $propertyName=>$propertyValue) 
+        foreach($properties as $propertyName=>$propertyValue)
         {
             // If it was null, we need to delete the property
-            if (is_null($propertyValue)) 
+            if (is_null($propertyValue))
             {
-                if (isset($resourceData['properties'][$propertyName])) 
+                if (isset($resourceData['properties'][$propertyName]))
                 {
                     unset($resourceData['properties'][$propertyName]);
                 }
-            } 
-            else 
+            }
+            else
             {
                 $resourceData['properties'][$propertyName] = $propertyValue;
             }
@@ -69,7 +69,7 @@ trait PropertyStorageTrait
      * @param array $properties
      * @return array
      */
-    function getProperties($properties) 
+    function getProperties($properties)
     {
         $resourceData = $this->getResourceData();
 
@@ -77,7 +77,7 @@ trait PropertyStorageTrait
         if (!$properties) return $resourceData['properties'];
 
         $props = [];
-        foreach($properties as $property) 
+        foreach($properties as $property)
         {
             if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
         }
@@ -90,7 +90,7 @@ trait PropertyStorageTrait
      *
      * @return string
      */
-    protected function getResourceInfoPath() 
+    protected function getResourceInfoPath()
     {
         list($parentDir) = \Sabre\Uri\split($this->path);
         return $parentDir . '/.sabredav';
@@ -101,7 +101,7 @@ trait PropertyStorageTrait
      *
      * @return array
      */
-    protected function getResourceData() 
+    protected function getResourceData()
     {
         $path = $this->getResourceInfoPath();
         if (!file_exists($path)) return ['properties' => []];
@@ -112,7 +112,7 @@ trait PropertyStorageTrait
         $data = '';
 
         // Reading data until the eof
-        while(!feof($handle)) 
+        while(!feof($handle))
         {
             $data.=fread($handle,8192);
         }
@@ -122,7 +122,7 @@ trait PropertyStorageTrait
 
         // Unserializing and checking if the resource file contains data for this file
         $data = unserialize($data);
-        if (!isset($data[$this->getName()])) 
+        if (!isset($data[$this->getName()]))
         {
             return ['properties' => []];
         }
@@ -138,7 +138,7 @@ trait PropertyStorageTrait
      * @param array $newData
      * @return void
      */
-    protected function putResourceData(array $newData) 
+    protected function putResourceData(array $newData)
     {
         $path = $this->getResourceInfoPath();
 
@@ -151,7 +151,7 @@ trait PropertyStorageTrait
                 $data = '';
                 rewind($handle1);
                 // Reading data until the eof
-                while(!feof($handle1)) 
+                while(!feof($handle1))
                 {
                     $data.=fread($handle1,8192);
                 }
@@ -174,12 +174,12 @@ trait PropertyStorageTrait
      * @param string $name The new name
      * @return void
      */
-    public function setName($name) 
+    public function setName($name)
     {
         list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
-        
+
         $sRelativePath = $this->getRelativePath();
 
         $oldPathForShare = $sRelativePath . '/' .$oldName;
@@ -205,7 +205,7 @@ trait PropertyStorageTrait
     /**
      * @return bool
      */
-    public function deleteResourceData() 
+    public function deleteResourceData()
     {
         // When we're deleting this node, we also need to delete any resource information
         $path = $this->getResourceInfoPath();
@@ -219,7 +219,7 @@ trait PropertyStorageTrait
         rewind($handle);
 
         // Reading data until the eof
-        while(!feof($handle)) 
+        while(!feof($handle))
         {
             $data.=fread($handle,8192);
         }

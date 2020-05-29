@@ -15,23 +15,23 @@ use LogicException;
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
-	
-//    use NodeTrait;    
+
+//    use NodeTrait;
 
 	protected $pdo = null;
-	
+
 	public function __construct() {
-		
+
 		$this->getUser();
 
 		$this->pdo = new \Afterlogic\DAV\FS\Backend\PDO();
 	}
-	
+
 	public function getName() {
 
         return \Aurora\System\Enums\FileStorageType::Shared;
 
-	}	
+	}
 
     /**
      * Returns the owner principal.
@@ -44,19 +44,20 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 	{
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId;
 	}
-	
+
 	protected function populateItem($aSharedFile)
 	{
 		$mResult = false;
 
 		if (is_array($aSharedFile))
 		{
-			$sCurrentUser = \Afterlogic\DAV\Server::getInstance()->getUser();
-			\Afterlogic\DAV\Server::getInstance()->setUser(basename($aSharedFile['owner']));
+			$oServer = \Afterlogic\DAV\Server::createInstance();
+			$sCurrentUser = $oServer->getUser();
+			$oServer->setUser(basename($aSharedFile['owner']));
 			$oItem = null;
 			try
 			{
-				$oItem = \Afterlogic\DAV\Server::getInstance()->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
+				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
 			}
 			catch (\Exception $oEx)
 			{
@@ -67,8 +68,8 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			{
 				$oItem->setAccess((int) $aSharedFile['access']);
 			}
-			
-			\Afterlogic\DAV\Server::getInstance()->setUser($sCurrentUser);
+
+			$oServer->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
@@ -79,37 +80,37 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 				$mResult = new Directory($oItem);
 			}
 		}
-		return $mResult;		
+		return $mResult;
 	}
-	
-	public function getChild($name) 
+
+	public function getChild($name)
 	{
 		$aSharedFile = $this->pdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
 
 		return $this->populateItem($aSharedFile);
-    }	
-	
-	public function getChildren() 
+    }
+
+	public function getChildren()
 	{
 		$aResult = [];
-		
+
 		$aSharedFiles = $this->pdo->getSharedFilesForUser(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId);
 
 		foreach ($aSharedFiles as $aSharedFile)
 		{
 			$oSharedItem = $this->populateItem($aSharedFile);
-			if ($oSharedItem)	
+			if ($oSharedItem)
 			{
 				$aResult[] = $oSharedItem;
 			}
 		}
-		
+
 		return $aResult;
-	}	
-	
+	}
+
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
 		throw new \Sabre\DAV\Exception\Forbidden();
 	}
-	
+
 }

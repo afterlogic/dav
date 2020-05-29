@@ -18,7 +18,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     protected $node;
 
-    public function __construct($node) 
+    public function __construct($node)
     {
         $this->node = $node;
     }
@@ -28,10 +28,10 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return $this->node->getPath();
     }
 
-    public function getName() 
+    public function getName()
     {
         return $this->node->getName();
-    }	
+    }
 
     public function getDisplayName()
 	{
@@ -43,7 +43,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return $this->getName();
     }
 
-    public function getChild($path) 
+    public function getChild($path)
     {
         return $this->node->getChild($path);
     }
@@ -57,27 +57,27 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
         $pdo->deleteShare($this->principalUri, $this->getId());
-    }   
-    
+    }
+
     /**
      * Renames the node
      *
      * @param string $name The new name
      * @return void
      */
-    public function setName($name) 
+    public function setName($name)
     {
-        throw new \Sabre\DAV\Exception\Conflict();            
-    }    
+        throw new \Sabre\DAV\Exception\Conflict();
+    }
 
-	public function createDirectory($name) 
+	public function createDirectory($name)
 	{
         $this->node->createDirectory($name);
     }
 
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
         return $this->node-> createFile($name, $data, $rangeType, $offset, $extendedProps);
     }
-    
+
 }

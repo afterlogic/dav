@@ -12,13 +12,13 @@ namespace Afterlogic\DAV\FS\Shared;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL 
+class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 {
     use PropertyStorageTrait;
 
 	protected $node;
 
-    public function __construct($node) 
+    public function __construct($node)
     {
         $this->node = $node;
     }
@@ -28,20 +28,20 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         return $this->node->getPath();
     }
 
-    // public function getOwner() 
+    // public function getOwner()
     // {
     //     return $this->principalUri;
     // }
 
-    public function getAccess() 
+    public function getAccess()
     {
         return $this->node->getAccess();
     }
 
-    public function getName() 
+    public function getName()
     {
         return $this->node->getName();
-    }	
+    }
 
     public function getId()
     {
@@ -58,25 +58,25 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      *
      * @return int
      */
-    function getLastModified() 
+    function getLastModified()
     {
         return $this->node->getLastModified();
-    }    
+    }
 
     /**
      * Returns the last modification time, as a unix timestamp
      *
      * @return int
      */
-    function getSize() 
+    function getSize()
     {
         return $this->node->getSize();
-    }        
+    }
 
     function get($bRedirectToUrl = true)
     {
         return $this->node->get($bRedirectToUrl);
-    }    
+    }
 
     function delete()
     {
@@ -90,9 +90,9 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      * @param string $name The new name
      * @return void
      */
-    public function setName($name) 
+    public function setName($name)
     {
-        throw new \Sabre\DAV\Exception\Conflict();            
+        throw new \Sabre\DAV\Exception\Conflict();
     }
 
     public function put($data)

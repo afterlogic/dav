@@ -30,19 +30,19 @@ trait NodeTrait
 	/**
 	 * @var string $UserPublicId
 	 */
-	protected $UserPublicId = null;	
-	
+	protected $UserPublicId = null;
+
 	/**
 	 *
 	 * @var integer
 	 */
 	protected $access = Permission::Write;
-	
-	public function getStorage() 
+
+	public function getStorage()
 	{
     	return $this->storage;
 	}
-	
+
 	public function getRootPath()
 	{
 		if ($this->rootPath === null)
@@ -57,15 +57,15 @@ trait NodeTrait
 			}
 		}
 		return $this->rootPath;
-    }  
-        
-	public function getRelativePath() 
+    }
+
+	public function getRelativePath()
 	{
         list($dir) = \Sabre\Uri\split($this->getPath());
 
 		return \str_replace(
-            $this->getRootPath(), 
-            '', 
+            $this->getRootPath(),
+            '',
             $dir
         );
     }
@@ -81,8 +81,8 @@ trait NodeTrait
 			$pdo = new Backend\PDO();
 			$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
 		}
-	}     
-	
+	}
+
 	public function checkFileName($name)
 	{
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
@@ -91,7 +91,7 @@ trait NodeTrait
 
         if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
         if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
-		
+
 		return $path;
 	}
 
@@ -99,13 +99,13 @@ trait NodeTrait
 	{
 		return $this->getName();
 	}
-    
+
     public function getId()
 	{
 		return $this->getName();
     }
-    
-    public function getPath() 
+
+    public function getPath()
     {
         return $this->path;
     }
@@ -113,16 +113,16 @@ trait NodeTrait
 	public function setPath($path)
 	{
 		$this->path = $path;
-	}	
-	
+	}
+
     public function getOwner()
 	{
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->getUser();
-	}	
+	}
 
 	public function getUser()
 	{
-        if ($this->UserPublicId === null) 
+        if ($this->UserPublicId === null)
         {
 			$this->setUser(\Afterlogic\DAV\Server::getUser());
 		}
@@ -145,7 +145,7 @@ trait NodeTrait
 	{
 		return null;
 	}
-	
+
     /**
      * Returns a list of ACE's for this node.
      *
@@ -176,10 +176,10 @@ trait NodeTrait
             ];
         }
 
-        return $acl;        
+        return $acl;
 
 	}
-	
+
     /**
      * Updates the ACL.
      *
@@ -209,11 +209,11 @@ trait NodeTrait
 		return null;
 	}
 
-    public function getAccess() 
+    public function getAccess()
     {
         return $this->access;
 	}
-	
+
 	public function setAccess($access)
 	{
 		$this->access = $access;

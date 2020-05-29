@@ -19,6 +19,14 @@ class Server extends \Sabre\DAV\Server
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
+	static public function createInstance()
+	{
+		return new self();
+	}
+
+	/**
+	 * @return \Afterlogic\DAV\Server
+	 */
 	static public function getInstance()
 	{
 		static $oInstance = null;

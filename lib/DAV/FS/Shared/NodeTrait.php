@@ -12,7 +12,7 @@ namespace Afterlogic\DAV\FS\Shared;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-trait NodeTrait 
+trait NodeTrait
 {
 	public $inRoot;
 	protected $node;
@@ -23,7 +23,7 @@ trait NodeTrait
 
     }
 
-    function getETag() 
+    function getETag()
     {
         if (\file_exists($this->path))
         {
@@ -39,12 +39,12 @@ trait NodeTrait
     {
             return null;
     }
-    
-    function getLastModified() 
+
+    function getLastModified()
     {
         return null;
-    }    
+    }
 
     function getQuotaInfo() {}
-   
+
 }

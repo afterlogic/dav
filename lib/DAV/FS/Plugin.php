@@ -26,30 +26,30 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      * @var string $sUserPublicId
      */
     protected $sUserPublicId = null;
-	
+
 	/**
 	 * @var \Aurora\Modules\Min\Module
 	 */
 	protected $oMinModule = null;
-	
+
 	/**
 	 * @var string
-	 */	
+	 */
 	protected $sOldPath = null;
 
 	/**
 	 * @var string
-	 */	
+	 */
 	protected $sOldID = null;
 
 	/**
 	 * @var string
-	 */	
+	 */
 	protected $sNewPath = null;
 
 	/**
 	 * @var string
-	 */	
+	 */
 	protected $sNewID = null;
 
 	/**
@@ -63,46 +63,46 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	function getPluginName()
 	{
         return 'files';
-    }	
-	
+    }
+
 	/***
-	 * 
+	 *
 	 */
 	public function getMinModule()
 	{
-		if ($this->oMinModule == null) 
+		if ($this->oMinModule == null)
 		{
 			$this->oMinModule = \Aurora\Modules\Min\Module::getInstance();
 		}
 		return $this->oMinModule;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public function getUser()
-	{	
-		if (!isset($this->sUserPublicId)) 
+	{
+		if (!isset($this->sUserPublicId))
 		{
 			$this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
-		return $this->sUserPublicId; 
+		return $this->sUserPublicId;
 	}
-	
+
 	/**
      * Initializes the plugin
      *
      * @param \Sabre\DAV\Server $server
      * @return void
      */
-	public function initialize(\Sabre\DAV\Server $server) 
+	public function initialize(\Sabre\DAV\Server $server)
 	{
 		$server->on('beforeBind', [$this, 'beforeBind'], 30);
 		$server->on('afterUnbind', [$this, 'afterUnbind'], 30);
         $server->on('propFind', [$this, 'propFind'], 250);
-		$server->on('method:MOVE', [$this, 'move'], 30);   
-		$server->on('method:GET', [$this, 'methodGet'], 10);   
-		$server->on('afterMethod:PUT', [$this, 'afterMethodPut'], 10);  
+		$server->on('method:MOVE', [$this, 'move'], 30);
+		$server->on('method:GET', [$this, 'methodGet'], 10);
+		$server->on('afterMethod:PUT', [$this, 'afterMethodPut'], 10);
 		$this->server = $server;
 	}
 
@@ -113,13 +113,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      *
      * @return array
      */
-	public function getFeatures() 
+	public function getFeatures()
 	{
         return ['files'];
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public static function getStoragePath($sUserPublicId, $sStorage)
 	{
@@ -139,7 +139,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public function getNodeFromPath($path)
 	{
@@ -156,12 +156,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     public function beforeBind($path)
     {
 		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
-		
+
 		$oNode = $this->getNodeFromPath($sFilePath);
 		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
 		{
 			$sUserPublicId = $this->getUser();
-			if ($sUserPublicId) 
+			if ($sUserPublicId)
 			{
 				$sType = $oNode->getStorage();
 
@@ -171,7 +171,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		}
 		return true;
 	}
-	
+
 	/**
      * @param string $path
      * @throws \Sabre\DAV\Exception\NotAuthenticated
@@ -180,13 +180,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
     public function afterUnbind($path)
     {
 		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
-		
+
 		$oNode = $this->getNodeFromPath($sFilePath);
 		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
 		{
 			$sUserPublicId = $this->getUser();
 
-			if ($sUserPublicId) 
+			if ($sUserPublicId)
 			{
  				$sType = $oNode->getStorage();
 
@@ -194,8 +194,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 				$this->sOldPath = $path;
 				$this->sOldID = implode('|', [$sUserPublicId, $sType, $sFilePath, $sFileName]);
 				$aData = $oMin->getMinByID($this->sOldID);
-				
-				if (isset($this->sNewID) && !empty($aData['__hash__'])) 
+
+				if (isset($this->sNewID) && !empty($aData['__hash__']))
 				{
 					$aNewData = explode('|', $this->sNewID);
 					$aParams = [
@@ -205,8 +205,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 						'Size' => $aData['Size']
 					];
 					$oMin->updateMinByID($this->sOldID, $aParams, $this->sNewID);
-				} 
-				else 
+				}
+				else
 				{
 					$oMin->deleteMinByID($this->sOldID);
 				}
@@ -225,7 +225,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      * @param \Sabre\DAV\INode $node
      * @return void
      */
-	function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node) 
+	function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node)
 	{
 		if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
 		{
@@ -239,15 +239,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	}
 
 	/**
-	 * 
+	 *
 	 */
-	function move($request, $response) 
+	function move($request, $response)
 	{
 		$GLOBALS['__FILESTORAGE_MOVE_ACTION__'] = true;
 		return true;
 	}
 
-	function methodGet($request, $response) 
+	function methodGet($request, $response)
 	{
 		$node = $this->server->tree->getNodeForPath($request->getPath());
 		if ($node instanceof \Afterlogic\DAV\FS\File)
@@ -256,7 +256,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			if (is_array($aExtendedProps))
 			{
 				$aHeaderValues = [];
-				foreach ($aExtendedProps as $key => $value)	
+				foreach ($aExtendedProps as $key => $value)
 				{
 					if (!is_array($value))
 					{
