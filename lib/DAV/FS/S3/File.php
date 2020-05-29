@@ -79,10 +79,10 @@ class File extends \Afterlogic\DAV\FS\File
             'ResponseContentType' => \Aurora\System\Utils::MimeContentType($fileName)
         ];
 
-        if ($bWithContentDisposition)
-        {
+        // if ($bWithContentDisposition)
+        // {
             $aArgs['ResponseContentDisposition'] = "attachment; filename=\"". $fileName . "\"";
-        }
+        // }
 
         $oS3Filestorage = \Aurora\Modules\S3Filestorage\Module::getInstance();
         $iPresignedLinkLifetime = 60;
@@ -122,7 +122,13 @@ class File extends \Afterlogic\DAV\FS\File
             if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') ||
                 strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl)
             {
-                return fopen($sUrl, 'rb');
+                $context = stream_context_create(array(
+                    "ssl"=>array(
+                        "verify_peer"=>false,
+                        "verify_peer_name"=>false,
+                    )
+                ));
+                return fopen($sUrl, 'rb', false, $context);
             }
             else
             {

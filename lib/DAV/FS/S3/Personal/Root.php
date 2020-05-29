@@ -16,11 +16,11 @@ use Aurora\Modules\S3Filestorage;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends Directory 
+class Root extends Directory
 {
 	protected $client = null;
 
-	public function __construct($sPrefix = null) 
+	public function __construct($sPrefix = null)
 	{
 		$oModule = S3Filestorage\Module::getInstance();
 
@@ -34,7 +34,7 @@ class Root extends Directory
 
 		$client = $this->getS3Client($endpoint);
 
-		if(!$client->doesBucketExist($sBucket)) 
+		if(!$client->doesBucketExist($sBucket))
 		{
 			$this->createBucket($client, $sBucket);
 		}
@@ -70,14 +70,15 @@ class Root extends Directory
 				'key'    => $sAccessKey,
 				'secret' => $sSecretKey,
 			],
+			'http' => ['verify' => false],
 			'bucket_endpoint' => $bucket_endpoint,
 			'signature_version' => $signature_version
-		]);					
-	}	
+		]);
+	}
 
 	protected function createBucket($client, $sBucket)
 	{
-		$client->createBucket([
+		$res = $client->createBucket([
 			'Bucket' => $sBucket
 		]);
 		$client->putBucketCors([
@@ -102,25 +103,25 @@ class Root extends Directory
 					],
 				],
 			],
-			'ContentMD5' => '',
-		]);				
+//			'ContentMD5' => '',
+		]);
 	}
 
-	public function getName() 
+	public function getName()
 	{
         return 'personal';
-    }	
-	
-	public function setName($name) 
+    }
+
+	public function setName($name)
 	{
         throw new \Sabre\DAV\Exception\Forbidden();
     }
 
-	public function delete() 
+	public function delete()
 	{
         throw new \Sabre\DAV\Exception\Forbidden();
     }
-	
+
 	protected function getUsedSize($sUserPublicId)
 	{
 		$iSize = 0;
@@ -132,13 +133,13 @@ class Root extends Directory
 				'Prefix' => $sUserPublicId . '/'
 			])
 			->search('Contents[?Size.to_number(@) != `0`].Size.to_number(@)');
-			
+
 			foreach ($oSearchResult as $size)
 			{
 				$iSize += $size;
 			}
 		}
-		
+
 		return $iSize;
 	}
 
@@ -156,5 +157,5 @@ class Root extends Directory
 			$this->getUsedSize($this->UserPublicId),
 			$sUserSpaceLimitInMb
 		];
-    }	
+    }
 }

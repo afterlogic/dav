@@ -12,7 +12,7 @@ namespace Afterlogic\DAV\FS\S3;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-trait NodeTrait 
+trait NodeTrait
 {
 	public function getPath()
 	{
@@ -27,11 +27,11 @@ trait NodeTrait
 	protected function updateUsedSpace()
 	{
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
+		if ($oModuleManager->IsAllowedModule('PersonalFiles'))
 		{
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
-	}	
+	}
 
 	public function getPathForS3($sPath)
 	{
@@ -44,6 +44,28 @@ trait NodeTrait
 		return $sPath;
 	}
 
+	public function endsWith($haystack, $needle)
+	{
+		$length = strlen($needle);
+		if ($length == 0)
+		{
+			return true;
+		}
+
+		return (substr($haystack, -$length) === $needle);
+	}
+
+	public function getCopySource($sKey)
+	{
+		$sRegion = '';
+		if ($this->endsWith($this->client->getEndpoint(), 'amazonaws.com'))
+		{
+			$sRegion = '.' . $this->client->getRegion();
+		}
+
+		return $this->bucket . $sRegion . "/" . \Aws\S3\S3Client::encodeKey($sKey);
+	}
+
 	public function copyObjectTo($sToStorage, $sToPath, $sNewName, $bMove = false, $aUpdateMetadata = null)
 	{
 		$mResult = false;
@@ -53,70 +75,82 @@ trait NodeTrait
 		$sUserPublicId = $this->getUser();
 		\Afterlogic\DAV\Server::getInstance()->setUser($sUserPublicId);
 
-		$sFullFromPath = $this->getPathForS3($this->getPath());		
-		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));		
+		$sFullFromPath = $this->getPathForS3($this->getPath());
+		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));
 
 		if ($this->isDirectoryObject())
 		{
 			$objects = $this->client->getIterator('ListObjectsV2', [
 				"Bucket" => $this->bucket,
 				"Prefix" => $sFullFromPath //must have the trailing forward slash "/"
-			]);	
+			]);
 
 			$aKeys = [];
 			$batchHeadObject = [];
 			foreach ($objects as $object)
 			{
-				$aKeys[$object['ETag']] = $object['Key'];
+				$sETag = \trim($object['ETag'], '"');
+				$aKeys[$sETag] = $object['Key'];
 				$batchHeadObject[] = $this->client->getCommand('HeadObject', [
 					'Bucket'     => $this->bucket,
 					'Key' => $object['Key']
 				]);
 			}
-			
+
 			$aSubMetadata = [];
 			$HeadObjectResults = \Aws\CommandPool::batch($this->client, $batchHeadObject);
-			foreach($HeadObjectResults as $result) 
+			foreach($HeadObjectResults as $result)
 			{
-				if ($result instanceof \Aws\ResultInterface) 
+				if ($result instanceof \Aws\ResultInterface)
 				{
-					$aSubMetadata[$result['ETag']] = $result->get('Metadata');
+					$sETag = \trim($result['ETag'], '"');
+					$aSubMetadata[$sETag] = $result->get('Metadata');
 					if (!$bMove)
 					{
-						$aSubMetadata[$result['ETag']]['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+						$aSubMetadata[$sETag]['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
 					}
 				}
 			}
 
 			$batchCopyObject = [];
-			foreach ($aKeys as $sETag => $sKey) 
+			foreach ($aKeys as $sETag => $sKey)
 			{
 				$sNewKey = \str_replace($sFullFromPath, $sFullToPath, $sKey);
 				$batchCopyObject[] = $this->client->getCommand('CopyObject', [
 					'Bucket'     => $this->bucket,
 					'Key'        => $sNewKey,
-					'CopySource' => $this->bucket . "/" . \Aws\S3\S3Client::encodeKey($sKey),
+					'CopySource' => $this->getCopySource($sKey),
 					'Metadata' => $aSubMetadata[$sETag],
 					'MetadataDirective' => 'REPLACE'
-				]);				
+				]);
 			}
-			try 
+
+			$oResults = \Aws\CommandPool::batch($this->client, $batchCopyObject);
+			$aCopyResultKeys = [];
+			foreach ($oResults as $oResult)
 			{
-				\Aws\CommandPool::batch($this->client, $batchCopyObject);
-				$mResult = true;
-			} 
-			catch (\Exception $e) 
-			{
-				$mResult = false;
-			}	
-			
+				if ($oResult instanceof \Aws\S3\Exception\S3Exception)
+				{
+					\Aurora\Api::LogException($oResult, \Aurora\System\Enums\LogLevel::Full);
+				}
+				else if ($oResult instanceof \Aws\Result)
+				{
+					$aCopyResult = $oResult->get('CopyObjectResult');
+					if (isset($aCopyResult['ETag']))
+					{
+						$sETag = \trim($aCopyResult['ETag'], '"');
+						$aCopyResultKeys[] = $aKeys[$sETag];
+					}
+				}
+			}
+			$mResult = true;
+
 			if ($bMove)
 			{
-				// 3. Delete the objects.
 				$this->client->deleteObjects([
 					'Bucket'  => $this->bucket,
 					'Delete' => [
-						'Objects' => array_map(function($sKey) {return ['Key' => $sKey];}, $aKeys)
+						'Objects' => array_map(function($sKey) {return ['Key' => $sKey];}, $aCopyResultKeys)
 					],
 				]);
 			}
@@ -127,7 +161,7 @@ trait NodeTrait
 				'Bucket' => $this->bucket,
 				'Key' => $sFullFromPath
 			]);
-			
+
 			$aMetadata = [];
 			$sMetadataDirective = 'COPY';
 			if ($oObject)
@@ -135,7 +169,7 @@ trait NodeTrait
 				$aMetadata = $oObject->get('Metadata');
 				$sMetadataDirective = 'REPLACE';
 			}
-	
+
 			if (is_array($aUpdateMetadata))
 			{
 				$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
@@ -148,23 +182,23 @@ trait NodeTrait
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
 				'Key' => $sFullToPath,
-				'CopySource' => $this->bucket . '/' . \Aws\S3\S3Client::encodeKey($sFullFromPath),
+				'CopySource' => $this->getCopySource($sFullFromPath),
 				'Metadata' => $aMetadata,
 				'MetadataDirective' => $sMetadataDirective
 			]);
-			if ($res && $bMove)	
+			if ($res && $bMove)
 			{
 				$this->client->deleteObject([
 					'Bucket' => $this->bucket,
 					'Key' => $sFullFromPath
-				]);					
+				]);
 
 				$mResult = true;
 			}
 		}
 
 		return $mResult;
-	}	
+	}
 
     /**
      * Renames the node
@@ -172,7 +206,7 @@ trait NodeTrait
      * @param string $name The new name
      * @return void
      */
-    public function setName($name) 
+    public function setName($name)
     {
 		$sUserPublicId = $this->getUser();
 
@@ -181,8 +215,8 @@ trait NodeTrait
 		list($path, $oldname) = \Sabre\Uri\split($path);
 
 		$this->copyObjectTo($this->getStorage(), $path, $name, true);
-	}	
-	
+	}
+
 	public function isDirectoryObject()
 	{
 		return ($this instanceof Directory);

@@ -32,7 +32,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	protected $object;
     protected $objects;
     protected $storage;
-	
+
 	/**
 	 * Undocumented function
 	 *
@@ -40,7 +40,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	 * @param [string] $bucket
 	 * @param [S3Client] $client
 	 */
-	public function __construct($object, $bucket, $client, $storage = null) 
+	public function __construct($object, $bucket, $client, $storage = null)
 	{
 		if (is_string($object))
 		{
@@ -81,9 +81,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	// public function isDirectory($name)
 	// {
 	// 	$this->getIterator();
-	// 	foreach ($this->objects as $object) 
+	// 	foreach ($this->objects as $object)
 	// 	{
-	// 		if (strcmp($name, basename($object['Key'])) === 0 && substr($object['Key'], -1) === '/') 
+	// 		if (strcmp($name, basename($object['Key'])) === 0 && substr($object['Key'], -1) === '/')
 	// 		{
 	// 			return true;
 	// 		}
@@ -91,7 +91,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	// 	return false;
 	// }
 
-	public function Search($sPattern, $sPath = null) 
+	public function Search($sPattern, $sPath = null)
 	{
 		return $this->getChildren($sPattern) ;
 	}
@@ -100,13 +100,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         return \substr($sPath, 0, 9) === 'corporate';
     }
-	 
+
     protected function isDirectory($sPath)
     {
         return \substr($sPath, -1) === '/';
     }
 
-	public function getChildren($sPattern = null) 
+	public function getChildren($sPattern = null)
 	{
 		$children = [];
 
@@ -118,16 +118,16 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			'Prefix' => $Path
 		]);
 
-		foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item) 
+		foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item)
 		{
 			$sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
 			 if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern))
 			 {
 				$iItemSlashesCount = substr_count($item['Key'], '/');
-				if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' || 
+				if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
 					$iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern))
 				{
-					if ($this->isDirectory($item['Key'])) 
+					if ($this->isDirectory($item['Key']))
 					{
                         if ($this->isCorporate($item['Key']))
                         {
@@ -137,8 +137,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                         {
                             $children[] = new Personal\Directory($item, $this->bucket, $this->client, $this->storage);
                         }
-					} 
-					else 
+					}
+					else
 					{
                         if ($this->isCorporate($item['Key']))
                         {
@@ -153,7 +153,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			}
 		}
 
-        return $children;		
+        return $children;
 	}
 
     /**
@@ -165,14 +165,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      * @throws DAV\Exception\NotFound
      * @return DAV\INode
      */
-	function getChild($name) 
+	function getChild($name)
 	{
 		$this->getIterator(true);
-		foreach ($this->objects as $object) 
+		foreach ($this->objects as $object)
 		{
 			list($filePath,) = \Sabre\Uri\split($object['Key']);
 
-			if ($filePath === \rtrim($this->path, '/') && (strcmp($name, \basename($object['Key'])) === 0 || strcmp($name . '/', \basename($object['Key'])) === 0)) 
+			if ($filePath === \rtrim($this->path, '/') && (strcmp($name, \basename($object['Key'])) === 0 || strcmp($name . '/', \basename($object['Key'])) === 0))
 			{
 				if (substr($object['Key'], -1) === '/')
 				{
@@ -188,18 +188,18 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		// if not a file nor a directory, throw an exception
         throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
 	}
-	
-	
+
+
 	public function createDirectory($name)
 	{
 		$Path = rtrim($this->path, '/').'/'. $name . '/';
-		$this->client->putObject([
+		$mResult = $this->client->putObject([
 			'Bucket' => $this->bucket,
 			'Key' => $Path
 		]);
 	}
-	
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
+
+	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
         $Path = rtrim($this->path, '/').'/'.$name;
 
@@ -208,7 +208,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         {
             $rData = fopen('php://memory','r+');
             fwrite($rData, $data);
-            rewind($rData);					
+            rewind($rData);
         }
 
 		$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
@@ -221,23 +221,23 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				$command['Metadata'] = [
 					'extendedprops' => \json_encode($extendedProps)
 				];
-			}		
+			}
         ]);
 
         // Perform the upload.
-        try 
+        try
         {
             $uploader->upload();
 
             return true;
-        } 
-        catch (MultipartUploadException $e) 
+        }
+        catch (MultipartUploadException $e)
         {
             return false;
-        }		
+        }
 	}
-	
-	function getQuotaInfo() {}	
+
+	function getQuotaInfo() {}
 
     /**
      * Returns the last modification time, as a unix timestamp
@@ -251,17 +251,17 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             return $this->object['LastModified']->getTimestamp();
         }
 
-	}		
+	}
 
-    public function delete() 
+    public function delete()
     {
         $res = $this->client->deleteMatchingObjects(
             $this->bucket,
             rtrim($this->path, '/') . '/'
-        );	
-	}	
+        );
+	}
 
-	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode) 
+	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)
 	{
         // We only support Directory or File objects, so
         // anything else we want to quickly reject.
@@ -280,5 +280,5 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 		return true;
 
-	}	
+	}
 }
