@@ -30,7 +30,7 @@ trait PropertyStorageTrait
 
             if (isset($aMetadata[\strtolower($sName)]))
             {
-                $prop = \json_decode($aMetadata[\strtolower($sName)], true);
+                $prop = $aMetadata[\strtolower($sName)];
             }
         }
         catch(\Exception $oEx){}
@@ -47,8 +47,8 @@ trait PropertyStorageTrait
 
         $aUpdateMetadata[\strtolower($sName)] = $mValue;
 
-        $this->copyObjectTo($this->getStorage(), $path, $name, $this->isDirectoryObject(), false, $aUpdateMetadata);
-    }	
+        $this->copyObjectTo($this->getStorage(), $path, $name, false, $aUpdateMetadata);
+    }
 
     /**
      * Updates properties on this node,
@@ -57,7 +57,7 @@ trait PropertyStorageTrait
      * @see Sabre\DAV\IProperties::updateProperties
      * @return bool|array
      */
-    public function updateProperties($properties) 
+    public function updateProperties($properties)
     {
 
         list($path, $name) = \Sabre\Uri\split($this->path);
@@ -69,7 +69,7 @@ trait PropertyStorageTrait
             $aUpdateMetadata[\strtolower($sName)] = $mValue;
         }
 
-        $this->copyObjectTo($this->getStorage(), $path, $name, $this->isDirectoryObject(), false, $aUpdateMetadata);
+        $this->copyObjectTo($this->getStorage(), $path, $name, false, $aUpdateMetadata);
     }
 
     /**
@@ -78,7 +78,7 @@ trait PropertyStorageTrait
      * @param array $properties
      * @return array
      */
-    function getProperties($properties) 
+    function getProperties($properties)
     {
         $props = [];
 

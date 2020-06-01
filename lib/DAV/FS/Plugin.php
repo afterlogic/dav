@@ -234,7 +234,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$propFind->handle('{DAV:}extended-props', $node->getProperty('ExtendedProps'));
+			$aExtendedProps = [];
+			$sExtendedProps = $node->getProperty('ExtendedProps');
+			if (isset($sExtendedProps))
+			{
+				$aExtendedProps = \json_decode($sExtendedProps, true);
+			}
+			$propFind->handle('{DAV:}extended-props', $aExtendedProps);
 		}
 	}
 
@@ -252,7 +258,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$node = $this->server->tree->getNodeForPath($request->getPath());
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$aExtendedProps = $node->getProperty('ExtendedProps');
+			$aExtendedProps = [];
+			$sExtendedProps = $node->getProperty('ExtendedProps');
+			if (isset($sExtendedProps))
+			{
+				$aExtendedProps = \json_decode($sExtendedProps, true);
+			}
+
 			if (is_array($aExtendedProps))
 			{
 				$aHeaderValues = [];
@@ -274,6 +286,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
 			$aExtendedProps = [];
+			$sExtendedProps = $node->getProperty('ExtendedProps');
+			if (isset($sExtendedProps))
+			{
+				$aExtendedProps = \json_decode($sExtendedProps, true);
+			}
+
 			foreach ($request->getHeaders() as $sKey => $aHeader)
 			{
 				if (\strtolower($sKey) === 'extended-props')
@@ -281,15 +299,23 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 					$aValues = \explode(";", $aHeader[0]);
 					foreach ($aValues as $sValue)
 					{
-						list($sKeyValue, $sValue) = \explode("=", \trim($sValue));
-						$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
+						if (!empty($sValue))
+						{
+							list($sKeyValue, $sValue) = \explode("=", \trim($sValue));
+							$sValue = \trim($sValue, '"');
+							if (isset($aExtendedProps[$sKeyValue]) && empty($sValue))
+							{
+								unset($aExtendedProps[$sKeyValue]);
+							}
+							else
+							{
+								$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
+							}
+						}
 					}
 				}
 			}
-			if (count($aExtendedProps) > 0)
-			{
-				$node->setProperty('ExtendedProps', \json_encode($aExtendedProps));
-			}
+			$node->setProperty('ExtendedProps', \json_encode($aExtendedProps));
 		}
 	}
 }
