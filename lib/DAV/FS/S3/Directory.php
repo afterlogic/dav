@@ -72,25 +72,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		}
 	}
 
-	// /**
-	//  * Undocumented function
-	//  *
-	//  * @param [type] $name
-	//  * @return boolean
-	//  */
-	// public function isDirectory($name)
-	// {
-	// 	$this->getIterator();
-	// 	foreach ($this->objects as $object)
-	// 	{
-	// 		if (strcmp($name, basename($object['Key'])) === 0 && substr($object['Key'], -1) === '/')
-	// 		{
-	// 			return true;
-	// 		}
-	// 	}
-	// 	return false;
-	// }
-
 	public function Search($sPattern, $sPath = null)
 	{
 		return $this->getChildren($sPattern) ;
@@ -258,7 +239,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $res = $this->client->deleteMatchingObjects(
             $this->bucket,
             rtrim($this->path, '/') . '/'
-        );
+		);
+
+		$this->deleteShares();
 	}
 
 	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)

@@ -15,18 +15,18 @@ namespace Afterlogic\DAV\Reminders;
 class Plugin extends \Sabre\DAV\ServerPlugin {
 
     /**
-     * Reference to Server class 
-     * 
-     * @var \Sabre\DAV\Server 
+     * Reference to Server class
+     *
+     * @var \Sabre\DAV\Server
      */
     private $server;
-	
+
     /**
-     * cacheBackend 
-     * 
-     * @var Backend\PDO 
+     * cacheBackend
+     *
+     * @var Backend\PDO
      */
-    private $backend;	
+    private $backend;
 
     /**
      * Returns a plugin name.
@@ -41,32 +41,32 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
         return 'reminders';
 
     }
-	
+
 	/**
-     * __construct 
-     * 
-     * @param Backend\PDO $backend 
+     * __construct
+     *
+     * @param Backend\PDO $backend
      * @return void
      */
     public function __construct(Backend\PDO $backend = null) {
 
-        $this->backend = $backend;        
+        $this->backend = $backend;
     }
-	
+
 	/**
-     * Initializes the plugin and registers event handlers 
-     * 
-     * @param \Sabre\DAV\Server $server 
+     * Initializes the plugin and registers event handlers
+     *
+     * @param \Sabre\DAV\Server $server
      * @return void
      */
-    public function initialize(\Sabre\DAV\Server $server) 
+    public function initialize(\Sabre\DAV\Server $server)
 	{
 
         $this->server = $server;
-		
+
 		$this->server->on('beforeMethod', array($this, 'beforeMethod'), 90);
-		$this->server->on('afterCreateFile', array($this, 'afterCreateFile'), 90);		
-		$this->server->on('afterWriteContent', array($this, 'afterWriteContent'), 90);		
+		$this->server->on('afterCreateFile', array($this, 'afterCreateFile'), 90);
+		$this->server->on('afterWriteContent', array($this, 'afterWriteContent'), 90);
     }
 
     /**
@@ -74,26 +74,26 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
      * @param string $uri
      * @return void
      */
-    public function beforeMethod($method, $uri) 
+    public function beforeMethod($method, $uri)
 	{
 		if (Backend\PDO::isCalendar($uri)) {
-			
+
 			if (strtoupper($method) == 'DELETE') {
-				
+
 				if (Backend\PDO::isEvent($uri)) {
-					
+
 					$this->deleteReminder(Backend\PDO::getEventId($uri));
 				} else {
-					
+
 					$this->deleteReminderByCalendar($uri);
 				}
 			}
 		}
     }
-	
+
 	public function afterCreateFile($uri, \Sabre\DAV\ICollection $parent)
 	{
-		if (Backend\PDO::isEvent($uri)) 
+		if (Backend\PDO::isEvent($uri))
 		{
 			$node = $parent->getChild(Backend\PDO::getEventUri($uri));
 			if ($node)
@@ -102,7 +102,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			}
 		}
 	}
-	
+
 	public function afterWriteContent($uri, \Sabre\DAV\IFile $node)
 	{
 		if (Backend\PDO::isEvent($uri) && $node)
@@ -110,27 +110,27 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			$this->updateReminder($uri, $node->get(), \Afterlogic\DAV\Server::getUser());
 		}
 	}
-			
+
 	public function getReminder($eventId, $user = null)
 	{
 		return $this->backend->getReminder($eventId, $user);
 	}
-	
+
 	public function getReminders($start, $end)
 	{
 		return $this->backend->getReminders($start, $end);
 	}
-	
+
 	public function addReminder($user, $calendarUri, $eventId, $time = null, $starttime = null, $allday = false)
 	{
 		return $this->backend->addReminder($user, $calendarUri, $eventId, $time, $starttime, $allday);
 	}
-	
+
 	public function deleteReminder($eventId, $user = null)
 	{
 		$this->backend->deleteReminder($eventId, $user);
 	}
-	
+
 	public function deleteReminderByCalendar($calendarUri)
 	{
 		$this->backend->deleteReminderByCalendar($calendarUri);

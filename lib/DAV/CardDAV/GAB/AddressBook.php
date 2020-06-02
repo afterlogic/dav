@@ -28,7 +28,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	 * @var string
      */
 	private $sUserPublicId;
-	
+
 	/**
      * Constructor
      */
@@ -44,7 +44,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	public function getUser()
 	{
 		if ($this->sUserPublicId == null) {
-			
+
 			$this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->sUserPublicId;
@@ -57,13 +57,13 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	{
         return $this->name;
     }
-	
+
 	public function getChild($name)
 	{
 		$aPathInfo = pathinfo($name);
-		
+
 		$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity(
-			$aPathInfo['filename'], 
+			$aPathInfo['filename'],
 			\Aurora\Modules\Contacts\Classes\Contact::class
 		);
 		if ($oContact)
@@ -85,7 +85,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 					'type' => ['work'],
 					'pref' => 1,
 				]
-			);				
+			);
 
 			return new Card(
 				[
@@ -99,7 +99,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 		{
 	        throw new \Sabre\DAV\Exception\NotFound();
 		}
-		
+
 	}
 
     /**
@@ -120,12 +120,12 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			\Aurora\Modules\Contacts\Classes\Contact::class,
 			[
 				'LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'
-			], 
-			0, 
-			0, 
+			],
+			0,
+			0,
 			['Storage' => 'team', 'IdTenant' => $iIdTenant]
 		);
-		
+
 		if (is_array($aContacts) && count($aContacts) > 0)
 		{
 			foreach($aContacts as $oContact) {
@@ -147,7 +147,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 						'type' => ['work'],
 						'pref' => 1,
 					]
-				);				
+				);
 
 				$aCards[] = new Card(
 					[
@@ -167,31 +167,31 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			\Aurora\Modules\Contacts\Classes\Contact::class,
 			['Storage' => 'team']
 		);
-		
+
 		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
 			\Aurora\Modules\Contacts\Classes\Contact::class,
 			[
 				'DateModified'
-			], 
-			0, 
-			0, 
+			],
+			0,
+			0,
 			['Storage' => 'team'],
-			['DateModified'], 
-			\Aurora\System\Enums\SortOrder::DESC				
+			['DateModified'],
+			\Aurora\System\Enums\SortOrder::DESC
 		);
 		if (is_array($aContacts) && isset($aContacts[0]))
 		{
 			$iResult .= strtotime($aContacts[0]->DateModified);
 		}
-		
+
 		return $iResult;
 	}
-	
+
     public function getProperties($properties) {
 
 		$this->addressBookInfo['{http://calendarserver.org/ns/}getctag'] = $this->getCTag();
         $response = [];
-		
+
         foreach($properties as $propertyName) {
 
             if (isset($this->addressBookInfo[$propertyName])) {
@@ -201,7 +201,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
             }
 
         }
-		
+
         return $response;
 
     }
@@ -214,13 +214,13 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
         return false;
 
     }
-	
+
 	public function propPatch(\Sabre\DAV\PropPatch $propPatch) {
-		
+
 		return false;
-		
+
 	}
-	
+
     /**
      * Returns the owner principal
      *
@@ -303,5 +303,5 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
         return null;
 
-    }	
+    }
 }

@@ -15,7 +15,7 @@ use Afterlogic\DAV\Constants;
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class PDO extends \Sabre\CardDAV\Backend\PDO {
-	
+
 	protected function getTenantPrincipal($sUserPublicId)
 	{
 		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
@@ -24,7 +24,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 		{
 			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
 		}
-		
+
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
 	}
 
@@ -40,7 +40,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 		$this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
 		$this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
     }
-	
+
     /**
      * Returns the addressbook for a specific user.
      *
@@ -51,12 +51,12 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
     public function getAddressBookForUser($principalUri, $addressbookUri) {
 
 		$mAddressBook = false;
-		
+
         $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, synctoken FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-		
+
 		if ($row)
 		{
 			$mAddressBook = [
@@ -69,10 +69,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
                 '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
 			];
 		}
-		
+
 		return $mAddressBook;
-    }	
-	
+    }
+
     /**
      * Returns all cards for a specific addressbook id.
      *
@@ -87,13 +87,13 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
 
     }
-	
+
     public function getSharedAddressBook($sPrincipalUri)
 	{
 		$sTenantPrincipal = $this->getTenantPrincipal(basename($sPrincipalUri));
-		
+
 		$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
-		
+
 		if (!is_array($aAddressBook))
 		{
 			$sProperties = [
@@ -103,10 +103,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 			$this->createAddressBook($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME, $sProperties);
 			$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
 		}
-		
+
 		return $aAddressBook;
 	}
-	
+
     /**
      * Returns a list of cards.
      *
@@ -135,6 +135,6 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
         }
         return $result;
 
-    }	
-	
+    }
+
 }

@@ -13,9 +13,9 @@ namespace Afterlogic\DAV\CardDAV\Shared;
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
-    
+
 	protected $principalUri;
-	
+
 	/**
      * Constructor
      *
@@ -23,12 +23,12 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      * @param array $addressBookInfo
      */
     public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, $principalUri) {
-        
+
 		parent::__construct($carddavBackend, $addressBookInfo);
 		$this->principalUri = $principalUri;
-		
-    }	
-	
+
+    }
+
     function getChildACL() {
 
         return [
@@ -39,14 +39,14 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
             ],
         ];
 
-    }	
-	
+    }
+
     function getOwner() {
 
         return $this->principalUri;
 
-    }	
-	
+    }
+
    /**
      * Returns a card
      *
@@ -76,8 +76,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         }
         return $children;
 
-    }	
-	
+    }
+
     /**
      * This method receives a list of paths in it's first argument.
      * It must return an array with Node objects.
@@ -90,7 +90,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     function getMultipleChildren(array $paths) {
 
         $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
-		
+
         $children = [];
         foreach ($objs as $obj) {
             $obj['acl'] = $this->getChildACL();
@@ -98,5 +98,5 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         }
         return $children;
 
-	}	
+	}
 }

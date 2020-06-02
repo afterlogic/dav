@@ -9,7 +9,7 @@ namespace Afterlogic\DAV\CalDAV\SharedWithAll;
 
 /**
  * This object represents a CalDAV calendar that is shared by a different user.
- * 
+ *
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
@@ -38,9 +38,9 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
     function getACL() {
 
         $acl = [];
-		
+
 		$sPrincipalUri = $this->calendarInfo['principaluri'];
-		
+
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
@@ -123,7 +123,7 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
         $acl = [];
 
 		$sPrincipalUri = $this->calendarInfo['principaluri'];
-		
+
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
 		if ($oUser)
 		{
@@ -169,10 +169,10 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
         return $acl;
 
     }
-	
+
     public function delete() {
 
         throw new \Sabre\DAV\Exception\Forbidden();
 
-    }	
+    }
 }

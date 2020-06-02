@@ -24,7 +24,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      * @var \Sabre\DAV\Server
      */
     private $oServer;
-	
+
 	private $oContactsDecorator;
 	private $oDavContactsDecorator;
 
@@ -81,7 +81,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		{
 			$sResult = 'collected';
 		}
-		
+
 		return $sResult;
 	}
 
@@ -96,7 +96,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		$aPathInfo = \pathinfo($uri);
 		return \strtolower(\dirname($aPathInfo['dirname'])) === 'addressbooks';
 	}
-	
+
 	public static function isContact($uri)
 	{
 		$sUriExt = \pathinfo($uri, PATHINFO_EXTENSION);
@@ -117,7 +117,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 		return $iUserId;
 	}
-	
+
 	protected function getContactFromDB($iUserId, $sStorage, $sUID)
 	{
 		return (new \Aurora\System\EAV\Query())
@@ -133,7 +133,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 			->one()
 			->exec();
 	}
-	
+
 	protected function getGroupFromDB($iUserId, $sUID)
 	{
 		return (new \Aurora\System\EAV\Query())
@@ -157,8 +157,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public function beforeUnbind($sPath)
     {
 		return true;
-	}    
-	
+	}
+
 	/**
      * @param string $sPath
      * @throws \Sabre\DAV\Exception\NotAuthenticated
@@ -166,10 +166,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterUnbind($sPath)
     {
-		if ($this->oContactsDecorator && self::isContact($sPath)) 
+		if ($this->oContactsDecorator && self::isContact($sPath))
 		{
 			$iUserId = $this->getCurrentUserId();
-			if ($iUserId > 0) 
+			if ($iUserId > 0)
 			{
 				\Aurora\System\Api::setUserId($iUserId);
 
@@ -204,20 +204,20 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		}
 		return true;
 	}
-	
+
 	function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parent, &$modified) {
-		
+
 		if (self::isContact($path))
 		{
 			if ($parent->childExists(\basename($path)))
 			{
 				throw new \Sabre\DAV\Exception\Conflict();
-				
+
 				return false;
 			}
 		}
-	}	
-	
+	}
+
 	function afterCreateFile($sPath, \Sabre\DAV\ICollection $oParent)
 	{
 		if (self::isContact($sPath))
@@ -233,20 +233,20 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 	function afterWriteContent($sPath, \Sabre\DAV\IFile $oNode)
 	{
 		if ($oNode instanceof \Sabre\CardDAV\ICard)
-		{		
+		{
 			$sStorage = $this->getStorage($sPath);
-			
+
 			$this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
 		}
 	}
 
 	protected function updateOrCreateContactItem($sPath, \Sabre\DAV\IFile $oNode, $sStorage)
 	{
-		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) 
+		if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator)
 		{
 			$iUserId = $this->getCurrentUserId();
-			
-			if ($iUserId > 0) 
+
+			if ($iUserId > 0)
 			{
 				\Aurora\System\Api::setUserId($iUserId);
 
@@ -263,10 +263,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					{
 						$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUID);
 					}
-					else 
+					else
 					{
 						$oVCard = \Sabre\VObject\Reader::read(
-							$sData, 
+							$sData,
 							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
 						);
 						if ($oVCard && $oVCard->UID)
@@ -279,7 +279,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 								{
 									$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUID);
 								}
-								else 
+								else
 								{
 									$this->oDavContactsDecorator->CreateGroup($iUserId, $sData, $sUID);
 								}
@@ -290,7 +290,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 								{
 									$this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sUID, $sStorage);
 								}
-								else 
+								else
 								{
 									$this->oDavContactsDecorator->CreateContact($iUserId, $sData, $sUID, $sStorage);
 								}

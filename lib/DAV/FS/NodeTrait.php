@@ -70,16 +70,17 @@ trait NodeTrait
         );
     }
 
-   public function deleteShares()
+	public function deleteShares()
 	{
 		$oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
 		if ($oSharedFilesModule && !$oSharedFilesModule->getConfig('Disabled'))
 		{
-			$sRelativePath =  $this->getRelativePath();
-			$sPath = (!empty($sRelativePath) ? $sRelativePath . '/' : '') . $this->getName();
-
 			$pdo = new Backend\PDO();
-			$pdo->deleteSharedFile($this->getOwner(), $this->getStorage(), $sPath);
+			$pdo->deleteSharedFile(
+				$this->getOwner(),
+				$this->getStorage(),
+				$this->getRelativePath() . '/' . $this->getName()
+			);
 		}
 	}
 
@@ -218,4 +219,38 @@ trait NodeTrait
 	{
 		$this->access = $access;
 	}
+
+	/**
+     * Renames the node
+     *
+     * @param string $name The new name
+     * @return void
+     */
+    public function setName($name)
+    {
+        list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
+        list(, $newName) = \Sabre\Uri\split($name);
+        $newPath = $parentPath . '/' . $newName;
+
+		$sRelativePath = $this->getRelativePath();
+
+		$oldPathForShare = $sRelativePath . '/' .$oldName;
+		$newPathForShare = $sRelativePath . '/' .$newName;
+
+        $oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles');
+        if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
+        {
+            $pdo = new Backend\PDO();
+            $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+        }
+
+        // We're deleting the existing resourcedata, and recreating it
+        // for the new path.
+        $resourceData = $this->getResourceData();
+        $this->deleteResourceData();
+
+        rename($this->path, $newPath);
+        $this->path = $newPath;
+        $this->putResourceData($resourceData);
+    }
 }

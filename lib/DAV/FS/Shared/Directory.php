@@ -77,7 +77,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
-        return $this->node-> createFile($name, $data, $rangeType, $offset, $extendedProps);
+        return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
     }
 
 }

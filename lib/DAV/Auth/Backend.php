@@ -15,12 +15,12 @@ namespace Afterlogic\DAV\Auth;
 class Backend
 {
 	/**
-	 * 
+	 *
 	 */
 	public static function Login($sUserName, $sPassword)
 	{
 		$mResult = false;
-		
+
 		$oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
 		if ($oDavModule)
 		{
@@ -36,17 +36,17 @@ class Backend
 						$mResult = $oUser->PublicId;
 					}
 				}
-				else 
+				else
 				{
 					$mResult = false;
 				}
-			} 
-			catch (\Exception $ex) 
+			}
+			catch (\Exception $ex)
 			{
 				$mResult = false;
 			}
 		}
-		
+
 		return $mResult;
 	}
 

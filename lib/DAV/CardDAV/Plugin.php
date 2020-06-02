@@ -51,5 +51,5 @@ class Plugin extends \Sabre\CardDAV\Plugin {
                 \rewind($mBody);
             }
         }
-    }    
+    }
 }

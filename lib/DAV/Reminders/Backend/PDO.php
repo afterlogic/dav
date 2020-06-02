@@ -18,29 +18,29 @@ class PDO
 {
 
     /**
-     * Reference to PDO connection 
-     * 
-     * @var \PDO 
+     * Reference to PDO connection
+     *
+     * @var \PDO
      */
     protected $pdo;
 
     /**
-     * PDO table name we'll be using  
-     * 
+     * PDO table name we'll be using
+     *
      * @var string
      */
     protected $table;
-	
+
     protected $calendarTbl;
-	
+
 	protected $principalsTbl;
 
 	/**
-     * Creates the backend object. 
+     * Creates the backend object.
      *
      * @return void
      */
-    public function __construct() 
+    public function __construct()
 	{
         $dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 
@@ -48,8 +48,8 @@ class PDO
         $this->table = $dBPrefix.Constants::T_REMINDERS;
         $this->calendarTbl = $dBPrefix.Constants::T_CALENDARS;
         $this->principalsTbl = $dBPrefix.Constants::T_PRINCIPALS;
-    } 
-	
+    }
+
 	public function getReminder($eventId, $user = null)
 	{
 		$userWhere = '';
@@ -61,9 +61,9 @@ class PDO
 		}
 
 		$stmt = $this->pdo->prepare('SELECT id, user, calendaruri, eventid, time, starttime, allday'
-				. ' FROM '.$this->table.' WHERE eventid = ?'.$userWhere); 
+				. ' FROM '.$this->table.' WHERE eventid = ?'.$userWhere);
         $stmt->execute($params);
-		
+
         return $stmt->fetch(\PDO::FETCH_ASSOC);
 	}
 
@@ -80,14 +80,14 @@ class PDO
 				(int) $end
 			);
 		}
-		
+
         $stmt = $this->pdo->prepare('SELECT id, user, calendaruri, eventid, time, starttime, allday'
-				. ' FROM '.$this->table.' WHERE 1 = 1' . $timeFilter); 
-		
+				. ' FROM '.$this->table.' WHERE 1 = 1' . $timeFilter);
+
         $stmt->execute($values);
-		
+
         $cache = array();
-        while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) 
+        while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
             $cache[] = array(
                 'id' => $row['id'],
@@ -98,10 +98,10 @@ class PDO
                 'starttime' => $row['starttime'],
 				'allday' => $row['allday']
 				);
-		}		
+		}
 		return $cache;
 	}
-	
+
 	public function addReminder($user, $calendarUri, $eventId, $time = null, $starttime = null, $allday = false)
 	{
 		$values = $fieldNames = array();
@@ -125,14 +125,14 @@ class PDO
 			$fieldNames[] = 'starttime';
 			$values[':starttime'] = (int) $starttime;
 		}
-		
+
 		$fieldNames[] = 'allday';
 		$values[':allday'] = $allday ? 1 : 0;
-		
+
 		$stmt = $this->pdo->prepare("INSERT INTO ".$this->table." (".implode(', ', $fieldNames).") VALUES (".implode(', ',array_keys($values)).")");
         $stmt->execute($values);
 
-        return $this->pdo->lastInsertId();		
+        return $this->pdo->lastInsertId();
 	}
 
 	public function deleteReminder($eventId, $user = null)
@@ -147,18 +147,18 @@ class PDO
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE eventid = ?'.$userWhere);
         $stmt->execute($params);
 	}
-	
+
 	public function deleteReminderByCalendar($calendarUri)
 	{
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE calendaruri = ?');
         $stmt->execute(array($calendarUri));
 	}
-	
+
 	public static function getEventId($uri)
 	{
 		return basename($uri, '.ics');
 	}
-		
+
 	public static function getEventUri($uri)
 	{
 		return basename($uri);
@@ -168,17 +168,17 @@ class PDO
 	{
 		return dirname($uri);
 	}
-	
+
 	public static function isEvent($uri)
 	{
 		$sUriExt = pathinfo($uri, PATHINFO_EXTENSION);
 		return ($sUriExt != null && strtoupper($sUriExt) == 'ICS');
 	}
-	
+
 	public static function isCalendar($uri)
 	{
 		return (strpos($uri, 'calendars/') !== false ||	strpos($uri, 'delegation/') !== false);
-	}	
+	}
 
 	public function updateReminder($uri, $data, $user)
 	{
@@ -207,7 +207,7 @@ class PDO
 					$bAllDay = !$oBaseEvent->DTSTART->hasTime();
 					$oStartDT = $oBaseEvent->DTSTART->getDateTime();
 					$oStartDT = $oStartDT->setTimezone(new \DateTimeZone('UTC'));
-					
+
 					$iReminderTime = false;
 					if ($bAllDay && $oUser instanceof \Aurora\Modules\Core\Classes\User)
 					{
@@ -275,7 +275,7 @@ class PDO
 						$iStartTS = $oStartDT->getTimestamp();
 						$this->addReminder($user, $calendarUri, $eventId, $iReminderTime - $iOffset, $iStartTS - $iOffset, $bAllDay);
 					}
-					
+
 				}
 
 			}

@@ -15,7 +15,7 @@ namespace Afterlogic\DAV\CardDAV\Shared;
 class Card extends \Sabre\CardDAV\Card {
 
    protected $principalUri;
-	
+
 	/**
      * Constructor
      *
@@ -27,9 +27,9 @@ class Card extends \Sabre\CardDAV\Card {
 
         parent::__construct($carddavBackend, $addressBookInfo, $cardData);
 		$this->principalUri = $principalUri;
-		
+
     }
-	
+
     public function getACL() {
 
         return array(
@@ -45,5 +45,5 @@ class Card extends \Sabre\CardDAV\Card {
             ),
         );
 
-    }	
+    }
  }

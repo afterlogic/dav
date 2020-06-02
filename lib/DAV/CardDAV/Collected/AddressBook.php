@@ -44,8 +44,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         }
         return $children;
 
-    }	
-	
+    }
+
     /**
      * This method receives a list of paths in it's first argument.
      * It must return an array with Node objects.
@@ -58,7 +58,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
     function getMultipleChildren(array $paths) {
 
         $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
-		
+
         $children = [];
         foreach ($objs as $obj) {
             $obj['acl'] = $this->getChildACL();

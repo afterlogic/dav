@@ -95,7 +95,7 @@ trait PropertyStorageTrait
             {
                 if (isset($aMetadata[\strtolower($value)]))
                 {
-                    $props[$value] = \json_decode($aMetadata[\strtolower($value)]);
+                    $props[$value] = $aMetadata[\strtolower($value)];
                 }
             }
         }

@@ -16,15 +16,15 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
 
     /**
      * Contact info
-     * 
-     * @var array 
+     *
+     * @var array
      */
     private $_cardInfo;
 
     /**
      * Constructor
-     * 
-     * @param array $cardInfo 
+     *
+     * @param array $cardInfo
      */
     public function __construct(array $cardInfo) {
 
@@ -42,7 +42,7 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
         return $this->_cardInfo['uri'];
 
     }
-	
+
     /**
      * Returns the mime content-type
      *
@@ -52,12 +52,12 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
 
         return 'text/x-vcard; charset=utf-8';
 
-    }	
+    }
 
     /**
-     * Returns the vcard 
-     * 
-     * @return string 
+     * Returns the vcard
+     *
+     * @return string
      */
     public function get() {
 
@@ -67,8 +67,8 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
 
     /**
      * Returns the last modification timestamp
-     * 
-     * @return int 
+     *
+     * @return int
      */
     public function getLastModified() {
 
@@ -78,15 +78,15 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
 
     /**
      * Returns the size of the vcard
-     * 
-     * @return int 
+     *
+     * @return int
      */
     public function getSize() {
 
         return strlen($this->_cardInfo['carddata']);
 
     }
-	
+
     function getETag() {
 
         if (isset($this->cardData['etag'])) {

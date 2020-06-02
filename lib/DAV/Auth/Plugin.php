@@ -13,7 +13,7 @@ namespace Afterlogic\DAV\Auth;
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
 class Plugin extends \Sabre\DAV\Auth\Plugin {
-	
+
 	public function getCurrentPrincipal()
 	{
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();

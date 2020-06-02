@@ -17,12 +17,12 @@ use Afterlogic\DAV\Constants;
 class PDO extends \Sabre\DAV\Locks\Backend\PDO {
 
     /**
-     * Constructor 
+     * Constructor
      */
     public function __construct() {
 
 	  	parent::__construct(\Aurora\System\Api::GetPDO());
-		
+
 		$dbPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 		$this->tableName = $dbPrefix.Constants::T_LOCKS;
     }

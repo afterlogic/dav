@@ -26,7 +26,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
     protected function validateUserPass($sUserName, $sPassword)
 	{
 		$mResult = false;
-		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid()) 
+		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid())
 		{
 			$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
 
@@ -34,7 +34,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
 			$bIsOutlookSyncAllowed = false;
 			$bIsDemo = false;
 
-            if ($mResult !== false) 
+            if ($mResult !== false)
             {
 
                 $mResult = true;
@@ -55,23 +55,23 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
                 {
                     $mResult = false;
                 }
-    
-/*					
+
+/*
     			$iIdUser = isset($mResult['id']) ? $mResult['id'] : 0;
 
 				$bIsMobileSync = $oApiCapabilityManager->isMobileSyncSupported($iIdUser);
 				$bIsOutlookSync = $oApiCapabilityManager->isOutlookSyncSupported($iIdUser);
 
 				\Aurora\System\Api::Plugin()->RunHook(
-						'plugin-is-demo-account', 
+						'plugin-is-demo-account',
 						array(&$oAccount, &$bIsDemo)
 				);
-* 
+*
 */
 			}
 /*
 			if (($oAccount && $oAccount->IncomingMailPassword === $sPassword &&
-					(($bIsMobileSync && !$bIsOutlookSyncClient) || 
+					(($bIsMobileSync && !$bIsOutlookSyncClient) ||
 					($bIsOutlookSync && $bIsOutlookSyncClient))) ||
 					$bIsDemo || $sUserName === \Aurora\System\Api::ExecuteMethod('Dav::GetPublicUser')) {
 				return true;

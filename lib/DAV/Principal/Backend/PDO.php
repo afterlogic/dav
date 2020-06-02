@@ -14,12 +14,12 @@ use Sabre\DAV\MkCol;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO 
+class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 {
     /**
      * Sets up the backend.
      */
-    public function __construct() { } 
+    public function __construct() { }
 
     /**
      * Returns a list of principals based on a prefix.
@@ -43,12 +43,12 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		$bPrevState = \Aurora\System\Api::skipCheckUserRole(true);
 		$aUsers = \Aurora\Modules\Core\Module::Decorator()->GetUserList(0, 0);
-		
+
 		\Aurora\System\Api::skipCheckUserRole($bPrevState);
-		
-		if (is_array($aUsers)) 
+
+		if (is_array($aUsers))
 		{
-			foreach ($aUsers as $oUser) 
+			foreach ($aUsers as $oUser)
 			{
                 if (!empty($oUser))
                 {
@@ -141,16 +141,16 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         $aPrincipals = [];
 
 		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
-			
+
 			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
                 $searchProperties['{http://sabredav.org/ns}email-address']
             );
-            if ($oUser instanceof \Aurora\Modules\Core\Classes\User) 
+            if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
             {
 	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 			}
 		}
-		
+
         return $aPrincipals;
 
     }

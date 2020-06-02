@@ -22,15 +22,15 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 
 	public function getDigestHash($sRealm, $sUserName)
 	{
-		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid()) 
+		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid())
 		{
 			return \Aurora\Modules\Core\Module::Decorator()->GetDigestHash($sUserName, $sRealm, \Aurora\Modules\Mail\Classes\Account::class);
 		}
 
-		return null;	
+		return null;
 	}
 
-	function check(RequestInterface $request, ResponseInterface $response) 
+	function check(RequestInterface $request, ResponseInterface $response)
 	{
 		$aResult = parent::check($request, $response);
 
@@ -38,7 +38,7 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 		{
 			$sLogin = \str_replace($this->principalPrefix, '', $aResult[1]);
 
-			if ($sLogin) 
+			if ($sLogin)
 			{
 				$oAccount = \Aurora\Modules\Core\Module::Decorator()->GetAccountUsedToAuthorize($sLogin);
 				if ($oAccount)

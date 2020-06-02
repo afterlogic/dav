@@ -20,12 +20,12 @@ class Backend
 	{
 		$oResult = null;
 		if (!method_exists('Backend', $sMethod)) {
-			
+
 			$oResult = self::getBackend(strtolower($sMethod));
 		}
 		return $oResult;
-	}	
-	
+	}
+
 	public static function getBackend($sName)
 	{
 		if (!isset(self::$aBackends[$sName])) {
@@ -51,11 +51,11 @@ class Backend
 					break;
 			}
 			if (isset($oBackend)) {
-				
+
 				self::$aBackends[$sName] = $oBackend;
 			}
 		}
 		return self::$aBackends[$sName];
 	}
-	
+
 }

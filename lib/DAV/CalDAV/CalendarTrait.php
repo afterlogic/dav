@@ -12,13 +12,13 @@ namespace Afterlogic\DAV\CalDAV;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-trait CalendarTrait 
+trait CalendarTrait
 {
-    public function _getProperties($calendarInfo, $requestedProperties = []) 
+    public function _getProperties($calendarInfo, $requestedProperties = [])
     {
         $response = [];
 
-        foreach ($calendarInfo as $propName => $propValue) 
+        foreach ($calendarInfo as $propName => $propValue)
         {
             if (!is_null($propValue) && (in_array($propName, $requestedProperties) || count($requestedProperties) === 0))
             {
@@ -26,7 +26,7 @@ trait CalendarTrait
             }
         }
         return $response;
-    }    
+    }
 
     public function isDefault()
     {

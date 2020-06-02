@@ -24,12 +24,12 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 	/**
 	 * Creates the backend
 	 */
-	public function __construct() 
+	public function __construct()
 	{
 		parent::__construct(\Aurora\System\Api::GetPDO());
-		
+
 		$this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
-		
+
 		$this->calendarTableName = $this->dBPrefix.Constants::T_CALENDARS;
 		$this->calendarChangesTableName = $this->dBPrefix.Constants::T_CALENDARCHANGES;
 		$this->calendarObjectTableName = $this->dBPrefix . Constants::T_CALENDAROBJECTS;
@@ -38,15 +38,15 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$this->calendarInstancesTableName = $this->dBPrefix . Constants::T_CALENDARINSTANCES;
 
 	}
-	
+
 	public function createCalendar($principalUri, $calendarUri, array $properties) {
-		
+
 		$sOrderProp = '{http://apple.com/ns/ical/}calendar-order';
 		if (!isset($properties[$sOrderProp]))
 		{
 			$properties[$sOrderProp] = 1;
 		}
-		
+
 		return parent::createCalendar($principalUri, $calendarUri, $properties);
 	}
 
@@ -72,14 +72,14 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		{
 			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
 		}
-		
+
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
-	}	
-	
+	}
+
     public function getPublicCalendar($calendarId) {
 
 		$calendar = false;
-		
+
         $fields = array_values($this->propertyMap);
         $fields[] = 'calendarid';
         $fields[] = 'uri';
@@ -139,7 +139,7 @@ SQL
 
         return $calendar;
     }
-	
+
     public function getParentCalendar($calendarId) {
 
         $fields = array_values($this->propertyMap);
@@ -214,7 +214,7 @@ SQL
 	 * @return null|string
 	 */
 	public function shareReply($href, $status, $calendarUri, $inReplyTo, $summary = null) {}
-	
+
 	/**
 	 * Marks this calendar as published.
 	 *
@@ -233,10 +233,10 @@ SQL
 			$stmt = $this->pdo->prepare('UPDATE ' . $this->calendarInstancesTableName . ' SET `public` = ? WHERE principaluri = ? AND uri = ?');
 			$bResult =  $stmt->execute([(int)$value, \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId, $calendarUri]);
 		}
-		
+
 		return $bResult;
 	}
-	
+
 	/**
 	 * Marks this calendar as published.
 	 *
@@ -245,7 +245,7 @@ SQL
 	 *
 	 * @return void
 	 */
-	public function getPublishStatus($calendarUri) 
+	public function getPublishStatus($calendarUri)
 	{
         $bResult = false;
 		$oUser = \Aurora\System\Api::getAuthenticatedUser();
@@ -259,10 +259,10 @@ SQL
 				$bResult = (bool) $row['public'];
 			}
 		}
-		
+
 		return $bResult;
-	}	
-	
+	}
+
 	/**
 	 * Returns a list of notifications for a given principal url.
 	 *
@@ -273,66 +273,66 @@ SQL
 	 * @return array
 	 */
 	public function getNotificationsForPrincipal($principalUri)
-	{ 
+	{
 		$aNotifications = array();
-/*            
+/*
 		// get ALL notifications for the user NB. Any read or out of date notifications should be already deleted.
 		$stmt = $this->pdo->prepare("SELECT * FROM ".$this->notificationsTableName." WHERE principaluri = ? ORDER BY dtstamp ASC");
 		$stmt->execute(array($principalUri));
 
-		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC)) 
+		while($aRow = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			// we need to return the correct type of notification
-			switch($aRow['notification']) 
+			switch($aRow['notification'])
 			{
 				case 'Invite':
 					$aValues = array();
 					// sort out the required data
-					if($aRow['id']) 
+					if($aRow['id'])
 					{
 						$aValues['id'] = $aRow['id'];
 					}
-					if($aRow['etag']) 
+					if($aRow['etag'])
 					{
 						$aValues['etag'] = $aRow['etag'];
 					}
-					if($aRow['principaluri']) 
+					if($aRow['principaluri'])
 					{
 						$aValues['href'] = $aRow['principaluri'];
 					}
-					if($aRow['dtstamp']) 
+					if($aRow['dtstamp'])
 					{
 						$aValues['dtstamp'] = $aRow['dtstamp'];
 					}
-					if($aRow['type']) 
+					if($aRow['type'])
 					{
 						$aValues['type'] = $aRow['type'];
 					}
-					if($aRow['readonly']) 
+					if($aRow['readonly'])
 					{
 						$aValues['readOnly'] = $aRow['readonly'];
 					}
-					if($aRow['hosturl']) 
+					if($aRow['hosturl'])
 					{
 						$aValues['hosturl'] = $aRow['hosturl'];
 					}
-					if($aRow['organizer']) 
+					if($aRow['organizer'])
 					{
 						$aValues['organizer'] = $aRow['organizer'];
 					}
-					if($aRow['commonname']) 
+					if($aRow['commonname'])
 					{
 						$aValues['commonName'] = $aRow['commonname'];
 					}
-					if($aRow['firstname']) 
+					if($aRow['firstname'])
 					{
 						$aValues['firstname'] = $aRow['firstname'];
 					}
-					if($aRow['lastname']) 
+					if($aRow['lastname'])
 					{
 						$aValues['lastname'] = $aRow['lastname'];
 					}
-					if($aRow['summary']) 
+					if($aRow['summary'])
 					{
 						$aValues['summary'] = $aRow['summary'];
 					}
@@ -350,7 +350,7 @@ SQL
 */
 		return $aNotifications;
 	}
-	
+
 	/**
 	 * This deletes a specific notifcation.
 	 *

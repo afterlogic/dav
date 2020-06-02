@@ -24,7 +24,7 @@ class Card extends \Sabre\CardDAV\Card {
     function delete() {
 
 //        throw new Forbidden();
-        
+
     }
 
 }

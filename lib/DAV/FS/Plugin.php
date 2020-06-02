@@ -240,6 +240,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			{
 				$aExtendedProps = \json_decode($sExtendedProps, true);
 			}
+			$propFind->handle('{DAV:}extended-props-as-json', $sExtendedProps);
 			$propFind->handle('{DAV:}extended-props', $aExtendedProps);
 		}
 	}

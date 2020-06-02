@@ -12,15 +12,15 @@ namespace Afterlogic\DAV\FS\Local;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-trait NodeTrait 
+trait NodeTrait
 {
 	protected function updateUsedSpace()
 	{
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles')) 
+		if ($oModuleManager->IsAllowedModule('PersonalFiles'))
 		{
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
-	}	
+	}
 
 }

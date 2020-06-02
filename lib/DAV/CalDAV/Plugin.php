@@ -29,7 +29,7 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         return self::CALENDAR_ROOT;
 
     }
-	
+
     /**
      * This method is triggered before a file gets updated with new content.
      *
@@ -68,8 +68,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             false
         );
 */
-    }	
-	
+    }
+
     /**
      * This method is triggered before a new file is created.
      *
@@ -98,7 +98,7 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             $this->server->httpResponse,
             true
         );
- * 
+ *
  */
 
     }

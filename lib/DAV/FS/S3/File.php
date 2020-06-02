@@ -38,6 +38,8 @@ class File extends \Afterlogic\DAV\FS\File
             'Bucket' => $this->bucket,
             'Key' => $this->path
         ]);
+
+        $this->deleteShares();
 	}
 
     public function put($data)
