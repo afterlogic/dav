@@ -234,13 +234,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$aExtendedProps = [];
-			$sExtendedProps = $node->getProperty('ExtendedProps');
-			if (isset($sExtendedProps))
-			{
-				$aExtendedProps = \json_decode($sExtendedProps, true);
-			}
-			$propFind->handle('{DAV:}extended-props-as-json', $sExtendedProps);
+			$mExtendedProps = $node->getProperty('ExtendedProps');
+			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
+			$propFind->handle('{DAV:}extended-props-as-json', \json_encode($aExtendedProps));
 			$propFind->handle('{DAV:}extended-props', $aExtendedProps);
 		}
 	}
@@ -259,25 +255,18 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$node = $this->server->tree->getNodeForPath($request->getPath());
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$aExtendedProps = [];
-			$sExtendedProps = $node->getProperty('ExtendedProps');
-			if (isset($sExtendedProps))
+			$mExtendedProps = $node->getProperty('ExtendedProps');
+			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
+			$aHeaderValues = [];
+			foreach ($aExtendedProps as $key => $value)
 			{
-				$aExtendedProps = \json_decode($sExtendedProps, true);
-			}
-
-			if (is_array($aExtendedProps))
-			{
-				$aHeaderValues = [];
-				foreach ($aExtendedProps as $key => $value)
+				if ($key === 'ParanoidKey')
 				{
-					if (!is_array($value))
-					{
-						$aHeaderValues[] = $key . "=" . '"' . $value . '"';
-					}
+					$value = \str_replace("\r\n", '\r\n', \addslashes(\trim($value, '"')));
 				}
-				$response->setHeader('Extended-Props', \implode("; ", $aHeaderValues));
+				$aHeaderValues[] = $key . "=" . '"' . $value . '"';
 			}
+			$response->setHeader('Extended-Props', \implode("; ", $aHeaderValues));
 		}
 	}
 
@@ -286,12 +275,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$node = $this->server->tree->getNodeForPath($request->getPath());
 		if ($node instanceof \Afterlogic\DAV\FS\File)
 		{
-			$aExtendedProps = [];
-			$sExtendedProps = $node->getProperty('ExtendedProps');
-			if (isset($sExtendedProps))
-			{
-				$aExtendedProps = \json_decode($sExtendedProps, true);
-			}
+			$mExtendedProps = $node->getProperty('ExtendedProps');
+			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
 
 			foreach ($request->getHeaders() as $sKey => $aHeader)
 			{
@@ -310,13 +295,20 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 							}
 							else
 							{
-								$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
+								if ($sKeyValue === 'ParanoidKey')
+								{
+									$aExtendedProps[$sKeyValue] = \stripslashes(\str_replace('\r\n', "\r\n", \trim($sValue, '"')));
+								}
+								else
+								{
+									$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
+								}
 							}
 						}
 					}
 				}
 			}
-			$node->setProperty('ExtendedProps', \json_encode($aExtendedProps));
+			$node->setProperty('ExtendedProps', $aExtendedProps);
 		}
 	}
 }

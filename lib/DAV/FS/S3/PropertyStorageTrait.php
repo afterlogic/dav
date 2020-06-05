@@ -15,6 +15,10 @@ namespace Afterlogic\DAV\FS\S3;
 trait PropertyStorageTrait
 {
 
+    protected $aJsonProperties = [
+        'extendedprops'
+    ];
+
     public function getProperty($sName)
     {
         $prop = null;
@@ -30,7 +34,14 @@ trait PropertyStorageTrait
 
             if (isset($aMetadata[\strtolower($sName)]))
             {
-                $prop = $aMetadata[\strtolower($sName)];
+                if (in_array(\strtolower($sName), $this->aJsonProperties))
+                {
+                    $prop = \json_decode($aMetadata[\strtolower($sName)], true);
+                }
+                else
+                {
+                    $prop = $aMetadata[\strtolower($sName)];
+                }
             }
         }
         catch(\Exception $oEx){}
@@ -44,7 +55,10 @@ trait PropertyStorageTrait
 		$path = str_replace($sUserPublicId, '', $this->path);
         list($path, $name) = \Sabre\Uri\split($path);
         $path = \rtrim($path, '/') . '/';
-
+        if (in_array(\strtolower($sName), $this->aJsonProperties))
+        {
+            $mValue = \json_encode($mValue);
+        }
         $aUpdateMetadata[\strtolower($sName)] = $mValue;
 
         $this->copyObjectTo($this->getStorage(), $path, $name, false, $aUpdateMetadata);
@@ -66,6 +80,10 @@ trait PropertyStorageTrait
         $aUpdateMetadata = [];
         foreach ($properties as $sName => $mValue)
         {
+            if (in_array(\strtolower($sName), $this->aJsonProperties))
+            {
+                $mValue = \json_encode($mValue);
+            }
             $aUpdateMetadata[\strtolower($sName)] = $mValue;
         }
 
@@ -95,7 +113,14 @@ trait PropertyStorageTrait
             {
                 if (isset($aMetadata[\strtolower($value)]))
                 {
-                    $props[$value] = $aMetadata[\strtolower($value)];
+                    if (in_array(\strtolower($value), $this->aJsonProperties))
+                    {
+                        $props[$value] = \json_decode($aMetadata[\strtolower($value)], true);
+                    }
+                    else
+                    {
+                        $props[$value] = $aMetadata[\strtolower($value)];
+                    }
                 }
             }
         }
