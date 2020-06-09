@@ -287,7 +287,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 					{
 						if (!empty($sValue))
 						{
-							list($sKeyValue, $sValue) = \explode("=", \trim($sValue));
+							list($sKeyValue, $sValue) = \explode("=", \trim($sValue), 2);
 							$sValue = \trim($sValue, '"');
 							if (isset($aExtendedProps[$sKeyValue]) && empty($sValue))
 							{
