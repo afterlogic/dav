@@ -157,11 +157,25 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			{
 				if (substr($object['Key'], -1) === '/')
 				{
-					return new Directory($object, $this->bucket, $this->client, $this->storage);
+					if ($this->isCorporate($object['Key']))
+					{
+						return new Corporate\Directory($object, $this->bucket, $this->client, $this->storage);
+					}
+					else
+					{
+						return new Personal\Directory($object, $this->bucket, $this->client, $this->storage);
+					}
 				}
 				else
 				{
-					return new File($object, $this->bucket, $this->client, $this->storage);
+					if ($this->isCorporate($object['Key']))
+					{
+						return new Corporate\File($object, $this->bucket, $this->client, $this->storage);
+					}
+					else
+					{
+						return new Personal\File($object, $this->bucket, $this->client, $this->storage);
+					}
 				}
 			}
 		}
