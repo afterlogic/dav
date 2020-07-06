@@ -44,4 +44,9 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
 
 		return $result;
     }
+
+    public function getUrl($bWithContentDisposition = false)
+    {
+        return null;
+    }
 }

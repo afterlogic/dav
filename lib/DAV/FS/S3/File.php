@@ -78,13 +78,13 @@ class File extends \Afterlogic\DAV\FS\File
         $aArgs = [
             'Bucket' => $this->bucket,
             'Key' => $this->path,
-            'ResponseContentType' => \Aurora\System\Utils::MimeContentType($fileName)
+            'ResponseContentType' => \Aurora\System\Utils::MimeContentType($fileName),
         ];
 
-        // if ($bWithContentDisposition)
-        // {
+        if ($bWithContentDisposition)
+        {
             $aArgs['ResponseContentDisposition'] = "attachment; filename=\"". $fileName . "\"";
-        // }
+        }
 
         $oS3Filestorage = \Aurora\Modules\S3Filestorage\Module::getInstance();
         $iPresignedLinkLifetime = 60;
@@ -134,6 +134,8 @@ class File extends \Afterlogic\DAV\FS\File
             }
             else
             {
+                // $oRes = $this->getObject();
+                // echo $oRes['Body'];
                 \Aurora\System\Api::Location($sUrl);
                 exit;
             }
