@@ -64,7 +64,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 				\Aurora\Api::LogException($oEx);
 			}
 
-			if (isset($oItem))
+			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
 				$oItem->setAccess((int) $aSharedFile['access']);
 			}
