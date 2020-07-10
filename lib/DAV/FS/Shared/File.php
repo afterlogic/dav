@@ -23,6 +23,21 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         $this->node = $node;
     }
 
+    public function getStorage()
+    {
+        return $this->node->getStorage();
+    }
+
+    public function getRootPath()
+    {
+        return $this->node->getRootPath();
+    }
+
+    public function getRelativePath()
+    {
+        return $this->node->getRelativePath();
+    }
+
     public function getPath()
     {
         return $this->node->getPath();
