@@ -18,9 +18,43 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     protected $node;
 
+    protected $relativeNodePath = null;
+
+    protected $ownerPublicId = null;
+
     public function __construct($node)
     {
         $this->node = $node;
+    }
+
+    public function setRelativeNodePath($sPath)
+    {
+        $this->relativeNodePath = $sPath;
+    }
+
+    public function getRelativeNodePath()
+    {
+        return $this->relativeNodePath;
+    }
+
+    public function setOwnerPublicId($sOwnerPublicId)
+    {
+        $this->ownerPublicId = $sOwnerPublicId;
+    }
+
+    public function getOwnerPublicId()
+    {
+        return $this->ownerPublicId;
+    }
+
+    public function getStorage()
+    {
+        return $this->node->getStorage();
+    }
+
+    public function getRootPath()
+    {
+        return $this->node->getRootPath();
     }
 
     public function getPath()

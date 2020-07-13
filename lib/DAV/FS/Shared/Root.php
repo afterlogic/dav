@@ -63,13 +63,12 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			{
 				\Aurora\Api::LogException($oEx);
 			}
+			$oServer->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
 				$oItem->setAccess((int) $aSharedFile['access']);
 			}
-
-			$oServer->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
@@ -78,6 +77,17 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
 				$mResult = new Directory($oItem);
+			}
+
+			if ($mResult)
+			{
+				$sRelativeNodePath = \str_replace(
+					$oItem->getName(),
+					'',
+					$aSharedFile['path']
+				);
+				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+				$mResult->setRelativeNodePath($sRelativeNodePath);
 			}
 		}
 		return $mResult;
