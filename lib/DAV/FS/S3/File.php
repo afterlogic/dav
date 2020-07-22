@@ -90,7 +90,7 @@ class File extends \Afterlogic\DAV\FS\File
         $iPresignedLinkLifetime = 60;
         if ($oS3Filestorage)
         {
-            $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifeTime', $iPresignedLinkLifetime);
+            $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifeTimeMinutes', $iPresignedLinkLifetime);
         }
 
         return $this->client->createPresignedRequest(
