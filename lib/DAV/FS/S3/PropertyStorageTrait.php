@@ -61,7 +61,7 @@ trait PropertyStorageTrait
         }
         $aUpdateMetadata[\strtolower($sName)] = $mValue;
 
-        $this->copyObjectTo($this->getStorage(), $path, $name, false, $aUpdateMetadata);
+        $this->updateMetadata($aUpdateMetadata);
     }
 
     /**
@@ -87,7 +87,7 @@ trait PropertyStorageTrait
             $aUpdateMetadata[\strtolower($sName)] = $mValue;
         }
 
-        $this->copyObjectTo($this->getStorage(), $path, $name, false, $aUpdateMetadata);
+        $this->updateMetadata($aUpdateMetadata);
     }
 
     /**

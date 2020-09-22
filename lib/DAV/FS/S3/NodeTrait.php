@@ -66,6 +66,37 @@ trait NodeTrait
 		return $this->bucket . $sRegion . "/" . \Aws\S3\S3Client::encodeKey($sKey);
 	}
 
+	public function updateMetadata($aUpdateMetadata)
+	{
+		$sFullFromPath = $this->getPathForS3($this->getPath());
+		$sFullToPath = $sFullFromPath;
+		$oObject = $this->client->HeadObject([
+			'Bucket' => $this->bucket,
+			'Key' => $sFullFromPath
+		]);
+
+		$aMetadata = [];
+		$sMetadataDirective = 'COPY';
+		if ($oObject)
+		{
+			$aMetadata = $oObject->get('Metadata');
+			$sMetadataDirective = 'REPLACE';
+		}
+
+		if (is_array($aUpdateMetadata))
+		{
+			$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
+		}
+
+		return $this->client->copyObject([
+			'Bucket' => $this->bucket,
+			'Key' => $sFullToPath,
+			'CopySource' => $this->getCopySource($sFullFromPath),
+			'Metadata' => $aMetadata,
+			'MetadataDirective' => $sMetadataDirective
+		]);
+	}
+
 	public function copyObjectTo($sToStorage, $sToPath, $sNewName, $bMove = false, $aUpdateMetadata = null)
 	{
 		$mResult = false;
@@ -107,7 +138,9 @@ trait NodeTrait
 					$aSubMetadata[$sETag] = $result->get('Metadata');
 					if (!$bMove)
 					{
-						$aSubMetadata[$sETag]['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+						$aExtendedProps = isset($aSubMetadata[$sETag]['extendedprops']) ? \json_decode($aSubMetadata[$sETag]['extendedprops'], true) : [];
+						$aExtendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+						$aSubMetadata[$sETag]['extendedprops'] = \json_encode($aExtendedProps);
 					}
 				}
 			}
@@ -176,7 +209,9 @@ trait NodeTrait
 			}
 			if (!$bMove)
 			{
-				$aMetadata['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+				$aExtendedProps = isset($aMetadata['extendedprops']) ? \json_decode($aMetadata['extendedprops'], true) : [];
+				$aExtendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+				$aMetadata['extendedprops'] = \json_encode($aExtendedProps);
 			}
 
 			$res = $this->client->copyObject([
