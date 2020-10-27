@@ -134,6 +134,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			}
 		}
 
+		foreach ($children as $iKey => $oChild)
+		{
+			if ($oChild->getName() === '.sabredav')
+			{
+				unset($children[$iKey]);
+			}
+		}
+
         return $children;
 	}
 
