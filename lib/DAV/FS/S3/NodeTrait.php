@@ -109,6 +109,21 @@ trait NodeTrait
 		$sFullFromPath = $this->getPathForS3($this->getPath());
 		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));
 
+
+		$aProps = $this->getProperties([]);
+		if (!$bMove)
+		{
+			if (!isset($aProps['ExtendedProps']))
+			{
+				$aProps['ExtendedProps'] = [];
+			}
+			$aProps['ExtendedProps']['GUID'] =  \Sabre\DAV\UUIDUtil::getUUID();
+		}
+		$sToPathInfo = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/.sabredav');
+		$aToProps = $this->getResourceRawData($sToPathInfo);
+		$aToProps[$sNewName]['properties'] = $aProps;
+		$this->putResourceRawData($sToPathInfo, $aToProps);
+
 		if ($this->isDirectoryObject())
 		{
 			$objects = $this->client->getIterator('ListObjectsV2', [
@@ -117,44 +132,22 @@ trait NodeTrait
 			]);
 
 			$aKeys = [];
-			$batchHeadObject = [];
 			foreach ($objects as $object)
 			{
 				$sETag = \trim($object['ETag'], '"');
 				$aKeys[$sETag] = $object['Key'];
-				$batchHeadObject[] = $this->client->getCommand('HeadObject', [
-					'Bucket'     => $this->bucket,
-					'Key' => $object['Key']
-				]);
-			}
-
-			$aSubMetadata = [];
-			$HeadObjectResults = \Aws\CommandPool::batch($this->client, $batchHeadObject);
-			foreach($HeadObjectResults as $result)
-			{
-				if ($result instanceof \Aws\ResultInterface)
-				{
-					$sETag = \trim($result['ETag'], '"');
-					$aSubMetadata[$sETag] = $result->get('Metadata');
-					if (!$bMove)
-					{
-						$aExtendedProps = isset($aSubMetadata[$sETag]['extendedprops']) ? \json_decode($aSubMetadata[$sETag]['extendedprops'], true) : [];
-						$aExtendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
-						$aSubMetadata[$sETag]['extendedprops'] = \json_encode($aExtendedProps);
-					}
-				}
 			}
 
 			$batchCopyObject = [];
+			$aNewKeys = [];
 			foreach ($aKeys as $sETag => $sKey)
 			{
 				$sNewKey = \str_replace($sFullFromPath, $sFullToPath, $sKey);
+				$aNewKeys[$sETag] = $sNewKey;
 				$batchCopyObject[] = $this->client->getCommand('CopyObject', [
 					'Bucket'     => $this->bucket,
 					'Key'        => $sNewKey,
-					'CopySource' => $this->getCopySource($sKey),
-					'Metadata' => $aSubMetadata[$sETag],
-					'MetadataDirective' => 'REPLACE'
+					'CopySource' => $this->getCopySource($sKey)
 				]);
 			}
 
@@ -186,47 +179,21 @@ trait NodeTrait
 						'Objects' => array_map(function($sKey) {return ['Key' => $sKey];}, $aCopyResultKeys)
 					],
 				]);
+
+				$this->deleteResourceData();
 			}
 		}
 		else
 		{
-			$oObject = $this->client->HeadObject([
-				'Bucket' => $this->bucket,
-				'Key' => $sFullFromPath
-			]);
-
-			$aMetadata = [];
-			$sMetadataDirective = 'COPY';
-			if ($oObject)
-			{
-				$aMetadata = $oObject->get('Metadata');
-				$sMetadataDirective = 'REPLACE';
-			}
-
-			if (is_array($aUpdateMetadata))
-			{
-				$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
-			}
-			if (!$bMove)
-			{
-				$aExtendedProps = isset($aMetadata['extendedprops']) ? \json_decode($aMetadata['extendedprops'], true) : [];
-				$aExtendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
-				$aMetadata['extendedprops'] = \json_encode($aExtendedProps);
-			}
-
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
 				'Key' => $sFullToPath,
-				'CopySource' => $this->getCopySource($sFullFromPath),
-				'Metadata' => $aMetadata,
-				'MetadataDirective' => $sMetadataDirective
+				'CopySource' => $this->getCopySource($sFullFromPath)
 			]);
+
 			if ($res && $bMove)
 			{
-				$this->client->deleteObject([
-					'Bucket' => $this->bucket,
-					'Key' => $sFullFromPath
-				]);
+				$this->delete();
 
 				$mResult = true;
 			}

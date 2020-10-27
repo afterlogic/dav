@@ -158,14 +158,14 @@ trait PropertyStorageTrait
                 $data = unserialize($data);
                 fclose($handle1);
             }
+
+            $handle2 = fopen($path,'w');
+            $data[$this->getName()] = $newData;
+
+            rewind($handle2);
+            fwrite($handle2,serialize($data));
+            fclose($handle2);
         }
-
-        $handle2 = fopen($path,'w');
-        $data[$this->getName()] = $newData;
-
-        rewind($handle2);
-        fwrite($handle2,serialize($data));
-        fclose($handle2);
     }
 
     /**

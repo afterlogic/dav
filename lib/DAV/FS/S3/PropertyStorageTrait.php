@@ -14,118 +14,178 @@ namespace Afterlogic\DAV\FS\S3;
  */
 trait PropertyStorageTrait
 {
+    protected $cache = [];
 
-    protected $aJsonProperties = [
-        'extendedprops'
-    ];
-
-    public function getProperty($sName)
+    public function getResourceRawData($path)
     {
-        $prop = null;
-
-        try
+        if (!isset($this->cache[$path]))
         {
-            $object = $this->client->HeadObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->path
-            ]);
-
-            $aMetadata = $object->get('Metadata');
-
-            if (isset($aMetadata[\strtolower($sName)]))
+            $data = [];
+            $oObject = false;
+            try
             {
-                if (in_array(\strtolower($sName), $this->aJsonProperties))
-                {
-                    $prop = \json_decode($aMetadata[\strtolower($sName)], true);
-                }
-                else
-                {
-                    $prop = $aMetadata[\strtolower($sName)];
-                }
+                $oObject = $this->client->getObject([
+                        'Bucket' => $this->bucket,
+                        'Key' => $path
+                    ]
+                );
             }
+            catch (\Exception $oEx){}
+            if ($oObject)
+            {
+                $mFileData = (string) $oObject['Body'];
+                $data = unserialize($mFileData);
+            }
+            $this->cache[$path] = $data;
         }
-        catch(\Exception $oEx){}
-
-        return $prop;
-    }
-
-    public function setProperty($sName, $mValue)
-    {
-		$sUserPublicId = $this->getUser();
-		$path = str_replace($sUserPublicId, '', $this->path);
-        list($path, $name) = \Sabre\Uri\split($path);
-        $path = \rtrim($path, '/') . '/';
-        if (in_array(\strtolower($sName), $this->aJsonProperties))
-        {
-            $mValue = \json_encode($mValue);
-        }
-        $aUpdateMetadata[\strtolower($sName)] = $mValue;
-
-        $this->updateMetadata($aUpdateMetadata);
+        return $this->cache[$path];
     }
 
     /**
-     * Updates properties on this node,
+     * Returns all the stored resource information
      *
-     * @param array $properties
-     * @see Sabre\DAV\IProperties::updateProperties
-     * @return bool|array
-     */
-    public function updateProperties($properties)
-    {
-
-        list($path, $name) = \Sabre\Uri\split($this->path);
-        $path = \rtrim($path, '/') . '/';
-
-        $aUpdateMetadata = [];
-        foreach ($properties as $sName => $mValue)
-        {
-            if (in_array(\strtolower($sName), $this->aJsonProperties))
-            {
-                $mValue = \json_encode($mValue);
-            }
-            $aUpdateMetadata[\strtolower($sName)] = $mValue;
-        }
-
-        $this->updateMetadata($aUpdateMetadata);
-    }
-
-    /**
-     * Returns a list of properties for this nodes.;
-     *
-     * @param array $properties
      * @return array
      */
-    function getProperties($properties)
+    protected function getResourceData()
     {
-        $props = [];
-
-        try
+        $data = $this->getResourceRawData($this->getResourceInfoPath());
+        if (!isset($data[$this->getName()]))
         {
-            $object = $this->client->HeadObject([
-                'Bucket' => $this->bucket,
-                'Key' => $this->path
-            ]);
+            $data[$this->getName()] = ['properties' => []];
+        }
 
-            $aMetadata = $object->get('Metadata');
+        $data = $data[$this->getName()];
+        if (!isset($data['properties'])) $data['properties'] = [];
 
-            foreach ($properties as $value)
+        if (!isset($data['properties']['ExtendedProps']))
+        {
+            $aMetadata = $this->getMetadata();
+            if (isset($aMetadata[\strtolower('ExtendedProps')]))
             {
-                if (isset($aMetadata[\strtolower($value)]))
-                {
-                    if (in_array(\strtolower($value), $this->aJsonProperties))
-                    {
-                        $props[$value] = \json_decode($aMetadata[\strtolower($value)], true);
-                    }
-                    else
-                    {
-                        $props[$value] = $aMetadata[\strtolower($value)];
-                    }
-                }
+                $data['properties']['ExtendedProps'] = \json_decode($aMetadata[\strtolower('ExtendedProps')], true);
             }
         }
-        catch(\Exception $oEx){}
+        return $data;
+    }
 
-        return $props;
+    /**
+     * Updates the resource information
+     *
+     * @param array $newData
+     * @return void
+     */
+    protected function putResourceData(array $newData)
+    {
+        $path = $this->getResourceInfoPath();
+        $data = $this->getResourceRawData($path);
+        $data[$this->getName()] = $newData;
+
+        $rData = fopen('php://memory','r+');
+        fwrite($rData, \serialize($data));
+        rewind($rData);
+
+        // Prepare the upload parameters.
+        $uploader = new \Aws\S3\MultipartUploader($this->client, $rData, [
+            'Bucket' => $this->bucket,
+            'Key'    => $path
+        ]);
+
+        // Perform the upload.
+        try
+        {
+            $uploader->upload();
+            $this->cache[$path] = $data;
+            return true;
+        }
+        catch (\Aws\Exception\MultipartUploadException $e)
+        {
+            return false;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function deleteResourceData()
+    {
+        $path = $this->getResourceInfoPath();
+        $data = $this->getResourceRawData($path);
+
+        // Unserializing and checking if the resource file contains data for this file
+        if (isset($data[$this->getName()]))
+        {
+            unset($data[$this->getName()]);
+        }
+
+        $rData = fopen('php://memory','r+');
+        fwrite($rData, \serialize($data));
+        rewind($rData);
+
+        // Prepare the upload parameters.
+        $uploader = new \Aws\S3\MultipartUploader($this->client, $rData, [
+            'Bucket' => $this->bucket,
+            'Key'    => $path
+        ]);
+
+        // Perform the upload.
+        try
+        {
+            $uploader->upload();
+            $this->cache[$path] = $data;
+            return true;
+        }
+        catch (\Aws\Exception\MultipartUploadException $e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function getMetadata()
+    {
+        $oObject = $this->client->HeadObject([
+            'Bucket' => $this->bucket,
+            'Key' => $this->getPathForS3($this->getPath())
+        ]);
+
+        $aMetadata = [];
+        if ($oObject)
+        {
+            $aMetadata = $oObject->get('Metadata');
+        }
+
+        return $aMetadata;
+    }
+
+    public function putResourceRawData($path, array $aData)
+    {
+        $data = $this->getResourceRawData($path);
+        foreach ($aData as $name => $newData)
+        {
+            $data[$name] = $newData;
+        }
+
+        $rData = fopen('php://memory','r+');
+        fwrite($rData, \serialize($data));
+        rewind($rData);
+
+        // Prepare the upload parameters.
+        $uploader = new \Aws\S3\MultipartUploader($this->client, $rData, [
+            'Bucket' => $this->bucket,
+            'Key'    => $path
+        ]);
+
+        // Perform the upload.
+        try
+        {
+            $uploader->upload();
+            $this->cache[$path] = $data;
+            return true;
+        }
+        catch (\Aws\Exception\MultipartUploadException $e)
+        {
+            return false;
+        }
     }
 }
