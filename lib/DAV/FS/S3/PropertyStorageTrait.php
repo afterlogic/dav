@@ -46,7 +46,7 @@ trait PropertyStorageTrait
      *
      * @return array
      */
-    protected function getResourceData()
+    public function getResourceData()
     {
         $data = $this->getResourceRawData($this->getResourceInfoPath());
         if (!isset($data[$this->getName()]))
@@ -74,7 +74,7 @@ trait PropertyStorageTrait
      * @param array $newData
      * @return void
      */
-    protected function putResourceData(array $newData)
+    public function putResourceData(array $newData)
     {
         $path = $this->getResourceInfoPath();
         $data = $this->getResourceRawData($path);

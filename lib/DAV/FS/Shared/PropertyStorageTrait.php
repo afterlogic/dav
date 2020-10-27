@@ -14,14 +14,43 @@ namespace Afterlogic\DAV\FS\Shared;
  */
 trait PropertyStorageTrait
 {
-    /**
-     * Returns the path to the resource file
-     *
-     * @return string
-     */
-    protected function getResourceInfoPath()
+    public function getResourceInfoPath()
     {
-        list($parentDir) = \Sabre\Uri\split($this->node->path);
-        return $parentDir . '/.sabredav';
+        $this->node->getResourceInfoPath();
+    }
+
+    public function getProperty($sName)
+    {
+        return $this->node->getProperty($sName);
+    }
+
+    public function setProperty($sName, $mValue)
+    {
+        $this->node->setProperty($sName, $mValue);
+    }
+
+    public function updateProperties($properties)
+    {
+        return $this->node->updateProperties($properties);
+    }
+
+    public function getProperties($properties)
+    {
+        return $this->node->getProperties($properties);
+    }
+
+    public function getResourceData()
+    {
+        return $this->node->getResourceData();
+    }
+
+    public function putResourceData(array $newData)
+    {
+        $this->node->putResourceData($newData);
+    }
+
+    public function deleteResourceData()
+    {
+        $this->node->deleteResourceData();
     }
 }

@@ -69,7 +69,7 @@ trait PropertyStorageTrait
      * @param array $properties
      * @return array
      */
-    function getProperties($properties)
+    public function getProperties($properties)
     {
         $resourceData = $this->getResourceData();
 
@@ -90,7 +90,7 @@ trait PropertyStorageTrait
      *
      * @return string
      */
-    protected function getResourceInfoPath()
+    public function getResourceInfoPath()
     {
         list($parentDir) = \Sabre\Uri\split($this->path);
         return $parentDir . '/.sabredav';
@@ -101,7 +101,7 @@ trait PropertyStorageTrait
      *
      * @return array
      */
-    protected function getResourceData()
+    public function getResourceData()
     {
         $path = $this->getResourceInfoPath();
         if (!file_exists($path)) return ['properties' => []];
@@ -138,7 +138,7 @@ trait PropertyStorageTrait
      * @param array $newData
      * @return void
      */
-    protected function putResourceData(array $newData)
+    public function putResourceData(array $newData)
     {
         $path = $this->getResourceInfoPath();
 
