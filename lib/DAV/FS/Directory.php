@@ -18,11 +18,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
     use PropertyStorageTrait;
 
 	/**
-	 * @var string $UserPublicId
-	 */
-	protected $UserPublicId = null;
-
-	/**
 	 * @var object $UserObject
 	 */
 	protected $UserObject = null;
