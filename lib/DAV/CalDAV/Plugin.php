@@ -45,20 +45,20 @@ class Plugin extends \Sabre\CalDAV\Plugin {
      */
     function beforeWriteContent($path, \Sabre\DAV\IFile $node, &$data, &$modified) {
 
-        if (!$node instanceof ICalendarObject)
+        if (!$node instanceof \Sabre\CalDAV\ICalendarObject)
             return;
 
         // We're onyl interested in ICalendarObject nodes that are inside of a
         // real calendar. This is to avoid triggering validation and scheduling
         // for non-calendars (such as an inbox).
-        list($parent) = Uri\split($path);
+        list($parent) =  \Sabre\Uri\split($path);
         $parentNode = $this->server->tree->getNodeForPath($parent);
 
-        if (!$parentNode instanceof ICalendar)
+        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
 
 // SKIP VALIDATION
-/*
+
         $this->validateICalendar(
             $data,
             $path,
@@ -67,7 +67,7 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             $this->server->httpResponse,
             false
         );
-*/
+
     }
 
     /**
@@ -85,11 +85,11 @@ class Plugin extends \Sabre\CalDAV\Plugin {
      */
     function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parentNode, &$modified) {
 
-        if (!$parentNode instanceof ICalendar)
+        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
 
 // SKIP VALIDATION
-/*
+
         $this->validateICalendar(
             $data,
             $path,
@@ -98,8 +98,6 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             $this->server->httpResponse,
             true
         );
- *
- */
 
     }
 

@@ -33,7 +33,8 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public function initialize(\Sabre\DAV\Server $server)
     {
         $this->server = $server;
-        $this->server->on('beforeMethod', array($this, 'beforeMethod'), 30);
+        $this->server->on('afterResponse', array($this, 'afterResponse'));
+        $this->server->on('exception', array($this, 'onException'));
     }
 
     /**
@@ -57,23 +58,31 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      * @throws \Sabre\DAV\Exception\NotAuthenticated
      * @return bool
      */
-    public function beforeMethod($sMethod, $path)
+    public function afterResponse(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
     {
-		$aHeaders = $this->server->httpRequest->getHeaders();
+    	\Aurora\System\Api::Log($request->getMethod() . ' ' . $request->getPath(), \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 
-    	\Aurora\System\Api::Log($sMethod . ' ' . $path, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
-    	\Aurora\System\Api::LogObject($aHeaders, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
-
-		$bLogBody = (bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false);
-		if ($bLogBody)
+		if ((bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false))
 		{
-			$body = $this->server->httpRequest->getBodyAsString();
-			$this->server->httpRequest->setBody($body);
-			\Aurora\System\Api::LogObject($body, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+            \Aurora\System\Api::Log('OUT >>>>>>>>>>>>>>>>>>>>>>', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+            $rRequestBody = $request->getBodyAsStream();
+            \rewind($rRequestBody);
+            $sRequestBody = stream_get_contents($rRequestBody);
+            \rewind($rRequestBody);
+            \Aurora\System\Api::LogObject($sRequestBody, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+
+            \Aurora\System\Api::Log('IN <<<<<<<<<<<<<<<<<<<<<<', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+            $rResponseBody = $response->getBodyAsStream();
+            \rewind($rResponseBody);
+            $sResponseBody = stream_get_contents($rResponseBody);
+            \Aurora\System\Api::LogObject($sResponseBody, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 		}
 		\Aurora\System\Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+    }
 
-    	return;
+    public function onException($oException)
+    {
+        \Aurora\System\Api::LogException($oException, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
     }
 
 }

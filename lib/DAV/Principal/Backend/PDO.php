@@ -48,7 +48,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
 		if (is_array($aUsers))
 		{
-			foreach ($aUsers as $oUser)
+			foreach ($aUsers['Items'] as $oUser)
 			{
                 if (!empty($oUser))
                 {
@@ -205,6 +205,31 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      */
     function createPrincipal($path, MkCol $mkCol) {
 
+    }
+
+    function findByUri($uri, $principalPrefix) {
+        $value = null;
+        $scheme = null;
+        list($scheme, $value) = explode(":", $uri, 2);
+        if (empty($value)) return null;
+
+        $uri = null;
+        switch ($scheme){
+            case "mailto":
+
+                $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
+                    $value
+                );
+                if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+                {
+                    $uri = $principalPrefix . '/' . $value;
+                }
+                break;
+            default:
+                //unsupported uri scheme
+                return null;
+        }
+        return $uri;
     }
 
 }

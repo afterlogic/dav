@@ -61,17 +61,18 @@ class Server extends \Sabre\DAV\Server
 
 		/* Authentication Plugin */
 		$oAuthPlugin = 	new \Afterlogic\DAV\Auth\Plugin(new \Afterlogic\DAV\Auth\Backend\Basic());
+		$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
 
 		$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav');
-		if ($oDavModule->getConfig('UseDigestAuth', false))
-		{
-			$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
-		}
+		// if ($oDavModule->getConfig('UseDigestAuth', false))
+		// {
+		// 	$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
+		// }
 		$this->addPlugin($oAuthPlugin);
 
 		/* DAV ACL Plugin */
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
-		$aclPlugin->hideNodesFromListings = true;
+		$aclPlugin->hideNodesFromListings = false;
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
@@ -108,7 +109,7 @@ class Server extends \Sabre\DAV\Server
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
 		/* Logs Plugin */
-//    $this->addPlugin(new Logs\Plugin());
+	   $this->addPlugin(new Logs\Plugin());
 
 	}
 
@@ -174,6 +175,13 @@ class Server extends \Sabre\DAV\Server
 				)
 			);
 
+
+			// $rootNode->addChild(
+			// 	new CalDAV\CalendarRoot(
+			// 		Backend::Caldav()
+			// 	)
+			// );
+
 			/* Reminders Plugin */
 			$this->addPlugin(
 				new Reminders\Plugin(Backend::Reminders())
@@ -196,11 +204,10 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\CalDAV\Schedule\Plugin()
 			);
 
-/*
+
 			$this->addPlugin(
-				new \Sabre\CalDAV\Schedule\IMipPlugin('test@local.host')
+				new CalDAV\IMipPlugin('test@local.host')
 			);
-	*/
 		}
 	}
 

@@ -64,18 +64,10 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport)
 		{
 			$oCalendar = new Shared\Calendar($this->caldavBackend, $calendar);
-			// if (!$bHasDefault && $oCalendar->isOwned() && $oCalendar->isDefault())
-			// {
-			// 	$bHasDefault = true;
-			// }
 		}
 		else
 		{
 			$oCalendar = new Calendar($this->caldavBackend, $calendar);
-			// if (!$bHasDefault && $oCalendar->isDefault())
-			// {
-			// 	$bHasDefault = true;
-			// }
 		}
 
 		return $oCalendar;
@@ -266,33 +258,48 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		{
 			if ($this->allowSharing())
 			{
-				$sTenantPrincipal = $this->getTenantPrincipal(basename($this->principalInfo['uri']));
-
-				foreach ( $this->caldavBackend->getCalendarsForUser($sTenantPrincipal) as $calendar)
-				{
-					if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport)
-					{
-						$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
-						if ($parentCalendar && $parentCalendar['uri'] === $name)
-						{
-							$calendar['id'] = $parentCalendar['id'];
-							$calendar['uri'] = $parentCalendar['uri'];
-
-							$oUser = \Aurora\System\Api::getAuthenticatedUser();
-							if ($oUser)
-							{
-								$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-							}
-
-							$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
-							break;
-						}
-					}
-				}
+				$oChild = $this->getChildForTenantPrincipal(
+					$name,
+					$this->getTenantPrincipal(basename($this->principalInfo['uri']))
+				);
 			}
 			if (!$oChild)
 			{
 				throw $oEx;
+			}
+		}
+
+		return $oChild;
+	}
+
+	    /**
+     * Returns a single calendar, by name
+     *
+     * @param string $name
+     * @return Calendar
+     */
+	function getChildForTenantPrincipal($name, $principal)
+	{
+		$oChild = false;
+		foreach ( $this->caldavBackend->getCalendarsForUser($principal) as $calendar)
+		{
+			if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport)
+			{
+				$parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
+				if ($parentCalendar && $parentCalendar['uri'] === $name)
+				{
+					$calendar['id'] = $parentCalendar['id'];
+					$calendar['uri'] = $parentCalendar['uri'];
+
+					$oUser = \Aurora\System\Api::getAuthenticatedUser();
+					if ($oUser)
+					{
+						$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
+					}
+
+					$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
+					break;
+				}
 			}
 		}
 
