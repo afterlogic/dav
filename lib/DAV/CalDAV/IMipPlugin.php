@@ -21,6 +21,8 @@ use Sabre\VObject\ITip;
  */
 class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
 
+    function __construct() {}
+
     /**
      * Event handler for the 'schedule' event.
      *

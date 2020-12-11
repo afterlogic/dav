@@ -108,9 +108,12 @@ class Server extends \Sabre\DAV\Server
 		/* Locks Plugin */
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
-		/* Logs Plugin */
-	   $this->addPlugin(new Logs\Plugin());
-
+		$oSettings = \Aurora\Api::GetSettings();
+		if ($oSettings->GetConf('EnableLogging', false))
+		{
+			/* Logs Plugin */
+			$this->addPlugin(new Logs\Plugin());
+		}
 	}
 
 	protected function initAddressbooks()
@@ -175,7 +178,6 @@ class Server extends \Sabre\DAV\Server
 				)
 			);
 
-
 			// $rootNode->addChild(
 			// 	new CalDAV\CalendarRoot(
 			// 		Backend::Caldav()
@@ -204,9 +206,8 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\CalDAV\Schedule\Plugin()
 			);
 
-
 			$this->addPlugin(
-				new CalDAV\IMipPlugin('test@local.host')
+				new CalDAV\IMipPlugin()
 			);
 		}
 	}
