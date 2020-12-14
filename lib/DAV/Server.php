@@ -203,11 +203,11 @@ class Server extends \Sabre\DAV\Server
 			}
 
 			$this->addPlugin(
-				new \Sabre\CalDAV\Schedule\Plugin()
+				new CalDAV\Schedule\Plugin()
 			);
 
 			$this->addPlugin(
-				new CalDAV\IMipPlugin()
+				new CalDAV\Schedule\IMipPlugin()
 			);
 		}
 	}

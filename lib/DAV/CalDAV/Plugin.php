@@ -30,6 +30,22 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
     }
 
+    protected function fixOrganizer(&$data)
+    {
+        $vobj = \Sabre\VObject\Reader::read($data);
+        if (isset($vobj->VEVENT->ORGANIZER))
+        {
+            $sOrganizer = $vobj->VEVENT->ORGANIZER->getNormalizedValue();
+            $iPos = strpos($sOrganizer, 'principals/');
+            if ($iPos !== false)
+            {
+                $sOrganizer = 'mailto:' . \trim(substr($sOrganizer, $iPos + 11), '/');
+                $vobj->VEVENT->ORGANIZER->setValue($sOrganizer);
+                $data = $vobj->serialize();
+            }
+        }
+    }
+
     /**
      * This method is triggered before a file gets updated with new content.
      *
@@ -56,6 +72,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
         if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
+
+        $this->fixOrganizer($data);
 
 // SKIP VALIDATION
 
@@ -87,6 +105,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
         if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
+
+        $this->fixOrganizer($data);
 
 // SKIP VALIDATION
 

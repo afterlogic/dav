@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterlogic\DAV\CalDAV;
+namespace Afterlogic\DAV\CalDAV\Schedule;
 
 use Sabre\DAV;
 use Sabre\VObject\ITip;
