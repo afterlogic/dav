@@ -44,6 +44,12 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $data = $vobj->serialize();
             }
         }
+        else if (isset($vobj->VEVENT->ATTENDEE))
+        {
+            $sOrganizer = 'mailto:' . $this->server->getUser();
+            $vobj->VEVENT->ORGANIZER->setValue($sOrganizer);
+            $data = $vobj->serialize();
+        }
     }
 
     /**
