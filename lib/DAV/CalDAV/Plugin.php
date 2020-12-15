@@ -44,12 +44,10 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $data = $vobj->serialize();
             }
         }
-        // else if (isset($vobj->VEVENT->ATTENDEE))
-        // {
-        //     $sOrganizer = 'mailto:' . $this->server->getUser();
-        //     $vobj->VEVENT->ORGANIZER->setValue($sOrganizer);
-        //     $data = $vobj->serialize();
-        // }
+        if (\is_resource($data))
+        {
+            \rewind($data);
+        }
     }
 
     /**
@@ -81,8 +79,6 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
         $this->fixOrganizer($data);
 
-// SKIP VALIDATION
-
         $this->validateICalendar(
             $data,
             $path,
@@ -113,8 +109,6 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             return;
 
         $this->fixOrganizer($data);
-
-// SKIP VALIDATION
 
         $this->validateICalendar(
             $data,
