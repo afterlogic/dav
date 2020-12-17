@@ -107,7 +107,12 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
      */
     public function getChildren()
 	{
-        $aCards = [];
+		$aCards = [];
+
+		// if (!$this->isEnabled())
+		// {
+		// 	return $aCards;
+		// }
 
 		$iIdTenant = 0;
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($this->getUser());
@@ -116,33 +121,31 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			$iIdTenant = $oUser->IdTenant;
 		}
 
-		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
-			\Aurora\Modules\Contacts\Classes\Contact::class,
-			[
-				'LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'
-			],
-			0,
-			0,
-			['Storage' => 'team', 'IdTenant' => $iIdTenant]
-		);
+		$aContacts = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
+			->select(['LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'])
+			->where(['Storage' => 'team', 'IdTenant' => $iIdTenant])
+			->asArray()
+			->exec();
 
 		if (is_array($aContacts) && count($aContacts) > 0)
 		{
-			foreach($aContacts as $oContact) {
-
-				$aName = [$oContact->LastName, $oContact->FirstName];
+			foreach($aContacts as $aContact) {
+				$sFirstName = isset($aContact['FirstName']) ? $aContact['FirstName'] : '';
+				$sLastName = isset($aContact['LastName']) ? $aContact['LastName'] : '';
+				$sFullName = isset($aContact['FullName']) ? $aContact['FullName'] : '';
+				$aName = [$sLastName, $sFirstName];
 				$vCard = new \Sabre\VObject\Component\VCard(
 					[
 						'VERSION' => '3.0',
-						'UID' => $oContact->UUID,
-						'FN' => $oContact->FullName,
-						'N' => (empty($oContact->LastName) && empty($oContact->FirstName)) ? explode(' ', $oContact->FullName) : $aName
+						'UID' => $aContact['UUID'],
+						'FN' => $sFullName,
+						'N' => (empty($sLastName) && empty($sFirstName)) ? explode(' ', $sFullName) : $aName
 					]
 				);
 
 				$vCard->add(
 					'EMAIL',
-					$oContact->ViewEmail,
+					$aContact['ViewEmail'],
 					[
 						'type' => ['work'],
 						'pref' => 1,
@@ -151,9 +154,9 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
 				$aCards[] = new Card(
 					[
-						'uri' => $oContact->UUID . '.vcf',
+						'uri' => $aContact['UUID'] . '.vcf',
 						'carddata' => $vCard->serialize(),
-						'lastmodified' => strtotime($oContact->DateModified)
+						'lastmodified' => strtotime($aContact['DateModified'])
 					]
 				);
 			}
@@ -163,25 +166,23 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
     public function getCTag() {
 
-		$iResult = \Aurora\System\Managers\Eav::getInstance()->getEntitiesCount(
-			\Aurora\Modules\Contacts\Classes\Contact::class,
-			['Storage' => 'team']
-		);
+		$iResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
+			->where(['Storage' => 'team'])
+			->count()
+			->exec();
 
-		$aContacts = \Aurora\System\Managers\Eav::getInstance()->getEntities(
-			\Aurora\Modules\Contacts\Classes\Contact::class,
-			[
-				'DateModified'
-			],
-			0,
-			0,
-			['Storage' => 'team'],
-			['DateModified'],
-			\Aurora\System\Enums\SortOrder::DESC
-		);
-		if (is_array($aContacts) && isset($aContacts[0]))
+		$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
+			->select(['DateModified'])
+			->where(['Storage' => 'team'])
+			->offset(0)
+			->limit(1)
+			->one()
+			->asArray()
+			->exec();
+
+		if (!empty($aResult['DateModified']))
 		{
-			$iResult .= strtotime($aContacts[0]->DateModified);
+			$iResult .= strtotime($aResult['DateModified']);
 		}
 
 		return $iResult;
@@ -303,5 +304,15 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
         return null;
 
-    }
+	}
+
+	public function isEnabled()
+	{
+		$oTenant = \Afterlogic\DAV\Server::getTenantObject();
+		$oUser = \Afterlogic\DAV\Server::getUserObject();
+		$bIsModuleDisabledForTenant = isset($oTenant) ? $oTenant->isModuleDisabled('TeamContacts') : false;
+		$bIsModuleDisabledForUser = isset($oUser) ? $oUser->isModuleDisabled('TeamContacts') : false;
+
+		return !($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser);
+	}
 }

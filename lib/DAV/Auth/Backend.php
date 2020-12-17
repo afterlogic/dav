@@ -30,11 +30,7 @@ class Backend
 
 				if (isset($mResult['AuthToken']))
 				{
-					$oUser = \Aurora\System\Api::getAuthenticatedUser($mResult['AuthToken']);
-					if ($oUser)
-					{
-						$mResult = $oUser->PublicId;
-					}
+					$mResult = \Aurora\System\Api::getAuthenticatedUserPublicId($mResult['AuthToken']);
 				}
 				else
 				{

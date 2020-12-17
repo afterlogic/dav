@@ -153,12 +153,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 				{
 					$calendar['id'] = $parentCalendar['id'];
 					$calendar['uri'] = $parentCalendar['uri'];
-
-					$oUser = \Aurora\System\Api::getAuthenticatedUser();
-					if ($oUser)
-					{
-						$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-					}
+					$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
 				}
 
 				$oSharedWithAllCalendar = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
@@ -290,12 +285,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 				{
 					$calendar['id'] = $parentCalendar['id'];
 					$calendar['uri'] = $parentCalendar['uri'];
-
-					$oUser = \Aurora\System\Api::getAuthenticatedUser();
-					if ($oUser)
-					{
-						$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-					}
+					$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
 
 					$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
 					break;

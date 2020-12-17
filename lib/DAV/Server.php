@@ -16,6 +16,10 @@ class Server extends \Sabre\DAV\Server
 {
 	public static $sUserPublicId = null;
 
+	public static $oUser = null;
+
+	public static $oTenant = null;
+
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
@@ -44,8 +48,7 @@ class Server extends \Sabre\DAV\Server
 
 	protected function isModuleEnabled($sModule)
 	{
-		$oModule = /* @var $oModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule($sModule);
-		return ($oModule && !$oModule->getConfig('Disabled', false));
+		return !\Aurora\System\Api::GetModuleManager()->getModuleConfigValue($sModule, 'Disabled', false);
 	}
 
 	protected function initServer()
@@ -61,13 +64,11 @@ class Server extends \Sabre\DAV\Server
 
 		/* Authentication Plugin */
 		$oAuthPlugin = 	new \Afterlogic\DAV\Auth\Plugin(new \Afterlogic\DAV\Auth\Backend\Basic());
-		$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
 
-		$oDavModule = /* @var $oDavModule \Aurora\Modules\Dav\Module */ \Aurora\System\Api::GetModule('Dav');
-		// if ($oDavModule->getConfig('UseDigestAuth', false))
-		// {
-		// 	$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
-		// }
+		if (\Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseDigestAuth', false))
+		{
+			$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
+		}
 		$this->addPlugin($oAuthPlugin);
 
 		/* DAV ACL Plugin */
@@ -76,7 +77,7 @@ class Server extends \Sabre\DAV\Server
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
-		$mAdminPrincipal = $oDavModule->getConfig('AdminPrincipal', false);
+		$mAdminPrincipal = \Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'AdminPrincipal', false);
 		$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
 						[Constants::PRINCIPALS_PREFIX . $mAdminPrincipal] : [];
 		$this->addPlugin($aclPlugin);
@@ -87,7 +88,7 @@ class Server extends \Sabre\DAV\Server
 		);
 
 		/* HTML Frontend Plugin */
-		if ($oDavModule->getConfig('UseBrowserPlugin', false))
+		if (\Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseBrowserPlugin', false))
 		{
 			$this->addPlugin(
 				new \Sabre\DAV\Browser\Plugin()
@@ -128,18 +129,13 @@ class Server extends \Sabre\DAV\Server
 					)
 			);
 
+			// $rootNode->addChild(new CardDAV\GAB\AddressBook(
+			// 	'gab',
+			// 	Constants::GLOBAL_CONTACTS
+			// ));
+
 			$carddavPlugin = new CardDAV\Plugin();
-
-			if ($this->isModuleEnabled('TeamContacts'))
-			{
-				/* Global Address Book */
-				$rootNode->addChild(new CardDAV\GAB\AddressBook(
-					'gab',
-					Constants::GLOBAL_CONTACTS
-				));
-				$carddavPlugin->directories = ['gab'];
-			}
-
+			// $carddavPlugin->directories = ['gab'];
 			$this->addPlugin(
 				$carddavPlugin
 			);
@@ -250,6 +246,8 @@ class Server extends \Sabre\DAV\Server
 
 	public function __construct()
 	{
+		$this->on('propFind', [$this, 'onPropFind']);
+
 		if (\Aurora\System\Api::GetPDO() && $this->isModuleEnabled('Dav'))
 		{
 			$this->initServer();
@@ -277,16 +275,20 @@ class Server extends \Sabre\DAV\Server
 		self::$sUserPublicId = $sUserPublicId;
 	}
 
+	public static function getUserObject()
+	{
+		if (null === self::$oUser)
+		{
+			self::$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		}
+		return self::$oUser;
+	}
+
 	public static function getUser()
 	{
 		if (null === self::$sUserPublicId)
 		{
-			$oUser = \Aurora\System\Api::getAuthenticatedUser();
-
-			if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
-			{
-				self::$sUserPublicId = $oUser->PublicId;
-			}
+			self::$sUserPublicId = \Aurora\System\Api::getAuthenticatedUserPublicId();
 		}
 		return self::$sUserPublicId;
 	}
@@ -337,23 +339,101 @@ class Server extends \Sabre\DAV\Server
 		return $principalInfo;
 	}
 
+	public static function getTenantObject()
+	{
+		if (null === self::$oTenant)
+		{
+			$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
+				->select(['IdTenant'])
+				->where(['PublicId' => self::getUser()])
+				->one()
+				->asArray()
+				->exec();
+
+			$iIdTenant = false;
+			if (isset($aResult['IdTenant']))
+			{
+				$iIdTenant = (int) $aResult['IdTenant'];
+			}
+			if ($iIdTenant)
+			{
+				self::$oTenant = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
+					->where(['EntityId' => $iIdTenant])
+					->one()
+					->exec();
+			}
+		}
+		return self::$oTenant;
+	}
+
 	public static function getTenantName()
 	{
 		$sTanantName = null;
-		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId(
-			self::getUser()
-		);
-		if ($oUser)
+
+		$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
+			->select(['IdTenant'])
+			->where(['PublicId' => self::getUser()])
+			->one()
+			->asArray()
+			->exec();
+
+		$iIdTenant = false;
+		if (isset($aResult['IdTenant']))
 		{
-			$oTenant = \Aurora\Modules\Core\Module::getInstance()->GetTenantUnchecked(
-				$oUser->IdTenant
-			);
-			if ($oTenant)
+			$iIdTenant = (int) $aResult['IdTenant'];
+		}
+		if ($iIdTenant)
+		{
+			$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
+				->select(['Name'])
+				->where(['EntityId' => $iIdTenant])
+				->one()
+				->asArray()
+				->exec();
+			if (isset($aResult['Name']))
 			{
-				$sTanantName = $oTenant->Name;
+				$sTanantName = $aResult['Name'];
 			}
 		}
 
 		return $sTanantName;
+	}
+
+
+	/**
+	 * @param \Sabre\DAV\PropFind $propfind
+	 * @param \Sabre\DAV\INode $node
+	 * @return void
+	 */
+	public function onPropFind($propfind, \Sabre\DAV\INode $node)
+	{
+		$sUserPublicId = self::getUser();
+		if (isset($sUserPublicId) && $node->getName() === 'root')
+		{
+			if ($this->isModuleEnabled('TeamContacts'))
+			{
+				$rootNode = $this->tree->getNodeForPath('');
+				if (!$rootNode->childExists('gab'))
+				{
+					$oTenant = self::getTenantObject();
+					$oUser = self::getUserObject();
+					$bIsModuleDisabledForTenant = isset($oTenant) ? $oTenant->isModuleDisabled('TeamContacts') : false;
+					$bIsModuleDisabledForUser = isset($oUser) ? $oUser->isModuleDisabled('TeamContacts') : false;
+
+					if (!($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser))
+					{
+						$rootNode->addChild(new CardDAV\GAB\AddressBook(
+							'gab',
+							Constants::GLOBAL_CONTACTS
+						));
+						$carddavPlugin = $this->getPlugin('carddav');
+						if ($carddavPlugin)
+						{
+							$carddavPlugin->directories = ['gab'];
+						}
+					}
+				}
+			}
+		}
 	}
 }

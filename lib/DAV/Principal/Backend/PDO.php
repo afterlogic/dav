@@ -41,22 +41,23 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-		$bPrevState = \Aurora\System\Api::skipCheckUserRole(true);
-		$aUsers = \Aurora\Modules\Core\Module::Decorator()->GetUserList(0, 0);
-
-		\Aurora\System\Api::skipCheckUserRole($bPrevState);
+        $aUsers = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
+            ->select(['PublicId', 'Name'])
+            ->orderBy('PublicId')
+            ->asArray()
+            ->exec();
 
 		if (is_array($aUsers))
 		{
-			foreach ($aUsers['Items'] as $oUser)
+			foreach ($aUsers as $aUser)
 			{
-                if (!empty($oUser))
+                if (is_array($aUser))
                 {
                     $principals[] = array(
-                        'id' => $oUser['UUID'],
-                        'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$oUser['PublicId'],
+                        'id' => $aUser['UUID'],
+                        'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aUser['PublicId'],
 //    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
-                        '{DAV:}displayname' => !empty($oUser['Name']) ? $oUser['Name'] : $oUser['PublicId'],
+                        '{DAV:}displayname' => !empty($aUser['Name']) ? $aUser['Name'] : $aUser['PublicId'],
                     );
                 }
 			}

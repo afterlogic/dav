@@ -40,12 +40,11 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
         $acl = [];
 
 		$sPrincipalUri = $this->calendarInfo['principaluri'];
-
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		if ($oUser)
-		{
-			$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-		}
+        $sUser = \Afterlogic\DAV\Server::getUser();
+        if ($sUser)
+        {
+		    $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
+        }
 
         switch ($this->getShareAccess()) {
 			case \Sabre\DAV\Sharing\Plugin::ACCESS_NOTSHARED :
@@ -124,11 +123,11 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar {
 
 		$sPrincipalUri = $this->calendarInfo['principaluri'];
 
-		$oUser = \Aurora\System\Api::getAuthenticatedUser();
-		if ($oUser)
-		{
-			$sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-		}
+        $sUser = \Afterlogic\DAV\Server::getUser();
+        if ($sUser)
+        {
+		    $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
+        }
 
 		switch ($this->getShareAccess()) {
             case \Sabre\DAV\Sharing\Plugin::ACCESS_NOTSHARED :
