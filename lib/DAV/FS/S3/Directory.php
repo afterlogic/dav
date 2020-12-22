@@ -214,24 +214,38 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             rewind($rData);
         }
 
-		$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
-
         // Prepare the upload parameters.
         $uploader = new MultipartUploader($this->client, $rData, [
             'Bucket' => $this->bucket,
 			'Key'    => $Path,
-			'before_initiate' => function (\Aws\Command $command) use ($extendedProps) {
-				$command['Metadata'] = [
-					'extendedprops' => \json_encode($extendedProps)
-				];
-			}
         ]);
 
         // Perform the upload.
         try
         {
-            $uploader->upload();
+			$uploader->upload();
 
+			$oFile = $this->getChild($name);
+			if ($oFile instanceof \Afterlogic\DAV\FS\File)
+			{
+
+			// 	if ($rangeType !== 0)
+			// 	{
+			// 		$oFile->patch($data, $rangeType, $offset);
+			// 	}
+
+				$aProps = $oFile->getProperties(['Owner']);
+
+				if (!isset($aProps['Owner']))
+				{
+					$aProps['Owner'] = $this->getUser();
+				}
+
+				$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+				$aProps['ExtendedProps'] = $extendedProps;
+
+				$oFile->updateProperties($aProps);
+			}
             return true;
         }
         catch (MultipartUploadException $e)
