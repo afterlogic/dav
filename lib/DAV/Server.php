@@ -73,7 +73,7 @@ class Server extends \Sabre\DAV\Server
 
 		/* DAV ACL Plugin */
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
-		$aclPlugin->hideNodesFromListings = false;
+		$aclPlugin->hideNodesFromListings = true;
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
@@ -343,18 +343,7 @@ class Server extends \Sabre\DAV\Server
 	{
 		if (null === self::$oTenant)
 		{
-			$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
-				->select(['IdTenant'])
-				->where(['PublicId' => self::getUser()])
-				->one()
-				->asArray()
-				->exec();
-
-			$iIdTenant = false;
-			if (isset($aResult['IdTenant']))
-			{
-				$iIdTenant = (int) $aResult['IdTenant'];
-			}
+			$iIdTenant = self::getTenantId();
 			if ($iIdTenant)
 			{
 				self::$oTenant = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
@@ -366,10 +355,9 @@ class Server extends \Sabre\DAV\Server
 		return self::$oTenant;
 	}
 
-	public static function getTenantName()
+	public static function getTenantId()
 	{
-		$sTanantName = null;
-
+		$iIdTenant = false;
 		$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
 			->select(['IdTenant'])
 			->where(['PublicId' => self::getUser()])
@@ -377,11 +365,19 @@ class Server extends \Sabre\DAV\Server
 			->asArray()
 			->exec();
 
-		$iIdTenant = false;
 		if (isset($aResult['IdTenant']))
 		{
 			$iIdTenant = (int) $aResult['IdTenant'];
 		}
+
+		return $iIdTenant;
+	}
+
+	public static function getTenantName()
+	{
+		$sTanantName = null;
+
+		$iIdTenant = self::getTenantId();
 		if ($iIdTenant)
 		{
 			$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
@@ -408,7 +404,7 @@ class Server extends \Sabre\DAV\Server
 	public function onPropFind($propfind, \Sabre\DAV\INode $node)
 	{
 		$sUserPublicId = self::getUser();
-		if (isset($sUserPublicId) && $node->getName() === 'root')
+		if (isset($sUserPublicId) && ($node->getName() === 'root' || $node->getName() === 'principals'))
 		{
 			if ($this->isModuleEnabled('TeamContacts'))
 			{
@@ -430,6 +426,11 @@ class Server extends \Sabre\DAV\Server
 						if ($carddavPlugin)
 						{
 							$carddavPlugin->directories = ['gab'];
+						}
+						$aclPlugin = $this->getPlugin('acl');
+						if ($aclPlugin)
+						{
+							$aclPlugin->hideNodesFromListings = true;
 						}
 					}
 				}

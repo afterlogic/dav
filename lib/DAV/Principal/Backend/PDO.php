@@ -41,30 +41,34 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 
         $principals = [];
 
-        $aUsers = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
-            ->select(['PublicId', 'Name'])
-            ->orderBy('PublicId')
-            ->asArray()
-            ->exec();
+        $iIdTenant = \Afterlogic\DAV\Server::getTenantId();
+        if ($iIdTenant)
+        {
+            $aUsers = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
+                ->select(['PublicId', 'Name'])
+                ->where(['IdTenant' => $iIdTenant])
+                ->orderBy('PublicId')
+                ->asArray()
+                ->exec();
 
-		if (is_array($aUsers))
-		{
-			foreach ($aUsers as $aUser)
-			{
-                if (is_array($aUser))
+            if (is_array($aUsers))
+            {
+                foreach ($aUsers as $aUser)
                 {
-                    $principals[] = array(
-                        'id' => $aUser['UUID'],
-                        'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aUser['PublicId'],
-//    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
-                        '{DAV:}displayname' => !empty($aUser['Name']) ? $aUser['Name'] : $aUser['PublicId'],
-                    );
+                    if (is_array($aUser))
+                    {
+                        $principals[] = array(
+                            'id' => $aUser['UUID'],
+                            'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aUser['PublicId'],
+    //    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
+                            '{DAV:}displayname' => !empty($aUser['Name']) ? $aUser['Name'] : $aUser['PublicId'],
+                        );
+                    }
                 }
-			}
-		}
+            }
+        }
 
         return $principals;
-
     }
 
     /**
