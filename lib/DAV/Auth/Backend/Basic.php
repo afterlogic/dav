@@ -26,7 +26,7 @@ class Basic extends \Sabre\DAV\Auth\Backend\AbstractBasic
     protected function validateUserPass($sUserName, $sPassword)
 	{
 		$mResult = false;
-		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid())
+		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid() && $sUserName !== \Afterlogic\DAV\Constants::DAV_PUBLIC_PRINCIPAL && $sUserName !== \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL)
 		{
 			$mResult = \Afterlogic\DAV\Auth\Backend::Login($sUserName, $sPassword);
 

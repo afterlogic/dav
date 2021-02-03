@@ -264,9 +264,15 @@ class Server extends \Sabre\DAV\Server
 
 	public function exec()
 	{
-		if ($this->isModuleEnabled('Dav'))
+		$sRequestUri = empty($_SERVER['REQUEST_URI']) ? '' : \trim($_SERVER['REQUEST_URI']);
+		
+		if ($this->isModuleEnabled('Dav') && !strpos(urldecode($sRequestUri), '../'))
 		{
 			parent::exec();
+		}
+		else
+		{
+			echo 'Access denied';
 		}
 	}
 
