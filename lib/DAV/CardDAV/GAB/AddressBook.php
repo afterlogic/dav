@@ -109,10 +109,10 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	{
 		$aCards = [];
 
-		// if (!$this->isEnabled())
-		// {
-		// 	return $aCards;
-		// }
+		if (!$this->isEnabled())
+		{
+			return $aCards;
+		}
 
 		$iIdTenant = 0;
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($this->getUser());
@@ -156,7 +156,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 					[
 						'uri' => $aContact['UUID'] . '.vcf',
 						'carddata' => $vCard->serialize(),
-						'lastmodified' => strtotime($aContact['DateModified'])
+						'lastmodified' => isset($aContact['DateModified']) ? strtotime($aContact['DateModified']) : time()
 					]
 				);
 			}

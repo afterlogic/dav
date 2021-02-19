@@ -20,6 +20,8 @@ class Server extends \Sabre\DAV\Server
 
 	public static $oTenant = null;
 
+	public $rootNode = null;
+
 	/**
 	 * @return \Afterlogic\DAV\Server
 	 */
@@ -54,7 +56,8 @@ class Server extends \Sabre\DAV\Server
 	protected function initServer()
 	{
 		/* Initializing server */
-		parent::__construct();
+		$oTree = new \Sabre\DAV\Tree($this->rootNode);
+ 		parent::__construct($oTree);
 
 		$this->debugExceptions = true;
 		self::$exposeVersion = false;
@@ -73,7 +76,7 @@ class Server extends \Sabre\DAV\Server
 
 		/* DAV ACL Plugin */
 		$aclPlugin = new \Sabre\DAVACL\Plugin();
-		$aclPlugin->hideNodesFromListings = true;
+		$aclPlugin->hideNodesFromListings = false;
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
@@ -121,21 +124,21 @@ class Server extends \Sabre\DAV\Server
 	{
 		if ($this->isModuleEnabled('Contacts') && $this->isModuleEnabled('MobileSync'))
 		{
-			$rootNode = $this->tree->getNodeForPath('');
-
-			$rootNode->addChild(
+			$this->rootNode->addChild(
 					new CardDAV\AddressBookRoot(
 							Backend::Carddav()
 					)
 			);
 
-			// $rootNode->addChild(new CardDAV\GAB\AddressBook(
-			// 	'gab',
-			// 	Constants::GLOBAL_CONTACTS
-			// ));
-
 			$carddavPlugin = new CardDAV\Plugin();
-			// $carddavPlugin->directories = ['gab'];
+			if ($this->isModuleEnabled('TeamContacts'))
+			{
+				$this->rootNode->addChild(new CardDAV\GAB\AddressBook(
+					'gab',
+					Constants::GLOBAL_CONTACTS
+				));
+				$carddavPlugin->directories = ['gab'];
+			}
 			$this->addPlugin(
 				$carddavPlugin
 			);
@@ -156,8 +159,6 @@ class Server extends \Sabre\DAV\Server
 	{
 		if ($this->isModuleEnabled('Calendar') && $this->isModuleEnabled('MobileSync'))
 		{
-			$rootNode = $this->tree->getNodeForPath('');
-
 			/* CalDAV Plugin */
 			$this->addPlugin(
 				new CalDAV\Plugin()
@@ -168,13 +169,13 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\CalDAV\ICSExportPlugin()
 			);
 
-			$rootNode->addChild(
+			$this->rootNode->addChild(
 				new CalDAV\CalendarHome(
 					Backend::Caldav()
 				)
 			);
 
-			// $rootNode->addChild(
+			// $this->rootNode->addChild(
 			// 	new CalDAV\CalendarRoot(
 			// 		Backend::Caldav()
 			// 	)
@@ -213,8 +214,6 @@ class Server extends \Sabre\DAV\Server
 		$sHeader = $this->httpRequest->getHeader('X-Client');
 		if ($this->isModuleEnabled('Files') && ($this->isModuleEnabled('MobileSync') || $sHeader === 'WebClient'))
 		{
-			$rootNode = $this->tree->getNodeForPath('');
-
 			$this->addPlugin(
 				new FS\Plugin()
 			);
@@ -228,24 +227,24 @@ class Server extends \Sabre\DAV\Server
 
 			 if ($oRoot->getChildrenCount() > 0)
 			 {
-				$rootNode->addChild($oRoot);
+				$this->rootNode->addChild($oRoot);
 			 }
 		}
 	}
 
 	protected function initPrincipals()
 	{
-		$rootNode = $this->tree->getNodeForPath('');
-
 		$oPrincipalColl = new \Sabre\DAVACL\PrincipalCollection(
 			Backend::Principal()
 		);
 		$oPrincipalColl->disableListing = false;
-		$rootNode->addChild($oPrincipalColl);
+		$this->rootNode->addChild($oPrincipalColl);
 	}
 
 	public function __construct()
 	{
+		$this->rootNode = new SimpleCollection('root');
+
 		$this->on('propFind', [$this, 'onPropFind']);
 
 		if (\Aurora\System\Api::GetPDO() && $this->isModuleEnabled('Dav'))
@@ -410,29 +409,28 @@ class Server extends \Sabre\DAV\Server
 	public function onPropFind($propfind, \Sabre\DAV\INode $node)
 	{
 		$sUserPublicId = self::getUser();
-		if (isset($sUserPublicId) && ($node->getName() === 'root' || $node->getName() === 'principals'))
+		if (isset($sUserPublicId))
 		{
 			if ($this->isModuleEnabled('TeamContacts'))
 			{
-				$rootNode = $this->tree->getNodeForPath('');
-				if (!$rootNode->childExists('gab'))
+				if ($this->rootNode->childExists('gab'))
 				{
 					$oTenant = self::getTenantObject();
 					$oUser = self::getUserObject();
+
 					$bIsModuleDisabledForTenant = isset($oTenant) ? $oTenant->isModuleDisabled('TeamContacts') : false;
 					$bIsModuleDisabledForUser = isset($oUser) ? $oUser->isModuleDisabled('TeamContacts') : false;
 
-					if (!($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser))
+					if ($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser)
 					{
-						$rootNode->addChild(new CardDAV\GAB\AddressBook(
-							'gab',
-							Constants::GLOBAL_CONTACTS
-						));
+						$this->rootNode->deleteChild('gab');
+
 						$carddavPlugin = $this->getPlugin('carddav');
 						if ($carddavPlugin)
 						{
-							$carddavPlugin->directories = ['gab'];
+							$carddavPlugin->directories = [];
 						}
+
 						$aclPlugin = $this->getPlugin('acl');
 						if ($aclPlugin)
 						{
