@@ -300,4 +300,15 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		return true;
 
 	}
+
+	public function childExists($name)
+	{
+		$oFile = null;
+		try
+		{
+			$oFile = $this->getChild($name);
+		}
+		catch (\Exception $oEx) {}
+		return ($oFile instanceof \Afterlogic\DAV\FS\File);
+	}
 }
