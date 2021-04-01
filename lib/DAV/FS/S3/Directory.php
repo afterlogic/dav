@@ -234,7 +234,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			// 		$oFile->patch($data, $rangeType, $offset);
 			// 	}
 
-				$aProps = $oFile->getProperties(['Owner']);
+				$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
 
 				if (!isset($aProps['Owner']))
 				{
@@ -242,7 +242,23 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				}
 
 				$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
-				$aProps['ExtendedProps'] = $extendedProps;
+				$aCurrentExtendedProps = $extendedProps;
+				if (!isset($aProps['ExtendedProps']))
+				{
+					$aCurrentExtendedProps = $aProps['ExtendedProps'];
+					foreach ($extendedProps as $sPropName => $propValue)
+					{
+						if ($propValue === null)
+						{
+							unset($aCurrentExtendedProps[$sPropName]);
+						}
+						else
+						{
+							$aCurrentExtendedProps[$sPropName] = $propValue;
+						}
+					}
+				}
+				$aProps['ExtendedProps'] = $aCurrentExtendedProps;
 
 				$oFile->updateProperties($aProps);
 			}

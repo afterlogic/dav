@@ -90,14 +90,29 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 			}
 		}
 
-		$aProps = $oFile->getProperties(['Owner']);
+		$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
 
 		if (!isset($aProps['Owner']))
 		{
 			$aProps['Owner'] = $this->getUser();
 		}
-
-		$aProps['ExtendedProps'] = $extendedProps;
+		$aCurrentExtendedProps = $extendedProps;
+		if (!isset($aProps['ExtendedProps']))
+		{
+			$aCurrentExtendedProps = $aProps['ExtendedProps'];
+			foreach ($extendedProps as $sPropName => $propValue)
+			{
+				if ($propValue === null)
+				{
+					unset($aCurrentExtendedProps[$sPropName]);
+				}
+				else
+				{
+					$aCurrentExtendedProps[$sPropName] = $propValue;
+				}
+			}
+		}
+		$aProps['ExtendedProps'] = $aCurrentExtendedProps;
 
 		$oFile->updateProperties($aProps);
 
