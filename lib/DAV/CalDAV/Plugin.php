@@ -30,8 +30,13 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
     }
 
-    protected function fixOrganizer(&$data)
+    protected function fixOrganizer(&$data, &$modified)
     {
+        // If it's a stream, we convert it to a string first.
+        if (is_resource($data)) {
+            $data = stream_get_contents($data);
+        }
+
         $vobj = \Sabre\VObject\Reader::read($data);
         if (isset($vobj->VEVENT->ORGANIZER))
         {
@@ -42,11 +47,9 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $sOrganizer = 'mailto:' . \trim(substr($sOrganizer, $iPos + 11), '/');
                 $vobj->VEVENT->ORGANIZER->setValue($sOrganizer);
                 $data = $vobj->serialize();
+                $vobj->destroy();
+                $modified = true;
             }
-        }
-        if (\is_resource($data))
-        {
-            \rewind($data);
         }
     }
 
@@ -77,17 +80,17 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
 
-        $this->fixOrganizer($data);
-
-        $this->validateICalendar(
-            $data,
-            $path,
-            $modified,
-            $this->server->httpRequest,
-            $this->server->httpResponse,
-            false
-        );
-
+        $this->fixOrganizer($data, $modified);
+        try{
+            $this->validateICalendar(
+                $data,
+                $path,
+                $modified,
+                $this->server->httpRequest,
+                $this->server->httpResponse,
+                false
+            );
+        } catch (\Exception $oEx) {}
     }
 
     /**
@@ -108,17 +111,17 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
             return;
 
-        $this->fixOrganizer($data);
-
-        $this->validateICalendar(
-            $data,
-            $path,
-            $modified,
-            $this->server->httpRequest,
-            $this->server->httpResponse,
-            true
-        );
-
+        $this->fixOrganizer($data, $modified);
+        try{
+            $this->validateICalendar(
+                $data,
+                $path,
+                $modified,
+                $this->server->httpRequest,
+                $this->server->httpResponse,
+                false
+            );
+        } catch (\Exception $oEx) {}
     }
 
    /**
