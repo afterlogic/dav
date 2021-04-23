@@ -249,8 +249,19 @@ trait NodeTrait
         $resourceData = $this->getResourceData();
         $this->deleteResourceData();
 
+		$oHistoryNode = null;
+		if ($this instanceof File)
+		{
+			$oHistoryNode = $this->getHistoryDirectory();
+		}
+
         rename($this->path, $newPath);
         $this->path = $newPath;
         $this->putResourceData($resourceData);
+
+		if ($oHistoryNode instanceof Directory)
+		{
+			$oHistoryNode->setName($name . '.hist');
+		}
     }
 }

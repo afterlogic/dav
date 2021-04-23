@@ -16,6 +16,7 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
 {
     use NodeTrait;
     use PropertyStorageTrait;
+    use HistoryDirectoryTrait;
 
 	public function __construct($storage, $path)
 	{
@@ -41,6 +42,8 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
         $this->deleteShares();
 
 		$this->deleteResourceData();
+
+        $this->deleteHistoryDirectory();
 
 		return $result;
     }

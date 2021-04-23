@@ -40,6 +40,7 @@ class File extends \Afterlogic\DAV\FS\File
         ]);
 		$this->deleteResourceData();
         $this->deleteShares();
+        $this->deleteHistoryDirectory();
 	}
 
     public function put($data)

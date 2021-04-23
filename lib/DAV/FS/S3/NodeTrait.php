@@ -14,6 +14,8 @@ namespace Afterlogic\DAV\FS\S3;
  */
 trait NodeTrait
 {
+    use \Afterlogic\DAV\FS\HistoryDirectoryTrait;
+
 	public function getPath()
 	{
 		return $this->path;

@@ -136,7 +136,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 		foreach ($children as $iKey => $oChild)
 		{
-			if ($oChild->getName() === '.sabredav')
+			$ext = strtolower(substr($oChild->getName(), -5));
+			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist'))
 			{
 				unset($children[$iKey]);
 			}

@@ -99,7 +99,6 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$aCurrentExtendedProps = $extendedProps;
 		if (!isset($aProps['ExtendedProps']))
 		{
-			$aCurrentExtendedProps = $aProps['ExtendedProps'];
 			foreach ($extendedProps as $sPropName => $propValue)
 			{
 				if ($propValue === null)
@@ -143,7 +142,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 
 		foreach ($aChildren as $iKey => $oChild)
 		{
-			if ($oChild->getName() === '.sabredav')
+			$ext = strtolower(substr($oChild->getName(), -5));
+			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist'))
 			{
 				unset($aChildren[$iKey]);
 			}
