@@ -122,10 +122,12 @@ trait NodeTrait
 			$aProps['ExtendedProps']['GUID'] =  \Sabre\DAV\UUIDUtil::getUUID();
 		}
 		$sToPathInfo = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/.sabredav');
-		$aToProps = $this->getResourceRawData($sToPathInfo);
-		$aToProps[$sNewName]['properties'] = $aProps;
-		$this->putResourceRawData($sToPathInfo, $aToProps);
-
+		if (!$this->isDirectoryObject())
+		{
+			$aToProps = $this->getResourceRawData($sToPathInfo);
+			$aToProps[$sNewName]['properties'] = $aProps;
+			$this->putResourceRawData($sToPathInfo, $aToProps);
+		}
 		if ($this->isDirectoryObject())
 		{
 			$objects = $this->client->getIterator('ListObjectsV2', [
