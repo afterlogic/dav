@@ -114,4 +114,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
     }
 
+    public function getRelativePath()
+    {
+        return $this->getRelativeNodePath();
+    }
+
 }

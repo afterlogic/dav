@@ -68,6 +68,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
 				$oItem->setAccess((int) $aSharedFile['access']);
+//				$oItem->setAccess(\Aurora\Modules\SharedFiles\Enums\Access::Read);
 			}
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
@@ -95,7 +96,20 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 
 	public function getChild($name)
 	{
+		$bHasHistory = false;
+		if (substr($name, -5) === '.hist')
+		{
+			$bHasHistory = true;
+			$name = substr($name, 0, strpos($name, '.hist'));
+		}
+
 		$aSharedFile = $this->pdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
+
+		if (is_array($aSharedFile) && $bHasHistory)
+		{
+			$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
+			$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
+		}
 
 		return $this->populateItem($aSharedFile);
     }
@@ -120,7 +134,15 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
-		throw new \Sabre\DAV\Exception\Forbidden();
+		$oFile = $this->getChild($name);
+		if ($oFile instanceof File)
+		{
+			$oFile->put($data);
+		}
+		else
+		{
+			throw new \Sabre\DAV\Exception\Forbidden();
+		}
 	}
 
 }

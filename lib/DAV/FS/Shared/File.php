@@ -69,6 +69,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getAccess()
     {
+//        return \Aurora\Modules\SharedFiles\Enums\Access::Read;
         return $this->node->getAccess();
     }
 
@@ -134,4 +135,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         return $this->node->put($data);
     }
 
+    public function getRelativePath()
+    {
+        return $this->getRelativeNodePath();
+    }
 }
