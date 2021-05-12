@@ -16,14 +16,17 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 {
     use PropertyStorageTrait;
 
+    protected $name;
+
     protected $node;
 
     protected $relativeNodePath = null;
 
     protected $ownerPublicId = null;
 
-    public function __construct($node)
+    public function __construct($name, $node)
     {
+        $this->name = $name;
         $this->node = $node;
     }
 
@@ -64,7 +67,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     public function getName()
     {
-        return $this->node->getName();
+//        return $this->node->getName();
+        return $this->name;
     }
 
     public function getDisplayName()

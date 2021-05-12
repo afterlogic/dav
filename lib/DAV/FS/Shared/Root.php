@@ -73,11 +73,11 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
 			{
-				$mResult = new File($oItem);
+				$mResult = new File($aSharedFile['uid'], $oItem);
 			}
 			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
 			{
-				$mResult = new Directory($oItem);
+				$mResult = new Directory($aSharedFile['uid'], $oItem);
 			}
 
 			if ($mResult)

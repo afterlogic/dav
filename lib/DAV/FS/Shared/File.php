@@ -16,14 +16,17 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 {
     use PropertyStorageTrait;
 
+    protected $name;
+
     protected $node;
 
     protected $relativeNodePath = null;
 
     protected $ownerPublicId = null;
 
-    public function __construct($node)
+    public function __construct($name, $node)
     {
+        $this->name = $name;
         $this->node = $node;
     }
 
@@ -75,7 +78,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getName()
     {
-        return $this->node->getName();
+//        return $this->node->getName();
+        return $this->name;
     }
 
     public function getId()
@@ -115,8 +119,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     function delete()
     {
-            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            $pdo->deleteShare($this->principalUri, $this->getId());
+        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+        $pdo->deleteShare($this->principalUri, $this->getId());
     }
 
     /**
