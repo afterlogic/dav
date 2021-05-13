@@ -241,7 +241,7 @@ trait NodeTrait
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
         {
             $pdo = new Backend\PDO();
-            $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+            $pdo->updateShare($this->getOwner(), $this->getStorage(), $this->getStorage(), $oldPathForShare, $newPathForShare);
         }
 
         // We're deleting the existing resourcedata, and recreating it

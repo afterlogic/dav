@@ -258,14 +258,14 @@ SQL
 		return  $stmt->execute([$name, $principalUri, $uid]);
 	}
 
-	public function updateShare($owner, $storage, $path, $newPath)
+	public function updateShare($owner, $storage, $path,  $newStorage, $newPath)
 	{
 		$stmt = $this->pdo->prepare(
 			"UPDATE " . $this->sharedFilesTableName . "
-			SET path = REPLACE(path, ?, ?)
+			SET path = REPLACE(path, ?, ?), storage = ?
 			WHERE path LIKE ? AND owner = ? AND storage = ?"
 		);
-		return  $stmt->execute([$path, $newPath, $path . '%', $owner, $storage]);
+		return  $stmt->execute([$path, $newPath, $newStorage, $path . '%', $owner, $storage]);
 	}
 
 	/**
