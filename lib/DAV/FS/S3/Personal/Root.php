@@ -8,8 +8,10 @@
 namespace Afterlogic\DAV\FS\S3\Personal;
 
 use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\S3Filestorage;
+use Aurora\System\Api;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -34,7 +36,23 @@ class Root extends Directory
 
 		$client = $this->getS3Client($endpoint);
 
-		if(!$client->doesBucketExist($sBucket))
+		$bDoesBucketExist = false;
+		try {
+			$client->headBucket([
+				'Bucket' => $sBucket
+			]);
+			$bDoesBucketExist = true;
+		}
+		catch (S3Exception $oEx) {
+			if ($oEx->getStatusCode() == '404') {
+				$bDoesBucketExist = false;
+			}
+			else if ($oEx->getStatusCode() == '403') {
+				throw new \Aurora\System\Exceptions\ApiException(403, $oEx, 'S3 storage access error.');
+			}
+		}
+
+		if(!$bDoesBucketExist)
 		{
 			$this->createBucket($client, $sBucket);
 		}
