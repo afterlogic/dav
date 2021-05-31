@@ -52,4 +52,33 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
     {
         return null;
     }
+
+    function patch($data, $rangeType, $offset = null) {
+
+        switch ($rangeType) {
+            case 0 :
+                $f = fopen($this->path, 'w');
+                break;
+            case 1 :
+                $f = fopen($this->path, 'a');
+                break;
+            case 2 :
+                $f = fopen($this->path, 'c');
+                fseek($f, $offset);
+                break;
+            case 3 :
+                $f = fopen($this->path, 'c');
+                fseek($f, $offset, SEEK_END);
+                break;
+        }
+        if (is_string($data)) {
+            fwrite($f, $data);
+        } else {
+            stream_copy_to_stream($data, $f);
+        }
+        fclose($f);
+        clearstatcache(true, $this->path);
+        return $this->getETag();
+
+    }
 }

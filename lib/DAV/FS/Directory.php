@@ -72,22 +72,12 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$result = false;
 		if (!$this->childExists($name))
 		{
-			if ($rangeType === 0)
-			{
-				$result = parent::createFile($name, $data);
-			}
-			else
-			{
-				$result = parent::createFile($name);
-			}
+			$result = parent::createFile($name);
 		}
 		$oFile = $this->getChild($name);
 		if ($oFile instanceof \Afterlogic\DAV\FS\File)
 		{
-			if ($rangeType !== 0)
-			{
-				$oFile->patch($data, $rangeType, $offset);
-			}
+			$oFile->patch($data, $rangeType, $offset);
 		}
 
 		$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
