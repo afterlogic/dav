@@ -70,11 +70,11 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     //     return $this->principalUri;
     // }
 
-    public function getAccess()
-    {
-//        return \Aurora\Modules\SharedFiles\Enums\Access::Read;
-        return $this->node->getAccess();
-    }
+//     public function getAccess()
+//     {
+// //        return \Aurora\Modules\SharedFiles\Enums\Access::Read;
+//         return $this->node->getAccess();
+//     }
 
     public function getName()
     {

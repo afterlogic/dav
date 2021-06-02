@@ -28,6 +28,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $this->name = $name;
         $this->node = $node;
+        $this->setAccess($node->getAccess());
     }
 
     public function setRelativeNodePath($sPath)
@@ -83,12 +84,23 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     public function getChild($path)
     {
-        return $this->node->getChild($path);
+        $oChild = $this->node->getChild($path);
+        if ($oChild)
+        {
+            $oChild->setAccess($this->getAccess());
+        }
+
+        return $oChild;
     }
 
     public function getChildren()
     {
-        return $this->node->getChildren();
+        $aChildren = $this->node->getChildren();
+        foreach ($aChildren as $oChild)
+        {
+            $oChild->setAccess($this->getAccess());
+        }
+        return $aChildren;
     }
 
     function delete()
@@ -108,6 +120,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         throw new \Sabre\DAV\Exception\Conflict();
     }
 
+    public function childExists($name)
+    {
+        return $this->node->childExists($name);
+    }
+
 	public function createDirectory($name)
 	{
         $this->node->createDirectory($name);
@@ -122,5 +139,4 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         return $this->getRelativeNodePath();
     }
-
 }
