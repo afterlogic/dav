@@ -25,7 +25,7 @@ class Root extends Directory
 		$oTenant = $this->getTenant();
 		if ($oTenant) 
 		{
-			$path = $path . '/' . $oTenant->EntityId;
+			$path = $path . '/' . $oTenant->Id;
 			if (!\file_exists($path)) 
 			{
 				\mkdir($path, 0777, true);
@@ -55,7 +55,7 @@ class Root extends Directory
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($this->UserPublicId);
 		if ($oUser)
 		{
-			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->EntityId, $this->getName());
+			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->Id, $this->getName());
 			$mResult = [
 				$aQuota['Used'],
 				$aQuota['Limit']

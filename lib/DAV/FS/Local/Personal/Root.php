@@ -67,7 +67,7 @@ class Root extends Directory
 		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($this->UserPublicId);
 		if ($oUser)
 		{
-			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->EntityId, $this->getName());
+			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->Id, $this->getName());
 			return [
 				$aQuota['Used'],
 				$aQuota['Limit']
