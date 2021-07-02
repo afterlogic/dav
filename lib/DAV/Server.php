@@ -264,7 +264,7 @@ class Server extends \Sabre\DAV\Server
 	public function exec()
 	{
 		$sRequestUri = empty($_SERVER['REQUEST_URI']) ? '' : \trim($_SERVER['REQUEST_URI']);
-		
+
 		if ($this->isModuleEnabled('Dav') && !strpos(urldecode($sRequestUri), '../'))
 		{
 			parent::exec();
@@ -351,10 +351,7 @@ class Server extends \Sabre\DAV\Server
 			$iIdTenant = self::getTenantId();
 			if ($iIdTenant)
 			{
-				self::$oTenant = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
-					->where(['EntityId' => $iIdTenant])
-					->one()
-					->exec();
+				self::$oTenant = \Aurora\Modules\Core\Models\Tenant::select('Name')->find($iIdTenant);
 			}
 		}
 		return self::$oTenant;
@@ -363,16 +360,10 @@ class Server extends \Sabre\DAV\Server
 	public static function getTenantId()
 	{
 		$iIdTenant = false;
-		$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
-			->select(['IdTenant'])
-			->where(['PublicId' => self::getUser()])
-			->one()
-			->asArray()
-			->exec();
-
-		if (isset($aResult['IdTenant']))
+		$oResult = \Aurora\Modules\Core\Models\User::select('IdTenant')->firstWhere('PublicId', self::getUser());
+		if (isset($oResult->IdTenant))
 		{
-			$iIdTenant = (int) $aResult['IdTenant'];
+			$iIdTenant = (int) $oResult->IdTenant;
 		}
 
 		return $iIdTenant;
@@ -385,15 +376,10 @@ class Server extends \Sabre\DAV\Server
 		$iIdTenant = self::getTenantId();
 		if ($iIdTenant)
 		{
-			$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\Tenant::class))
-				->select(['Name'])
-				->where(['EntityId' => $iIdTenant])
-				->one()
-				->asArray()
-				->exec();
-			if (isset($aResult['Name']))
+			$oResult = \Aurora\Modules\Core\Models\Tenant::select('Name')->find($iIdTenant);
+			if (isset($oResult) && isset($oResult->Name))
 			{
-				$sTanantName = $aResult['Name'];
+				$sTanantName = (int) $oResult->Name;
 			}
 		}
 
