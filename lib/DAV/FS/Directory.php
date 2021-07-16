@@ -174,7 +174,12 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		{
 			foreach ($aItems as $sItem)
 			{
-				$aResult[] = is_dir($sItem) ? new self($this->getStorage(), $sItem) : new File($this->getStorage(), $sItem);
+				$sItemName = \basename($sItem);
+				$ext = strtolower(substr($sItemName, -5));
+				if ($sItemName !== '.sabredav' && !(is_dir($sItem) && $ext === '.hist'))
+				{
+					$aResult[] = is_dir($sItem) ? new self($this->getStorage(), $sItem) : new File($this->getStorage(), $sItem);
+				}
 			}
 		}
 
