@@ -246,7 +246,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				$aCurrentExtendedProps = $extendedProps;
 				if (!isset($aProps['ExtendedProps']))
 				{
-					$aCurrentExtendedProps = $aProps['ExtendedProps'];
+					$aCurrentExtendedProps = []; //$aProps['ExtendedProps'];
 					foreach ($extendedProps as $sPropName => $propValue)
 					{
 						if ($propValue === null)
