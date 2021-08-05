@@ -7,8 +7,8 @@
 
 namespace Afterlogic\DAV\Contacts;
 
-use Aurora\System\EAV\Query;
-use Aurora\System\Managers\Eav;
+use Aurora\Modules\Contacts\Models\Contact;
+use Aurora\Modules\Contacts\Models\Group;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -110,9 +110,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
 			\Afterlogic\DAV\Server::getUser()
 		);
-		if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+		if ($oUser instanceof \Aurora\Modules\Core\Models\User)
 		{
-			$iUserId = $oUser->EntityId;
+			$iUserId = $oUser->Id;
 		}
 
 		return $iUserId;
@@ -120,33 +120,17 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
 	protected function getContactFromDB($iUserId, $sStorage, $sUID)
 	{
-		return (new \Aurora\System\EAV\Query())
-			->select()
-			->whereType(\Aurora\Modules\Contacts\Classes\Contact::class)
-			->where([
-				'IdUser' => $iUserId,
-				'Storage' => $sStorage,
-				'DavContacts::UID' => $sUID
-			])
-			->offset(0)
-			->limit(1)
-			->one()
-			->exec();
+		return Contact::where('IdUser', $iUserId)
+			->where('Storage', $sStorage)
+			->where('Properties->DavContacts::UID', $sUID)
+			->first();
 	}
 
 	protected function getGroupFromDB($iUserId, $sUID)
 	{
-		return (new \Aurora\System\EAV\Query())
-			->select()
-			->whereType(\Aurora\Modules\Contacts\Classes\Group::class)
-			->where([
-				'IdUser' => $iUserId,
-				'DavContacts::UID' => $sUID
-			])
-			->offset(0)
-			->limit(1)
-			->one()
-			->exec();
+		return Group::where('IdUser', $iUserId)
+			->where('Properties->DavContacts::UID', $sUID)
+			->first();
 	}
 
     /**

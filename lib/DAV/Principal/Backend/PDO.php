@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\Principal\Backend;
 
+use Aurora\Modules\Core\Models\User;
 use Sabre\DAV\MkCol;
 
 /**
@@ -44,27 +45,16 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         $iIdTenant = \Afterlogic\DAV\Server::getTenantId();
         if ($iIdTenant)
         {
-            $aUsers = (new \Aurora\System\EAV\Query(\Aurora\Modules\Core\Classes\User::class))
-                ->select(['PublicId', 'Name'])
-                ->where(['IdTenant' => $iIdTenant])
-                ->orderBy('PublicId')
-                ->asArray()
-                ->exec();
+            $aUsers = User::where('IdTenant', $iIdTenant)->orderBy('PublicId')->get();
 
-            if (is_array($aUsers))
+            foreach ($aUsers as $oUser)
             {
-                foreach ($aUsers as $aUser)
-                {
-                    if (is_array($aUser))
-                    {
-                        $principals[] = array(
-                            'id' => $aUser['UUID'],
-                            'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aUser['PublicId'],
-    //    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
-                            '{DAV:}displayname' => !empty($aUser['Name']) ? $aUser['Name'] : $aUser['PublicId'],
-                        );
-                    }
-                }
+                $principals[] = array(
+                    'id' => $oUser->UUID,
+                    'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId,
+//    					'{http://sabredav.org/ns}email-address' => $oUser['Name'],
+                    '{DAV:}displayname' => !empty($oUser->Name) ? $oUser->Name : $oUser->PublicId,
+                );
             }
         }
 
@@ -150,7 +140,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
 			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
                 $searchProperties['{http://sabredav.org/ns}email-address']
             );
-            if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+            if ($oUser instanceof \Aurora\Modules\Core\Models\User)
             {
 	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
 			}
@@ -225,7 +215,7 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
                 $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
                     $value
                 );
-                if ($oUser instanceof \Aurora\Modules\Core\Classes\User)
+                if ($oUser instanceof \Aurora\Modules\Core\Models\User)
                 {
                     $uri = $principalPrefix . '/' . $value;
                 }

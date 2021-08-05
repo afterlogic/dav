@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CardDAV\GAB;
 
+use Aurora\Modules\Contacts\Models\Contact;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -62,10 +64,8 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 	{
 		$aPathInfo = pathinfo($name);
 
-		$oContact = \Aurora\System\Managers\Eav::getInstance()->getEntity(
-			$aPathInfo['filename'],
-			\Aurora\Modules\Contacts\Classes\Contact::class
-		);
+		$oContact = Contact::firstWhere('UUID', $aPathInfo['filename']);
+
 		if ($oContact)
 		{
 			$aName = [$oContact->LastName, $oContact->FirstName];
@@ -121,68 +121,49 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			$iIdTenant = $oUser->IdTenant;
 		}
 
-		$aContacts = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
-			->select(['LastName', 'FirstName', 'FullName', 'ViewEmail', 'DateModified'])
-			->where(['Storage' => 'team', 'IdTenant' => $iIdTenant])
-			->asArray()
-			->exec();
+		$aContacts = Contact::where('Storege', 'team')->where('IdTenant', $iIdTenant)->get();
 
-		if (is_array($aContacts) && count($aContacts) > 0)
-		{
-			foreach($aContacts as $aContact) {
-				$sFirstName = isset($aContact['FirstName']) ? $aContact['FirstName'] : '';
-				$sLastName = isset($aContact['LastName']) ? $aContact['LastName'] : '';
-				$sFullName = isset($aContact['FullName']) ? $aContact['FullName'] : '';
-				$aName = [$sLastName, $sFirstName];
-				$vCard = new \Sabre\VObject\Component\VCard(
-					[
-						'VERSION' => '3.0',
-						'UID' => $aContact['UUID'],
-						'FN' => $sFullName,
-						'N' => (empty($sLastName) && empty($sFirstName)) ? explode(' ', $sFullName) : $aName
-					]
-				);
+		foreach($aContacts as $oContact) {
+			$sFirstName = isset($oContact->FirstName) ? $oContact->FirstName : '';
+			$sLastName = isset($oContact->LastName) ? $oContact->LastName : '';
+			$sFullName = isset($oContact->FullName) ? $oContact->FullName : '';
+			$aName = [$sLastName, $sFirstName];
+			$vCard = new \Sabre\VObject\Component\VCard(
+				[
+					'VERSION' => '3.0',
+					'UID' => $oContact->UUID,
+					'FN' => $sFullName,
+					'N' => (empty($sLastName) && empty($sFirstName)) ? explode(' ', $sFullName) : $aName
+				]
+			);
 
-				$vCard->add(
-					'EMAIL',
-					$aContact['ViewEmail'],
-					[
-						'type' => ['work'],
-						'pref' => 1,
-					]
-				);
+			$vCard->add(
+				'EMAIL',
+				$oContact->ViewEmail,
+				[
+					'type' => ['work'],
+					'pref' => 1,
+				]
+			);
 
-				$aCards[] = new Card(
-					[
-						'uri' => $aContact['UUID'] . '.vcf',
-						'carddata' => $vCard->serialize(),
-						'lastmodified' => isset($aContact['DateModified']) ? strtotime($aContact['DateModified']) : time()
-					]
-				);
-			}
+			$aCards[] = new Card(
+				[
+					'uri' => $oContact->UUID . '.vcf',
+					'carddata' => $vCard->serialize(),
+					'lastmodified' => isset($oContact->DateModified) ? strtotime($oContact->DateModified) : time()
+				]
+			);
 		}
-        return $aCards;
+
+		return $aCards;
     }
 
     public function getCTag() {
 
-		$iResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
-			->where(['Storage' => 'team'])
-			->count()
-			->exec();
-
-		$aResult = (new \Aurora\System\EAV\Query(\Aurora\Modules\Contacts\Classes\Contact::class))
-			->select(['DateModified'])
-			->where(['Storage' => 'team'])
-			->offset(0)
-			->limit(1)
-			->one()
-			->asArray()
-			->exec();
-
-		if (!empty($aResult['DateModified']))
-		{
-			$iResult .= strtotime($aResult['DateModified']);
+		$iResult = Contact::where('Storage', 'team')->count();
+		$oContact = Contact::where('Storage', 'team')->orderBy('DateModified')->first();
+		if ($oContact) {
+			$iResult .= strtotime($oContact->DateModified);
 		}
 
 		return $iResult;

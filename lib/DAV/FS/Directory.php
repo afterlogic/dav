@@ -23,7 +23,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 	protected $UserObject = null;
 
 	/**
-	 * @var \Aurora\Modules\Core\Classes\Tenant
+	 * @var \Aurora\Modules\Core\Models\Tenant
 	 */
 	protected $oTenant = null;
 
