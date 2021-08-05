@@ -209,7 +209,7 @@ class PDO
 					$oStartDT = $oStartDT->setTimezone(new \DateTimeZone('UTC'));
 
 					$iReminderTime = false;
-					if ($bAllDay && $oUser instanceof \Aurora\Modules\Core\Classes\User)
+					if ($bAllDay && $oUser instanceof \Aurora\Modules\Core\Models\User)
 					{
 						$oClientTZ = isset($oClientTZ) ? $oClientTZ : new \DateTimeZone($oUser->DefaultTimeZone);
 						$oNowDTClientTZ = isset($oNowDTClientTZ) ? $oNowDTClientTZ : new \DateTime("now", $oClientTZ);
@@ -220,7 +220,7 @@ class PDO
 					//NextRepeat
 					if (isset($oBaseEvent->RRULE))
 					{
-						$oCalendar = ($oUser instanceof \Aurora\Modules\Core\Classes\User) ? $oApiCalendarDecorator->getCalendar($user, $calendarUri) : false;
+						$oCalendar = ($oUser instanceof \Aurora\Modules\Core\Models\User) ? $oApiCalendarDecorator->getCalendar($user, $calendarUri) : false;
 						$oEndDT = \Aurora\Modules\Calendar\Classes\Helper::getRRuleIteratorNextRepeat($oNowDT, $oBaseEvent);
 						$aEvents = null;
 						if ($oCalendar && $user && $oEndDT)
