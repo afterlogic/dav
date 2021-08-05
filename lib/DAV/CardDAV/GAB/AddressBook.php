@@ -121,7 +121,7 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 			$iIdTenant = $oUser->IdTenant;
 		}
 
-		$aContacts = Contact::where('Storege', 'team')->where('IdTenant', $iIdTenant)->get();
+		$aContacts = Contact::where('Storage', 'team')->where('IdTenant', $iIdTenant)->get();
 
 		foreach($aContacts as $oContact) {
 			$sFirstName = isset($oContact->FirstName) ? $oContact->FirstName : '';
