@@ -32,7 +32,7 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
     public function getDirectory()
     {
         list($dir) = \Sabre\Uri\split($this->path);
-		return new Directory($dir);
+		return new Directory($this->storage, $dir);
     }
 
     public function delete()

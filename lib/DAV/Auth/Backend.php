@@ -39,6 +39,7 @@ class Backend
 			}
 			catch (\Exception $ex)
 			{
+				\Aurora\System\Api::LogException($ex);
 				$mResult = false;
 			}
 		}

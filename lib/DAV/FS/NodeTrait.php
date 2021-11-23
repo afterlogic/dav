@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Afterlogic\DAV\FS\Backend\PDO;
+use Afterlogic\DAV\FS\Shared\Root;
 use Afterlogic\DAV\Server;
 
 /**
@@ -61,13 +63,15 @@ trait NodeTrait
 
 	public function getRelativePath()
 	{
-        list($dir) = \Sabre\Uri\split($this->getPath());
+		$sResult = '';
+		$sPath = $this->getPath();
+		$sRootPath = $this->getRootPath();
+		if ($sPath !== $sRootPath) {
+        	list($dir) = \Sabre\Uri\split($sPath);
+			$sResult = \str_replace($sRootPath, '', $dir);
+		}
 
-		return \str_replace(
-            $this->getRootPath(),
-            '',
-            $dir
-        );
+		return $sResult;
     }
 
 	public function deleteShares()
@@ -82,6 +86,14 @@ trait NodeTrait
 				$this->getRelativePath() . '/' . $this->getName()
 			);
 		}
+	}
+
+	public function getShared($name)
+	{
+		$oPdo = new PDO();
+		$aSharedFile = $oPdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
+
+		return Root::populateItem($aSharedFile);
 	}
 
 	public function checkFileName($name)
@@ -241,7 +253,8 @@ trait NodeTrait
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
         {
             $pdo = new Backend\PDO();
-            $pdo->updateShare($this->getOwner(), $this->getStorage(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+            $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
+			$pdo->updateSharedFileSharePathWithLike('principals/' . $this->getUser(), $oldPathForShare, $newPathForShare);
         }
 
         // We're deleting the existing resourcedata, and recreating it

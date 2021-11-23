@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV;
 
+use Aurora\System\Enums\LogLevel;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -42,7 +44,7 @@ class Client extends \Sabre\DAV\Client {
         }
 		else
 		{
-			$features = explode(',', $response['headers']['dav']);
+			$features = explode(',', $response['headers']['dav'][0]);
 			foreach($features as &$v)
 			{
 				$v = trim($v);
@@ -56,7 +58,7 @@ class Client extends \Sabre\DAV\Client {
         }
 		else
 		{
-			$allow = explode(',', $response['headers']['allow']);
+			$allow = explode(',', $response['headers']['allow'][0]);
 			foreach($allow as &$v)
 			{
 				$v = trim($v);
@@ -79,8 +81,8 @@ class Client extends \Sabre\DAV\Client {
 		{
 			$sLog = $sLog."\r\nBody:\r\n".$body;
 		}
-		\Aurora\System\Api::Log($sLog, \ELogLevel::Full, 'dav-');
-		\Aurora\System\Api::LogObject($headers, \ELogLevel::Full, 'dav-');
+		\Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
+		\Aurora\System\Api::LogObject($headers, LogLevel::Full, 'dav-');
 
 		$response = array();
 		try
@@ -89,7 +91,7 @@ class Client extends \Sabre\DAV\Client {
 		}
 		catch (\Sabre\DAV\Exception $ex)
 		{
-			\Aurora\System\Api::LogObject($ex->getMessage(), \ELogLevel::Full, 'dav-');
+			\Aurora\System\Api::LogObject($ex->getMessage(), LogLevel::Full, 'dav-');
 			throw $ex;
 		}
 
@@ -98,10 +100,10 @@ class Client extends \Sabre\DAV\Client {
 		{
 			$sLog = $sLog."\r\nBody:\r\n".$response['body'];
 		}
-		\Aurora\System\Api::Log($sLog, \ELogLevel::Full, 'dav-');
+		\Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
 		if (!empty($response['headers']))
 		{
-			\Aurora\System\Api::LogObject($response['headers'], \ELogLevel::Full, 'dav-');
+			\Aurora\System\Api::LogObject($response['headers'], LogLevel::Full, 'dav-');
 		}
 
 		return $response;

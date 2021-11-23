@@ -20,7 +20,7 @@ class PDO
 	protected $dBPrefix;
 
 	/**
-	 * @var string
+	 * @var \PDO
 	 */
 	protected $pdo;
 
@@ -46,7 +46,7 @@ class PDO
     /* @param string $principalUri
      * @return array
      */
-    public function getSharedFilesForUser($principalUri) {
+    public function getSharedFilesForUser($principalUri, $sharePath = null) {
 
 		$aResult = [];
 
@@ -58,16 +58,27 @@ class PDO
         $fields[] = 'uid';
         $fields[] = 'access';
         $fields[] = 'isdir';
+		$fields[] = 'share_path';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
-        $stmt = $this->pdo->prepare(<<<SQL
+		if ($sharePath === null) {
+ 	       $stmt = $this->pdo->prepare(<<<SQL
 SELECT $fields FROM {$this->sharedFilesTableName}
 WHERE {$this->sharedFilesTableName}.principaluri = ?
 SQL
-        );
+        	);
 
-		$stmt->execute([$principalUri]);
+			$stmt->execute([$principalUri]);
+		} else {
+ 	       $stmt = $this->pdo->prepare(<<<SQL
+SELECT $fields FROM {$this->sharedFilesTableName}
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND {$this->sharedFilesTableName}.share_path = ?
+SQL
+        	);
+
+			$stmt->execute([$principalUri, $sharePath]);			
+		}
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			$aResult[] = [
@@ -79,6 +90,7 @@ SQL
 				'path' => $row['path'],
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
+				'share_path' => $row['share_path'],
 			];
 		}
 
@@ -101,6 +113,7 @@ SQL
         $fields[] = 'uid';
         $fields[] = 'access';
         $fields[] = 'isdir';
+		$fields[] = 'share_path';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -124,6 +137,7 @@ SQL
 				'path' => $row['path'],
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
+				'share_path' => $row['share_path'],
 			];
 		}
 
@@ -146,6 +160,7 @@ SQL
         $fields[] = 'uid';
         $fields[] = 'access';
         $fields[] = 'isdir';
+		$fields[] = 'share_path';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -169,6 +184,7 @@ SQL
 				'path' => $row['path'],
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
+				'share_path' => $row['share_path'],
 			];
 		}
 
@@ -190,6 +206,7 @@ SQL
         $fields[] = 'path';
         $fields[] = 'principaluri';
         $fields[] = 'access';
+		$fields[] = 'share_path';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -203,8 +220,10 @@ SQL
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			$aResult[] = [
+				'id' => $row['id'],
 				'principaluri' => $row['principaluri'],
 				'access' => (int) $row['access'],
+				'share_path' => $row['share_path'],
 			];
 		}
 
@@ -252,10 +271,32 @@ SQL
         return $this->pdo->lastInsertId();
 	}
 
+	public function updateSharedFile($owner, $storage, $path, $principalUri, $access)
+	{
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ?');
+		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path]);
+	}
+
 	public function updateSharedFileName($principalUri, $uid, $name)
 	{
 		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ?');
 		return  $stmt->execute([$name, $principalUri, $uid]);
+	}
+
+	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath)
+	{
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ? WHERE principaluri = ? AND uid = ? AND share_path = ?');
+		return  $stmt->execute([$newSharePath, $principalUri, $uid, $sharePath]);
+	}
+
+	public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath)
+	{
+		$stmt = $this->pdo->prepare(
+			'UPDATE ' . $this->sharedFilesTableName . '
+			SET share_path = REPLACE(share_path, ?, ?)
+			WHERE principaluri = ? AND share_path LIKE ?'
+		);
+		return  $stmt->execute([$sharePath, $newSharePath, $principalUri, $sharePath . '%']);
 	}
 
 	public function updateShare($owner, $storage, $path,  $newStorage, $newPath)
@@ -281,16 +322,29 @@ SQL
         return $stmt->execute([$owner, $storage, $path]);
 	}
 
+		/**
+	 *
+	 * @param string $principaluri
+	 * @param string $storage
+	 * @param string $path
+	 * @return bool
+	 */
+	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ?');
+        return $stmt->execute([$principaluri, $storage, $path]);
+	}
+
 	/**
 	 *
 	 * @param string $owner
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteShare($principaluri, $uid)
+	public function deleteShare($principaluri, $uid, $share_path = '')
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ?');
-        return $stmt->execute([$principaluri, $uid]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ? AND share_path = ?');
+        return $stmt->execute([$principaluri, $uid, $share_path]);
 	}
 
 	/**

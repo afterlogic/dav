@@ -24,6 +24,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     protected $ownerPublicId = null;
 
+    protected $sharePath = '';
+
     public function __construct($name, $node)
     {
         $this->name = $name;
@@ -120,7 +122,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     function delete()
     {
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $pdo->deleteShare($this->principalUri, $this->getId());
+        $pdo->deleteShare($this->getOwner(), $this->getId(), $this->getSharePath());
     }
 
     /**
@@ -142,5 +144,15 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     public function getRelativePath()
     {
         return $this->getRelativeNodePath();
+    }
+
+    public function setSharePath($sharePath)
+    {
+        $this->sharePath = $sharePath;
+    }
+
+    public function getSharePath()
+    {
+        return $this->sharePath;
     }
 }

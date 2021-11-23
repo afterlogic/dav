@@ -24,6 +24,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     protected $ownerPublicId = null;
 
+    protected $sharePath = '';
+
     public function __construct($name, $node)
     {
         $this->name = $name;
@@ -106,7 +108,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     function delete()
     {
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $pdo->deleteShare($this->principalUri, $this->getId());
+        $pdo->deleteShare($this->getUser(), $this->getId());
     }
 
     /**
@@ -138,5 +140,15 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     public function getRelativePath()
     {
         return $this->getRelativeNodePath();
+    }
+
+    public function setSharePath($sharePath)
+    {
+        $this->sharePath;
+    }
+
+    public function getSharePath()
+    {
+        return $this->sharePath;
     }
 }

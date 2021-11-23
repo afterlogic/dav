@@ -45,7 +45,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId;
 	}
 
-	protected function populateItem($aSharedFile)
+	public static function populateItem($aSharedFile)
 	{
 		$mResult = false;
 
@@ -88,7 +88,11 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 					$aSharedFile['path']
 				);
 				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+				if ($sRelativeNodePath === '/') {
+					$sRelativeNodePath = '';
+				}
 				$mResult->setRelativeNodePath($sRelativeNodePath);
+				$mResult->setSharePath($aSharedFile['share_path']);
 			}
 		}
 		return $mResult;
@@ -111,7 +115,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
 		}
 
-		return $this->populateItem($aSharedFile);
+		return self::populateItem($aSharedFile);
     }
 
 	public function getChildren()
@@ -122,7 +126,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 
 		foreach ($aSharedFiles as $aSharedFile)
 		{
-			$oSharedItem = $this->populateItem($aSharedFile);
+			$oSharedItem = self::populateItem($aSharedFile);
 			if ($oSharedItem)
 			{
 				$aResult[] = $oSharedItem;

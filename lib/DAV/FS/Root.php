@@ -16,14 +16,25 @@ class Root extends \Sabre\DAV\Collection {
 
 	use NodeTrait;
 
+	public static $aStoragesCache = null;
+
 	public function getName()
 	{
 		return 'files';
 	}
 
+	protected function getStorages()
+	{
+		if (!isset(self::$aStoragesCache)) {
+			self::$aStoragesCache = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
+		}
+
+		return self::$aStoragesCache;
+	}
+
 	public function getChildrenCount()
 	{
-		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
+		$aStorages = $this->getStorages();
 
 		return count($aStorages);
 	}
@@ -31,7 +42,7 @@ class Root extends \Sabre\DAV\Collection {
 	public function getChildren()
 	{
 		$aChildren = [];
-		$aStorages = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
+		$aStorages = $this->getStorages();
 
 		foreach ($aStorages as $sStorage)
 		{
