@@ -34,9 +34,7 @@ class Root extends \Sabre\DAV\Collection {
 
 	public function getChildrenCount()
 	{
-		$aStorages = $this->getStorages();
-
-		return count($aStorages);
+		return count($this->getStorages());
 	}
 
 	public function getChildren()
@@ -44,13 +42,11 @@ class Root extends \Sabre\DAV\Collection {
 		$aChildren = [];
 		$aStorages = $this->getStorages();
 
-		foreach ($aStorages as $sStorage)
-		{
+		foreach ($aStorages as $sStorage) {
 			$aClassPath = ['Afterlogic', 'DAV', 'FS'];
 
 			$aStoragePath = \explode('.', $sStorage);
-			foreach ($aStoragePath as $sPathItem)
-			{
+			foreach ($aStoragePath as $sPathItem) {
 				$aClassPath[] = \ucfirst($sPathItem);
 			}
 			$aClassPath[] = 'Root';

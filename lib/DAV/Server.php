@@ -427,4 +427,10 @@ class Server extends \Sabre\DAV\Server
 			}
 		}
 	}
+
+	public static function getNodeForPath($path)
+	{
+		self::getInstance()->setUser(self::getUser());
+		return self::getInstance()->tree->getNodeForPath($path);
+	}
 }

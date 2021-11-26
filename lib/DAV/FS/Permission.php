@@ -16,4 +16,5 @@ class Permission
 {
     const Write = 1;
     const Read = 2;
+    const Reshare = 3;
 }

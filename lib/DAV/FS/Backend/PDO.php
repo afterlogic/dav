@@ -143,6 +143,54 @@ SQL
 
 		return $aResult;
 	}
+	
+    /* @param string $principalUri
+    /* @param string $uid
+     * @return array
+     */
+    public function getSharedFileBySharePath($principalUri, $sharePath = '') {
+
+		$aResult = false;
+
+		$fields[] = 'id';
+        $fields[] = 'owner';
+        $fields[] = 'principaluri';
+        $fields[] = 'storage';
+        $fields[] = 'path';
+        $fields[] = 'uid';
+        $fields[] = 'access';
+        $fields[] = 'isdir';
+		$fields[] = 'share_path';
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT $fields FROM {$this->sharedFilesTableName}
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND (share_path = ? OR share_path LIKE ?)
+SQL
+        );
+
+		$stmt->execute([$principalUri, $sharePath, $sharePath . '/%']);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		if ($row)
+		{
+			$aResult = [
+				'id' => 0,
+				'uid' => $sharePath,
+				'owner' => $row['owner'],
+				'principaluri' => $row['principaluri'],
+				'storage' => 'shared',
+				'path' => $sharePath,
+				'access' => 2,
+				'isdir' => true,
+				'share_path' => '',
+				'is_share_path'
+			];
+		}
+
+		return $aResult;
+	}
 
     /* @param string $principalUri
     /* @param string $uid
@@ -277,10 +325,10 @@ SQL
 		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path]);
 	}
 
-	public function updateSharedFileName($principalUri, $uid, $name)
+	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '')
 	{
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ?');
-		return  $stmt->execute([$name, $principalUri, $uid]);
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ? AND share_path = ?');
+		return  $stmt->execute([$name, $principalUri, $uid, $share_path]);
 	}
 
 	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath)

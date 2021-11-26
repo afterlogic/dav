@@ -47,14 +47,10 @@ trait NodeTrait
 
 	public function getRootPath()
 	{
-		if ($this->rootPath === null)
-		{
-			list(, $owner) = \Sabre\Uri\split($this->getOwner());
-			Server::getInstance()->setUser($owner);
-			$oNode = Server::getInstance()->tree->getNodeForPath('files/'. $this->getStorage());
+		if ($this->rootPath === null) {
+			$oNode = Server::getNodeForPath('files/'. $this->getStorage());
 
-			if ($oNode)
-			{
+			if ($oNode) {
 				$this->rootPath = $oNode->getPath();
 			}
 		}
@@ -74,6 +70,11 @@ trait NodeTrait
 		return $sResult;
     }
 
+	public function isRoot()
+	{
+		return ($this->getRootPath() === $this->getPath());
+	}
+
 	public function deleteShares()
 	{
 		$oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
@@ -88,10 +89,17 @@ trait NodeTrait
 		}
 	}
 
-	public function getShared($name)
+	public function getSharedChild($name)
 	{
 		$oPdo = new PDO();
-		$aSharedFile = $oPdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
+
+		$sSharePath = '';
+		if (!empty($this->getRelativePath())) {
+			$sSharePath = $this->getRelativePath() . '/' . $this->getName();
+		} else if (!empty($this->getName()) && !$this->isRoot()) {
+			$sSharePath = '/' . $this->getName();
+		}
+		$aSharedFile = $oPdo->getSharedFileByUid($this->getOwner(), $name, $sSharePath);
 
 		return Root::populateItem($aSharedFile);
 	}
@@ -248,6 +256,17 @@ trait NodeTrait
 
 		$oldPathForShare = $sRelativePath . '/' .$oldName;
 		$newPathForShare = $sRelativePath . '/' .$newName;
+
+		$oNode = false;
+		try {
+			$oNode = Server::getNodeForPath('files/' . $this->getStorage() . $newPathForShare);
+		}
+		catch (\Exception $oEx) {}
+
+		if ($oNode)
+		{
+			throw new \Sabre\DAV\Exception\Conflict();
+		}
 
         $oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles');
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))

@@ -108,7 +108,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     function delete()
     {
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $pdo->deleteShare($this->getUser(), $this->getId());
+        return $pdo->deleteShare($this->getOwner(), $this->getId());
     }
 
     /**
@@ -119,7 +119,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      */
     public function setName($name)
     {
-        throw new \Sabre\DAV\Exception\Conflict();
+        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+
+        if ($pdo->getSharedFileByUid($this->getOwner(), $name, $this->getSharePath()))
+        {
+            throw new \Sabre\DAV\Exception\Conflict();
+        }
+
+        $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
     }
 
     public function childExists($name)
@@ -144,7 +151,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     public function setSharePath($sharePath)
     {
-        $this->sharePath;
+        $this->sharePath = $sharePath;
     }
 
     public function getSharePath()

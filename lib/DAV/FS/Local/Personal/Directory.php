@@ -23,15 +23,12 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
     
 	public function getChild($name) 
     {
-		$mResult = false;
-		// $oShared = $this->getShared($name);
-		// if ($oShared) {
-		// 	$mResult = $oShared;
-		// } else {
+		$mResult = $this->getSharedChild($name);
+		if (!$mResult) {
 			$path = $this->checkFileName($name);
 
 			$mResult = is_dir($path) ? new self($path) : new File($path);
-		// }
+		}
 
 		return $mResult;
     }
@@ -60,7 +57,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 			}
 		}
 		$aSharedFiles = $oPdo->getSharedFilesForUser(
-			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
+			$this->getOwner(), 
 			$sPath
 		);
 		foreach ($aSharedFiles as $aSharedFile) {

@@ -55,6 +55,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			$sCurrentUser = $oServer->getUser();
 			$oServer->setUser(basename($aSharedFile['owner']));
 			$oItem = null;
+
 			try
 			{
 				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
@@ -68,7 +69,6 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			if ($oItem instanceof \Sabre\DAV\FS\Node)
 			{
 				$oItem->setAccess((int) $aSharedFile['access']);
-//				$oItem->setAccess(\Aurora\Modules\SharedFiles\Enums\Access::Read);
 			}
 
 			if ($oItem instanceof \Afterlogic\DAV\FS\File)
@@ -98,7 +98,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 		return $mResult;
 	}
 
-	public function getChild($name)
+	public static function hasHistoryDirectory(&$name)
 	{
 		$bHasHistory = false;
 		if (substr($name, -5) === '.hist')
@@ -107,10 +107,26 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 			$name = substr($name, 0, strpos($name, '.hist'));
 		}
 
-		$aSharedFile = $this->pdo->getSharedFileByUid(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, $name);
+		return $bHasHistory;
+	}
 
-		if (is_array($aSharedFile) && $bHasHistory)
-		{
+	public function getChild($name)
+	{
+		$bHasHistory = self::hasHistoryDirectory($name);
+
+		$aSharedFile = $this->pdo->getSharedFileByUid(
+			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
+			$name
+		);
+
+		if (!$aSharedFile) {
+			$aSharedFile = $this->pdo->getSharedFileBySharePath(
+				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser(), 
+				$name
+			);			
+		}
+
+		if (is_array($aSharedFile) && $bHasHistory) {
 			$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
 			$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
 		}
@@ -122,13 +138,13 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 	{
 		$aResult = [];
 
-		$aSharedFiles = $this->pdo->getSharedFilesForUser(\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId);
+		$aSharedFiles = $this->pdo->getSharedFilesForUser(
+			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId
+		);
 
-		foreach ($aSharedFiles as $aSharedFile)
-		{
+		foreach ($aSharedFiles as $aSharedFile) {
 			$oSharedItem = self::populateItem($aSharedFile);
-			if ($oSharedItem)
-			{
+			if ($oSharedItem) {
 				$aResult[] = $oSharedItem;
 			}
 		}

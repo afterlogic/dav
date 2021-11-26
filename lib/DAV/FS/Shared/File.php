@@ -7,6 +7,9 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use Afterlogic\DAV\Server;
+use Aurora\System\Enums\FileStorageType;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -132,7 +135,17 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     public function setName($name)
     {
-        throw new \Sabre\DAV\Exception\Conflict();
+        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+        $sSharePath = $this->getSharePath();
+        $sFullPath = !empty($sSharePath) ? $sSharePath . '/' . $name : '/' . $name;
+        $oNode = Server::getNodeForPath(FileStorageType::Personal . $sFullPath);
+
+        if ($oNode)
+        {
+            throw new \Sabre\DAV\Exception\Conflict();
+        }
+
+        $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
     }
 
     public function put($data)
