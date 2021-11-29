@@ -196,7 +196,7 @@ SQL
     /* @param string $uid
      * @return array
      */
-    public function getSharedFileByUid($principalUri, $uid, $sharePath = '') {
+    public function getSharedFileByUidWithPath($principalUri, $uid, $sharePath = '') {
 
 		$aResult = false;
 
@@ -219,6 +219,53 @@ SQL
         );
 
 		$stmt->execute([$principalUri, $uid, $sharePath]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		if ($row)
+		{
+			$aResult = [
+				'id' => $row['id'],
+				'uid' => $row['uid'],
+				'owner' => $row['owner'],
+				'principaluri' => $row['principaluri'],
+				'storage' => $row['storage'],
+				'path' => $row['path'],
+				'access' => (int) $row['access'],
+				'isdir' => (bool) $row['isdir'],
+				'share_path' => $row['share_path'],
+			];
+		}
+
+		return $aResult;
+	}
+
+	    /* @param string $principalUri
+    /* @param string $uid
+     * @return array
+     */
+    public function getSharedFileByUid($principalUri, $uid) {
+
+		$aResult = false;
+
+		$fields[] = 'id';
+        $fields[] = 'owner';
+        $fields[] = 'principaluri';
+        $fields[] = 'storage';
+        $fields[] = 'path';
+        $fields[] = 'uid';
+        $fields[] = 'access';
+        $fields[] = 'isdir';
+		$fields[] = 'share_path';
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT $fields FROM {$this->sharedFilesTableName}
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ?
+SQL
+        );
+
+		$stmt->execute([$principalUri, $uid]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		if ($row)

@@ -139,7 +139,7 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 		$aResult = [];
 
 		$aSharedFiles = $this->pdo->getSharedFilesForUser(
-			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId
+			$this->getOwner()
 		);
 
 		foreach ($aSharedFiles as $aSharedFile) {

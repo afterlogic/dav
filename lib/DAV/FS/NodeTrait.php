@@ -10,6 +10,7 @@ namespace Afterlogic\DAV\FS;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
 use Afterlogic\DAV\Server;
+use Aurora\System\Enums\FileStorageType;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -57,10 +58,33 @@ trait NodeTrait
 		return $this->rootPath;
     }
 
+	public function getRealStorageName($sStorage)
+	{
+		if ($sStorage === FileStorageType::Personal)
+		{
+			$sStorage = \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
+		}
+		else
+		{
+			$sStorage = '/' . $sStorage;
+		}
+
+		return $sStorage;
+	}
+
 	public function getRelativePath()
 	{
 		$sResult = '';
 		$sPath = $this->getPath();
+
+		// $sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . $this->getRealStorageName($this->getStorage()) . '/';
+		// $sPath = str_replace($sRootPath, '', $sPath);
+		// $aPathItems = explode('/', $sPath);
+		// if (isset($aPathItems[0])) {
+		// 	unset($aPathItems[0]);
+		// }
+		// $sResult = '/' . implode('/', $aPathItems);
+				
 		$sRootPath = $this->getRootPath();
 		if ($sPath !== $sRootPath) {
         	list($dir) = \Sabre\Uri\split($sPath);
