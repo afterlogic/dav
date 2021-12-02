@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
 use Aurora\System\Enums\FileStorageType;
 
@@ -82,7 +83,6 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getName()
     {
-//        return $this->node->getName();
         return $this->name;
     }
 
@@ -93,7 +93,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function getDisplayName()
 	{
-        return $this->getName();
+        return !empty($this->sharePath) ?  \trim($this->sharePath, '/') . '-' . $this->getName() : $this->getName();
 	}
 
     /**
@@ -138,7 +138,13 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
         $sSharePath = $this->getSharePath();
         $sFullPath = !empty($sSharePath) ? $sSharePath . '/' . $name : '/' . $name;
-        $oNode = Server::getNodeForPath(FileStorageType::Personal . $sFullPath);
+        $oNode = false;
+        try
+        {
+            $oNode = $pdo->getSharedFileByUidWithPath($this->getOwner(), $name, $sSharePath);
+//            $oNode = Server::getNodeForPath('files/' . FileStorageType::Personal . $sFullPath);
+        }
+        catch (\Exception $oEx) {}
 
         if ($oNode)
         {

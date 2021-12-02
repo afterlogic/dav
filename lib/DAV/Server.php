@@ -433,4 +433,11 @@ class Server extends \Sabre\DAV\Server
 		self::getInstance()->setUser(self::getUser());
 		return self::getInstance()->tree->getNodeForPath($path);
 	}
+
+	public static function checkPrivileges($path, $priv)
+	{
+		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oAclPlugin = $oServer->getPlugin('acl');
+		$oAclPlugin->checkPrivileges($path, $priv);
+	}
 }

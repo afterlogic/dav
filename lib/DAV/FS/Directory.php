@@ -60,6 +60,18 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		return $this->oTenant;
 	}
 
+	public function childExists($name)
+	{
+		$mResult = false;
+		try
+		{
+			$mResult = !!$this->getChild($name);
+		}
+		catch (\Exception $oEx) {}
+
+		return $mResult;
+	}
+
 	public function createDirectory($name)
 	{
 		if ($this->childExists($name)) throw new \Sabre\DAV\Exception\Conflict('Can\'t create a directory');

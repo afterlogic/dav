@@ -230,6 +230,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File)
 		{
 			$propFind->handle('{DAV:}displayname', $node->getDisplayName());
+			if ($node instanceof \Afterlogic\DAV\FS\Shared\Directory || $node instanceof \Afterlogic\DAV\FS\Shared\File)
+			{
+				$propFind->handle('{DAV:}share-path', $node->getSharePath());
+			}
 		}
 
 		if ($node instanceof \Afterlogic\DAV\FS\File)
