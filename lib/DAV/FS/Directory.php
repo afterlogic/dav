@@ -180,7 +180,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 	{
 		$aResult = [];
 
-		$path = ($path === null) ? $this->path : $path;
+		$path = ($path === null) ? $this->getPath() : $path;
 		$aItems = \Aurora\System\Utils::SearchFiles($path, $pattern);
 		if ($aItems)
 		{

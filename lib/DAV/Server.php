@@ -56,7 +56,7 @@ class Server extends \Sabre\DAV\Server
 	protected function initServer()
 	{
 		/* Initializing server */
-		$oTree = new \Sabre\DAV\Tree($this->rootNode);
+		$oTree = new Tree($this->rootNode);
  		parent::__construct($oTree);
 
 		$this->debugExceptions = true;
