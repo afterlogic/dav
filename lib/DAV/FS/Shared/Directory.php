@@ -90,6 +90,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         if ($oChild)
         {
             $oChild->setAccess($this->getAccess());
+            if ($oChild instanceof \Afterlogic\DAV\FS\File)
+			{
+				$oChild = new File($oChild->getName(), $oChild);
+			}
+			else if ($oChild instanceof \Afterlogic\DAV\FS\Directory)
+			{
+				$oChild = new Directory($oChild->getName(), $oChild);
+			}
         }
 
         return $oChild;
@@ -97,12 +105,21 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     public function getChildren()
     {
+        $aResult = [];
         $aChildren = $this->node->getChildren();
         foreach ($aChildren as $oChild)
         {
             $oChild->setAccess($this->getAccess());
+            if ($oChild instanceof \Afterlogic\DAV\FS\File)
+			{
+				$aResult[] = new File($oChild->getName(), $oChild);
+			}
+			else if ($oChild instanceof \Afterlogic\DAV\FS\Directory)
+			{
+				$aResult[] = new Directory($oChild->getName(), $oChild);
+			}
         }
-        return $aChildren;
+        return $aResult;
     }
 
     function delete()

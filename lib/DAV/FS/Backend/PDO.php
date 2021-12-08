@@ -336,7 +336,7 @@ SQL
 	 * @param bool $isdir
 	 * @return int
 	 */
-	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir)
+	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '')
 	{
 		$values = $fieldNames = [];
         $fieldNames[] = 'owner';
@@ -359,6 +359,9 @@ SQL
 
 		$fieldNames[] = 'isdir';
 		$values[':isdir'] = (int) $isdir;
+
+		$fieldNames[] = 'share_path';
+		$values[':share_path'] = $share_path;
 
 		$stmt = $this->pdo->prepare("INSERT INTO ".$this->sharedFilesTableName." (".implode(', ', $fieldNames).") VALUES (".implode(', ',array_keys($values)).")");
         $stmt->execute($values);
