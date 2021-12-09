@@ -15,36 +15,117 @@ namespace Afterlogic\DAV\FS\Shared;
 trait NodeTrait
 {
 	public $inRoot;
-	protected $node;
+	
+    protected $name;
 
-    public function getOwner() {
+    protected $node;
 
-        return $this->principalUri;
+    protected $ownerPublicId = null;
 
+    protected $relativeNodePath = null;
+
+    protected $sharePath = '';
+
+    protected $isInherited = false;
+    
+    public function getId()
+    {
+        return $this->getName();
     }
 
-    function getETag()
+    public function setOwnerPublicId($sOwnerPublicId)
     {
-        if (\file_exists($this->path))
-        {
-            return parent::getETag();
+        $this->ownerPublicId = $sOwnerPublicId;
+    }
+
+    public function getOwnerPublicId()
+    {
+        return $this->ownerPublicId;
+    }
+
+    public function setRelativeNodePath($sPath)
+    {
+        $this->relativeNodePath = $sPath;
+    }
+
+    public function getRelativeNodePath()
+    {
+        return $this->relativeNodePath;
+    }
+
+    public function getStorage()
+    {
+        return $this->node->getStorage();
+    }
+
+    public function getRootPath()
+    {
+        return $this->node->getRootPath();
+    }
+
+    public function getPath()
+    {
+        return $this->node->getPath();
+    }
+
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Renames the node
+     *
+     * @param string $name The new name
+     * @return void
+     */
+    public function setName($name)
+    {
+        if ($this->isInherited) {
+            $this->node->setName($name);
+        } else {
+            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $oNode = $pdo->getSharedFileByUidWithPath($this->getOwner(), $name, $this->getSharePath());
+            if ($oNode) {
+                throw new \Sabre\DAV\Exception\Conflict();
+            }
+    
+            $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
         }
-        else
-        {
-            return '';
+    }
+
+    function delete()
+    {
+        if ($this->isInherited) {
+            $this->node->delete();
+        } else {
+            $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            return $pdo->deleteShare($this->getOwner(), $this->getId(), $this->getSharePath());
         }
     }
 
-    public function getSize()
+    public function setSharePath($sharePath)
     {
-            return null;
+        $this->sharePath = $sharePath;
     }
 
-    function getLastModified()
+    public function getSharePath()
     {
-        return null;
+        return $this->sharePath;
     }
 
-    function getQuotaInfo() {}
+    public function setInherited($bIsInherited)
+    {
+        $this->isInherited = $bIsInherited;
+    }
 
+    public function isInherited()
+    {
+        return $this->isInherited;
+    }
+
+    public function getRelativePath()
+    {
+        return $this->getRelativeNodePath();
+    }
 }

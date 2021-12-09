@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use Afterlogic\DAV\Constants;
+use Afterlogic\DAV\Server;
 use LogicException;
 
 /**
@@ -112,26 +114,30 @@ class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
 
 	public function getChild($name)
 	{
-		$bHasHistory = self::hasHistoryDirectory($name);
+		$oChild = false;
 
 		$aSharedFile = $this->pdo->getSharedFileByUid(
 			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
 			$name
 		);
+		if (is_array($aSharedFile)) {
+			if (self::hasHistoryDirectory($name)) {
+				$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
+				$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
+			}
 
-		if (!$aSharedFile) {
+			$oChild = self::populateItem($aSharedFile);
+		} else {
 			$aSharedFile = $this->pdo->getSharedFileBySharePath(
-				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser(), 
-				$name
-			);			
+				Constants::PRINCIPALS_PREFIX . Server::getUser(), 
+				'/' . trim($name, '/')
+			);
+			if ($aSharedFile) {
+				$oChild = Server::getNodeForPath('files/personal/' . trim($name, '/'));
+			}
 		}
 
-		if (is_array($aSharedFile) && $bHasHistory) {
-			$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
-			$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
-		}
-
-		return self::populateItem($aSharedFile);
+		return $oChild;
     }
 
 	public function getChildren()

@@ -15,16 +15,7 @@ namespace Afterlogic\DAV\FS\Shared;
 class Directory extends \Afterlogic\DAV\FS\Directory
 {
     use PropertyStorageTrait;
-
-    protected $name;
-
-    protected $node;
-
-    protected $relativeNodePath = null;
-
-    protected $ownerPublicId = null;
-
-    protected $sharePath = '';
+    use NodeTrait;
 
     public function __construct($name, $node)
     {
@@ -33,56 +24,10 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $this->setAccess($node->getAccess());
     }
 
-    public function setRelativeNodePath($sPath)
-    {
-        $this->relativeNodePath = $sPath;
-    }
-
-    public function getRelativeNodePath()
-    {
-        return $this->relativeNodePath;
-    }
-
-    public function setOwnerPublicId($sOwnerPublicId)
-    {
-        $this->ownerPublicId = $sOwnerPublicId;
-    }
-
-    public function getOwnerPublicId()
-    {
-        return $this->ownerPublicId;
-    }
-
-    public function getStorage()
-    {
-        return $this->node->getStorage();
-    }
-
-    public function getRootPath()
-    {
-        return $this->node->getRootPath();
-    }
-
-    public function getPath()
-    {
-        return $this->node->getPath();
-    }
-
-    public function getName()
-    {
-//        return $this->node->getName();
-        return $this->name;
-    }
-
     public function getDisplayName()
 	{
         return $this->getName();
 	}
-
-    public function getId()
-    {
-        return $this->getName();
-    }
 
     public function getChild($path)
     {
@@ -98,6 +43,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			{
 				$oChild = new Directory($oChild->getName(), $oChild);
 			}
+            $oChild->setInherited(true);
         }
 
         return $oChild;
@@ -107,43 +53,20 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $aResult = [];
         $aChildren = $this->node->getChildren();
-        foreach ($aChildren as $oChild)
-        {
+        foreach ($aChildren as $oChild) {
+            $oResult = false;
             $oChild->setAccess($this->getAccess());
-            if ($oChild instanceof \Afterlogic\DAV\FS\File)
-			{
-				$aResult[] = new File($oChild->getName(), $oChild);
+            if ($oChild instanceof \Afterlogic\DAV\FS\File) {
+				$oResult = new File($oChild->getName(), $oChild);
+			} else if ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
+				$oResult = new Directory($oChild->getName(), $oChild);
 			}
-			else if ($oChild instanceof \Afterlogic\DAV\FS\Directory)
-			{
-				$aResult[] = new Directory($oChild->getName(), $oChild);
-			}
+            if ($oResult) {
+                $oResult->setInherited(true);
+                $aResult[] = $oResult;
+            }
         }
         return $aResult;
-    }
-
-    function delete()
-    {
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        return $pdo->deleteShare($this->getOwner(), $this->getId());
-    }
-
-    /**
-     * Renames the node
-     *
-     * @param string $name The new name
-     * @return void
-     */
-    public function setName($name)
-    {
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-
-        if ($pdo->getSharedFileByUid($this->getOwner(), $name, $this->getSharePath()))
-        {
-            throw new \Sabre\DAV\Exception\Conflict();
-        }
-
-        $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
     }
 
     public function childExists($name)
@@ -159,20 +82,5 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
         return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
-    }
-
-    public function getRelativePath()
-    {
-        return $this->getRelativeNodePath();
-    }
-
-    public function setSharePath($sharePath)
-    {
-        $this->sharePath = $sharePath;
-    }
-
-    public function getSharePath()
-    {
-        return $this->sharePath;
     }
 }

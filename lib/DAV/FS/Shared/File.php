@@ -19,56 +19,12 @@ use Aurora\System\Enums\FileStorageType;
 class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 {
     use PropertyStorageTrait;
-
-    protected $name;
-
-    protected $node;
-
-    protected $relativeNodePath = null;
-
-    protected $ownerPublicId = null;
-
-    protected $sharePath = '';
+    use NodeTrait;
 
     public function __construct($name, $node)
     {
         $this->name = $name;
         $this->node = $node;
-    }
-
-    public function setRelativeNodePath($sPath)
-    {
-        $this->relativeNodePath = $sPath;
-    }
-
-    public function getRelativeNodePath()
-    {
-        return $this->relativeNodePath;
-    }
-
-    public function setOwnerPublicId($sOwnerPublicId)
-    {
-        $this->ownerPublicId = $sOwnerPublicId;
-    }
-
-    public function getOwnerPublicId()
-    {
-        return $this->ownerPublicId;
-    }
-
-    public function getStorage()
-    {
-        return $this->node->getStorage();
-    }
-
-    public function getRootPath()
-    {
-        return $this->node->getRootPath();
-    }
-
-    public function getPath()
-    {
-        return $this->node->getPath();
     }
 
     // public function getOwner()
@@ -79,16 +35,6 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     public function getAccess()
     {
         return $this->node->getAccess();
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function getId()
-    {
-        return $this->getName();
     }
 
     public function getDisplayName()
@@ -121,56 +67,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         return $this->node->get($bRedirectToUrl);
     }
 
-    function delete()
-    {
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $pdo->deleteShare($this->getOwner(), $this->getId(), $this->getSharePath());
-    }
-
-    /**
-     * Renames the node
-     *
-     * @param string $name The new name
-     * @return void
-     */
-    public function setName($name)
-    {
-        $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-        $sSharePath = $this->getSharePath();
-        $sFullPath = !empty($sSharePath) ? $sSharePath . '/' . $name : '/' . $name;
-        $oNode = false;
-        try
-        {
-            $oNode = $pdo->getSharedFileByUidWithPath($this->getOwner(), $name, $sSharePath);
-//            $oNode = Server::getNodeForPath('files/' . FileStorageType::Personal . $sFullPath);
-        }
-        catch (\Exception $oEx) {}
-
-        if ($oNode)
-        {
-            throw new \Sabre\DAV\Exception\Conflict();
-        }
-
-        $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
-    }
-
     public function put($data)
     {
         return $this->node->put($data);
-    }
-
-    public function getRelativePath()
-    {
-        return $this->getRelativeNodePath();
-    }
-
-    public function setSharePath($sharePath)
-    {
-        $this->sharePath = $sharePath;
-    }
-
-    public function getSharePath()
-    {
-        return $this->sharePath;
     }
 }

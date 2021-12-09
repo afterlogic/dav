@@ -430,8 +430,14 @@ class Server extends \Sabre\DAV\Server
 
 	public static function getNodeForPath($path)
 	{
+		$oNode = false;
 		self::getInstance()->setUser(self::getUser());
-		return self::getInstance()->tree->getNodeForPath($path);
+		try {
+			$oNode = self::getInstance()->tree->getNodeForPath($path);
+		}
+		catch (\Exception $oEx) {}
+
+		return $oNode;
 	}
 
 	public static function checkPrivileges($path, $priv)

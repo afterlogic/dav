@@ -221,6 +221,15 @@ trait NodeTrait
             ];
         }
 
+
+        if ($this->access === Permission::Reshare) {
+            $acl[] = [
+                'privilege' => '{DAV:}all',
+                'principal' => $this->getOwner(),
+                'protected' => true,
+            ];
+        }
+
         return $acl;
 
 	}
