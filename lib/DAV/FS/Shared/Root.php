@@ -16,7 +16,7 @@ use LogicException;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends \Afterlogic\DAV\FS\Root implements \Sabre\DAVACL\IACL {
+class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 //    use NodeTrait;
 

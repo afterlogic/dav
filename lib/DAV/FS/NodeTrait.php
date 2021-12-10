@@ -74,24 +74,12 @@ trait NodeTrait
 
 	public function getRelativePath()
 	{
-		$sResult = '';
-		$sPath = $this->getPath();
+		list($sPath) = \Sabre\Uri\split($this->getPath());
 
-		// $sRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . $this->getRealStorageName($this->getStorage()) . '/';
-		// $sPath = str_replace($sRootPath, '', $sPath);
-		// $aPathItems = explode('/', $sPath);
-		// if (isset($aPathItems[0])) {
-		// 	unset($aPathItems[0]);
-		// }
-		// $sResult = '/' . implode('/', $aPathItems);
-				
-		$sRootPath = $this->getRootPath();
-		if ($sPath !== $sRootPath) {
-        	list($dir) = \Sabre\Uri\split($sPath);
-			$sResult = \str_replace($sRootPath, '', $dir);
-		}
-
-		return $sResult;
+		$sFilesRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . '/';
+		$sPath = str_replace($sFilesRootPath, '', $sPath);
+		$aPathItems = explode('/', $sPath, 3);
+		return isset($aPathItems[2]) ? $aPathItems[2] : '';
     }
 
 	public function isRoot()
@@ -329,4 +317,9 @@ trait NodeTrait
 			$oHistoryNode->setName($name . '.hist');
 		}
     }
+
+	public function getShares()
+	{
+
+	}
 }

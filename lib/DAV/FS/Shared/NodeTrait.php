@@ -128,4 +128,9 @@ trait NodeTrait
     {
         return $this->getRelativeNodePath();
     }
+
+    public function getNode()
+    {
+        return $this->node;
+    }
 }
