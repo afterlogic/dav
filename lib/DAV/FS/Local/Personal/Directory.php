@@ -23,11 +23,16 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
     
 	public function getChild($name) 
     {
-		$mResult = $this->getSharedChild($name);
-		if (!$mResult) {
+		$mResult = false;
+		try {
 			$path = $this->checkFileName($name);
 
 			$mResult = is_dir($path) ? new self($path) : new File($path);
+		} catch (\Exception $oEx) {}
+
+		
+		if (!$mResult) {
+			$mResult = $this->getSharedChild($name);
 		}
 
 		return $mResult;

@@ -33,6 +33,11 @@ trait NodeTrait
         return $this->getName();
     }
 
+    public function getDisplayName()
+	{
+        return $this->getName();
+	}
+
     public function setOwnerPublicId($sOwnerPublicId)
     {
         $this->ownerPublicId = $sOwnerPublicId;
@@ -132,5 +137,10 @@ trait NodeTrait
     public function getNode()
     {
         return $this->node;
+    }
+
+    public function getAccess()
+    {
+        return $this->node->getAccess();
     }
 }

@@ -79,7 +79,7 @@ trait NodeTrait
 		$sFilesRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . '/';
 		$sPath = str_replace($sFilesRootPath, '', $sPath);
 		$aPathItems = explode('/', $sPath, 3);
-		return isset($aPathItems[2]) ? $aPathItems[2] : '';
+		return isset($aPathItems[2]) ? '/' . $aPathItems[2] : '';
     }
 
 	public function isRoot()

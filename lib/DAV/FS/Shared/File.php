@@ -32,15 +32,10 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     //     return $this->principalUri;
     // }
 
-    public function getAccess()
-    {
-        return $this->node->getAccess();
-    }
-
-    public function getDisplayName()
-	{
-        return !empty($this->sharePath) ?  \trim($this->sharePath, '/') . '-' . $this->getName() : $this->getName();
-	}
+    // public function getAccess()
+    // {
+    //     return $this->node->getAccess();
+    // }
 
     /**
      * Returns the last modification time, as a unix timestamp

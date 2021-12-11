@@ -9,6 +9,7 @@ namespace Afterlogic\DAV\FS\S3;
 
 
 use Aws\Common\Exception\MultipartUploadException;
+use Aws\Exception\MultipartUploadException as ExceptionMultipartUploadException;
 use Aws\S3\MultipartUploader;
 
 /**
@@ -264,7 +265,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			}
             return true;
         }
-        catch (MultipartUploadException $e)
+        catch (ExceptionMultipartUploadException $e)
         {
             return false;
         }
