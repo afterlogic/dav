@@ -115,11 +115,16 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 	public function getChild($name)
 	{
 		$oChild = false;
-
+		$new_name = $name;
+		$pathinfo = pathinfo($new_name);
+		if (isset($pathinfo['extension']) && $pathinfo['extension'] === 'hist') {
+			$new_name = $pathinfo['filename'];
+		}
 		$aSharedFile = $this->pdo->getSharedFileByUid(
 			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
-			$name
+			$new_name
 		);
+		
 		if (is_array($aSharedFile)) {
 			if (self::hasHistoryDirectory($name)) {
 				$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
