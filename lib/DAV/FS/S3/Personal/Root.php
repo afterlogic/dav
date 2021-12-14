@@ -57,8 +57,9 @@ class Root extends Directory
 			$this->createBucket($client, $sBucket);
 		}
 
-		$endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
-		$this->client = $this->getS3Client($endpoint, true);
+		// $endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
+		// $this->client = $this->getS3Client($endpoint);
+		$this->client = $client;
 
 		if (empty($sPrefix))
 		{
@@ -88,9 +89,9 @@ class Root extends Directory
 				'key'    => $sAccessKey,
 				'secret' => $sSecretKey,
 			],
-			'http' => ['verify' => false],
-			'bucket_endpoint' => $bucket_endpoint,
-			'signature_version' => $signature_version
+			// 'http' => ['verify' => false],
+			// 'bucket_endpoint' => $bucket_endpoint,
+			// 'signature_version' => $signature_version
 		]);
 	}
 
