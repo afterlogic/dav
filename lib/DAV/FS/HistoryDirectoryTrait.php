@@ -27,7 +27,7 @@ trait HistoryDirectoryTrait
             Server::getInstance()->setUser($owner);
             try
             {
-                $oNode = Server::getInstance()->tree->getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist'/*/prev.' . $ext*/);
+                $oNode = Server::getInstance()->tree->getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist');
             }
             catch (\Exception $oEx) {}
         }

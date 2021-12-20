@@ -162,18 +162,17 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 	{
 		$this->deleteResourceData();
 
-		if (\file_exists($this->path . '/.sabredav'))
-		{
-			\unlink($this->path . '/.sabredav');
-		}
+        // Deleting all children
+        foreach (parent::getChildren() as $child) $child->delete();
 
-		$result = parent::delete();
+        // Removing the directory itself
+        rmdir($this->path);
 
         $this->deleteShares();
 
 		$this->updateQuota();
 
-		return $result;
+		return true;
 	}
 
 	public function Search($pattern, $path = null)

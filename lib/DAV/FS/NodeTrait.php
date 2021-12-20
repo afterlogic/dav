@@ -210,7 +210,6 @@ trait NodeTrait
             ];
         }
 
-
         if ($this->access === Permission::Reshare) {
             $acl[] = [
                 'privilege' => '{DAV:}all',
