@@ -21,7 +21,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $this->name = $name;
         $this->node = $node;
-//        $this->setAccess($node->getAccess());
     }
 
     public function getChild($path)
@@ -29,7 +28,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $oChild = $this->node->getChild($path);
         if ($oChild)
         {
-//            $oChild->setAccess($this->getAccess());
             if ($oChild instanceof \Afterlogic\DAV\FS\File)
 			{
 				$oChild = new File($oChild->getName(), $oChild);
@@ -39,6 +37,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				$oChild = new Directory($oChild->getName(), $oChild);
 			}
             $oChild->setInherited(true);
+            $oChild->setAccess($this->getAccess());
         }
 
         return $oChild;
@@ -50,13 +49,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $aChildren = $this->node->getChildren();
         foreach ($aChildren as $oChild) {
             $oResult = false;
-//            $oChild->setAccess($this->getAccess());
             if ($oChild instanceof \Afterlogic\DAV\FS\File) {
 				$oResult = new File($oChild->getName(), $oChild);
 			} else if ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
 				$oResult = new Directory($oChild->getName(), $oChild);
 			}
             if ($oResult) {
+                $oResult->setAccess($this->node->getAccess());
                 $oResult->setInherited(true);
                 $aResult[] = $oResult;
             }

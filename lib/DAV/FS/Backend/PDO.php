@@ -184,8 +184,7 @@ SQL
 				'path' => $sharePath,
 				'access' => 2,
 				'isdir' => true,
-				'share_path' => '',
-				'is_share_path'
+				'share_path' => ''
 			];
 		}
 

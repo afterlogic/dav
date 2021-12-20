@@ -27,16 +27,6 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         $this->node = $node;
     }
 
-    // public function getOwner()
-    // {
-    //     return $this->principalUri;
-    // }
-
-    // public function getAccess()
-    // {
-    //     return $this->node->getAccess();
-    // }
-
     /**
      * Returns the last modification time, as a unix timestamp
      *

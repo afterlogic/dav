@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS\S3\Personal;
 
+use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
 
@@ -43,7 +44,7 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 			}
 		}
 		$aSharedFiles = $oPdo->getSharedFilesForUser(
-			$this->getOwner(), 
+			Constants::PRINCIPALS_PREFIX . $this->getUser(), 
 			$sPath
 		);
 		foreach ($aSharedFiles as $aSharedFile) {
@@ -78,7 +79,7 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 		} else if (!empty($this->getName()) && !$this->isRoot()) {
 			$sSharePath = '/' . $this->getName();
 		}
-		$aSharedFile = $oPdo->getSharedFileByUid($this->getOwner(), $name, $sSharePath);
+		$aSharedFile = $oPdo->getSharedFileByUid(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
 
 		return Root::populateItem($aSharedFile);
 	}

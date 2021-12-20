@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use Afterlogic\DAV\Constants;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -41,6 +43,11 @@ trait NodeTrait
     public function setOwnerPublicId($sOwnerPublicId)
     {
         $this->ownerPublicId = $sOwnerPublicId;
+    }
+
+    public  function getOwner()
+    {
+        return $this->getOwnerPublicId();
     }
 
     public function getOwnerPublicId()
@@ -90,12 +97,12 @@ trait NodeTrait
             $this->node->setName($name);
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            $oNode = $pdo->getSharedFileByUidWithPath($this->getOwner(), $name, $this->getSharePath());
+            $oNode = $pdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $this->getSharePath());
             if ($oNode) {
                 throw new \Sabre\DAV\Exception\Conflict();
             }
     
-            $pdo->updateSharedFileName($this->getOwner(), $this->name, $name, $this->getSharePath());
+            $pdo->updateSharedFileName(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->name, $name, $this->getSharePath());
         }
     }
 
@@ -105,7 +112,7 @@ trait NodeTrait
             $this->node->delete();
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
-            return $pdo->deleteShare($this->getOwner(), $this->getId(), $this->getSharePath());
+            return $pdo->deleteShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getId(), $this->getSharePath());
         }
     }
 
@@ -137,10 +144,5 @@ trait NodeTrait
     public function getNode()
     {
         return $this->node;
-    }
-
-    public function getAccess()
-    {
-        return $this->node->getAccess();
     }
 }

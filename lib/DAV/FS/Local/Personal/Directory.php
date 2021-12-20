@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS\Local\Personal;
 
+use Afterlogic\DAV\Constants;
 use \Afterlogic\DAV\FS\Backend\PDO;
 
 /**
@@ -62,7 +63,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 			}
 		}
 		$aSharedFiles = $oPdo->getSharedFilesForUser(
-			$this->getOwner(), 
+			Constants::PRINCIPALS_PREFIX . $this->getUser(), 
 			$sPath
 		);
 		foreach ($aSharedFiles as $aSharedFile) {

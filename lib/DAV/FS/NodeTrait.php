@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
 use Afterlogic\DAV\Server;
@@ -94,7 +95,7 @@ trait NodeTrait
 		{
 			$pdo = new Backend\PDO();
 			$pdo->deleteSharedFile(
-				$this->getOwner(),
+				Constants::PRINCIPALS_PREFIX . $this->getUser(),
 				$this->getStorage(),
 				$this->getRelativePath() . '/' . $this->getName()
 			);
@@ -111,7 +112,7 @@ trait NodeTrait
 		} else if (!empty($this->getName()) && !$this->isRoot()) {
 			$sSharePath = '/' . $this->getName();
 		}
-		$aSharedFile = $oPdo->getSharedFileByUid($this->getOwner(), $name, $sSharePath);
+		$aSharedFile = $oPdo->getSharedFileByUid(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
 
 		return Root::populateItem($aSharedFile);
 	}
@@ -196,7 +197,7 @@ trait NodeTrait
 		$acl = [
             [
                 'privilege' => '{DAV:}read',
-                'principal' => $this->getOwner(),
+                'principal' => Constants::PRINCIPALS_PREFIX . $this->getUser(),
                 'protected' => true,
             ],
         ];
@@ -204,7 +205,7 @@ trait NodeTrait
         if ($this->access === Permission::Write) {
             $acl[] = [
                 'privilege' => '{DAV:}write',
-                'principal' => $this->getOwner(),
+                'principal' => Constants::PRINCIPALS_PREFIX . $this->getUser(),
                 'protected' => true,
             ];
         }
@@ -213,7 +214,7 @@ trait NodeTrait
         if ($this->access === Permission::Reshare) {
             $acl[] = [
                 'privilege' => '{DAV:}all',
-                'principal' => $this->getOwner(),
+                'principal' => Constants::PRINCIPALS_PREFIX . $this->getUser(),
                 'protected' => true,
             ];
         }
@@ -293,8 +294,8 @@ trait NodeTrait
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
         {
             $pdo = new Backend\PDO();
-            $pdo->updateShare($this->getOwner(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
-			$pdo->updateSharedFileSharePathWithLike('principals/' . $this->getUser(), $oldPathForShare, $newPathForShare);
+            $pdo->updateShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
+			$pdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oldPathForShare, $newPathForShare);
         }
 
         // We're deleting the existing resourcedata, and recreating it

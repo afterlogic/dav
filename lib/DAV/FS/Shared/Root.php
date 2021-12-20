@@ -95,6 +95,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 				}
 				$mResult->setRelativeNodePath($sRelativeNodePath);
 				$mResult->setSharePath($aSharedFile['share_path']);
+				$mResult->setAccess((int) $aSharedFile['access']);
 			}
 		}
 		return $mResult;
@@ -150,7 +151,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 		$aResult = [];
 
 		$aSharedFiles = $this->pdo->getSharedFilesForUser(
-			$this->getOwner()
+			Constants::PRINCIPALS_PREFIX . $this->getUser()
 		);
 
 		foreach ($aSharedFiles as $aSharedFile) {
