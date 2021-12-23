@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Shared;
 
+use Afterlogic\DAV\Constants;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -36,8 +38,15 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			{
 				$oChild = new Directory($oChild->getName(), $oChild);
 			}
-            $oChild->setInherited(true);
-            $oChild->setAccess($this->getAccess());
+            $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName());
+            if ($aSharedFile) {
+                $oChild->setAccess($aSharedFile['access']);    
+            }
+            else {
+                $oChild->setInherited(true);
+                $oChild->setAccess($this->getAccess());    
+            }
         }
 
         return $oChild;
@@ -55,8 +64,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				$oResult = new Directory($oChild->getName(), $oChild);
 			}
             if ($oResult) {
-                $oResult->setAccess($this->node->getAccess());
-                $oResult->setInherited(true);
+                $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+                $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName());
+                if ($aSharedFile) {
+                    $oResult->setAccess($aSharedFile['access']);    
+                } else {
+                    $oResult->setAccess($this->node->getAccess());
+                    $oResult->setInherited(true);
+                }
                 $aResult[] = $oResult;
             }
         }
