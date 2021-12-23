@@ -112,7 +112,7 @@ trait NodeTrait
 		} else if (!empty($this->getName()) && !$this->isRoot()) {
 			$sSharePath = '/' . $this->getName();
 		}
-		$aSharedFile = $oPdo->getSharedFileByUid(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
+		$aSharedFile = $oPdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
 
 		return Root::populateItem($aSharedFile);
 	}
