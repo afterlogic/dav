@@ -19,15 +19,11 @@ trait HistoryDirectoryTrait
     public function getHistoryDirectory()
 	{
         $oNode = null;
-        if ($this instanceof File)
-        {
-            $ext = strtolower(pathinfo($this->getName(), PATHINFO_EXTENSION));
-
+        if ($this instanceof File) {
             list(, $owner) = \Sabre\Uri\split($this->getOwner());
             Server::getInstance()->setUser($owner);
-            try
-            {
-                $oNode = Server::getInstance()->tree->getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist');
+            try {
+                $oNode = Server::getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist');
             }
             catch (\Exception $oEx) {}
         }

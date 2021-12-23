@@ -56,4 +56,19 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     {
         return $this->node->put($data);
     }
+
+    public function getHistoryDirectory()
+    {
+        $oNode = null;
+
+        list(, $owner) = \Sabre\Uri\split($this->getOwner());
+        Server::getInstance()->setUser($owner);
+        try
+        {
+            $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist');
+        }
+        catch (\Exception $oEx) {}
+
+		return $oNode;
+    }
 }

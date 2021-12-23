@@ -9,6 +9,7 @@ namespace Afterlogic\DAV\FS\Local\Personal;
 
 use Afterlogic\DAV\Constants;
 use \Afterlogic\DAV\FS\Backend\PDO;
+use Afterlogic\DAV\FS\HistoryDirectory;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -26,9 +27,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
     {
 		$mResult = false;
 		try {
-			$path = $this->checkFileName($name);
-
-			$mResult = is_dir($path) ? new self($path) : new File($path);
+			$mResult = $this->getLocalChild($name);
 		} catch (\Exception $oEx) {}
 
 		
@@ -37,6 +36,26 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		}
 
 		return $mResult;
+    }
+
+	public function getLocalChild($name)
+	{
+		$result = null;
+
+		$path = $this->checkFileName($name);
+
+		if (is_dir($path)) {
+			$ext = strtolower(substr($name, -5));
+			if ($ext === '.hist') {
+				$result = new HistoryDirectory($this->getStorage(), $path);
+			} else {
+				$result = new self($path);
+			}
+		} else {
+			$result = new File($path);
+		}
+
+		return $result;
     }
 	
 	public function getChildren()

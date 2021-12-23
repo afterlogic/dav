@@ -146,11 +146,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 	{
 		$aChildren = parent::getChildren();
 
-		foreach ($aChildren as $iKey => $oChild)
-		{
-			$ext = strtolower(substr($oChild->getName(), -5));
-			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist'))
-			{
+		foreach ($aChildren as $iKey => $oChild) {
+			if ($oChild->getName() === '.sabredav' || ($oChild instanceof HistoryDirectory)) {
 				unset($aChildren[$iKey]);
 			}
 		}
