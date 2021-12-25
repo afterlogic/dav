@@ -71,4 +71,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
 		return $oNode;
     }
+
+    function patch($data, $rangeType, $offset = null) {
+        return $this->node->patch($data, $rangeType, $offset);
+    }
 }
