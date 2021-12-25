@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Afterlogic\DAV\Server;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -82,13 +84,17 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
 		$result = false;
-		if (!$this->childExists($name))
-		{
+		if (!$this->childExists($name)) {
 			$result = parent::createFile($name);
 		}
 		$oFile = $this->getChild($name);
-		if ($oFile instanceof \Afterlogic\DAV\FS\File)
-		{
+		if ($oFile) {
+			Server::checkPrivileges(
+				'files/' . $oFile->getStorage() . '/' . $oFile->getRelativePath() . $oFile->getName(),
+				'{DAV:}write'
+			);
+		}
+		if ($oFile instanceof \Afterlogic\DAV\FS\File) {
 			$oFile->patch($data, $rangeType, $offset);
 		}
 
