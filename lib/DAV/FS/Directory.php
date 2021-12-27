@@ -88,38 +88,26 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 			$result = parent::createFile($name);
 		}
 		$oFile = $this->getChild($name);
-		if ($oFile) {
-			Server::checkPrivileges(
-				'files/' . $oFile->getStorage() . $oFile->getRelativePath() . '/' . $oFile->getName(),
-				'{DAV:}write'
-			);
-		}
+
 		if ($oFile instanceof \Afterlogic\DAV\FS\File) {
 			$oFile->patch($data, $rangeType, $offset);
 		}
 
 		$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
 
-		if (!isset($aProps['Owner']))
-		{
+		if (!isset($aProps['Owner'])) {
 			$aProps['Owner'] = $this->getUser();
 		}
 		$aCurrentExtendedProps = [];
-		if (isset($aProps['ExtendedProps']))
-		{
+		if (isset($aProps['ExtendedProps'])) {
 			$aCurrentExtendedProps = $aProps['ExtendedProps'];
 		}
-		foreach ($extendedProps as $sPropName => $propValue)
-		{
-			if ($propValue === null)
-			{
-				if (isset($aCurrentExtendedProps[$sPropName]))
-				{
+		foreach ($extendedProps as $sPropName => $propValue) {
+			if ($propValue === null) {
+				if (isset($aCurrentExtendedProps[$sPropName])) {
 					unset($aCurrentExtendedProps[$sPropName]);
 				}
-			}
-			else
-			{
+			} else {
 				$aCurrentExtendedProps[$sPropName] = $propValue;
 			}
 		}
@@ -127,8 +115,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 
 		$oFile->updateProperties($aProps);
 
-		if (!$this->updateQuota())
-		{
+		if (!$this->updateQuota()) {
 			$oFile->delete();
 			throw new \Sabre\DAV\Exception\InsufficientStorage();
 		}
