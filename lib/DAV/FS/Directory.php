@@ -90,7 +90,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$oFile = $this->getChild($name);
 		if ($oFile) {
 			Server::checkPrivileges(
-				'files/' . $oFile->getStorage() . '/' . $oFile->getRelativePath() . $oFile->getName(),
+				'files/' . $oFile->getStorage() . $oFile->getRelativePath() . '/' . $oFile->getName(),
 				'{DAV:}write'
 			);
 		}
