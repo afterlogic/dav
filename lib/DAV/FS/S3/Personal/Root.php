@@ -20,7 +20,11 @@ use Aurora\System\Api;
  */
 class Root extends Directory
 {
+	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
+
 	protected $client = null;
+
+	public static $cache;
 
 	public function __construct($sPrefix = null)
 	{
@@ -30,69 +34,50 @@ class Root extends Directory
 
 		$sBucket = \strtolower($sBucketPrefix . \str_replace([' ', '.'], '-', Server::getTenantName()));
 
-		$sHost = $oModule->getConfig('Host');
-		$sRegion = $oModule->getConfig('Region');
-		$endpoint = "https://".$sRegion.".".$sHost;
+		$this->client = $this->getS3Client();
 
-		$client = $this->getS3Client($endpoint);
-
-		$bDoesBucketExist = false;
-		try {
-			$client->headBucket([
-				'Bucket' => $sBucket
-			]);
-			$bDoesBucketExist = true;
-		}
-		catch (S3Exception $oEx) {
-			if ($oEx->getStatusCode() == '404') {
-				$bDoesBucketExist = false;
-			}
-			else if ($oEx->getStatusCode() == '403') {
-				throw new \Aurora\System\Exceptions\ApiException(403, $oEx, 'S3 storage access error.');
-			}
+		static $bDoesBucketExist = null;
+		if ($bDoesBucketExist === null) {
+			$bDoesBucketExist = $this->client->doesBucketExist($sBucket);
 		}
 
-		if(!$bDoesBucketExist)
-		{
-			$this->createBucket($client, $sBucket);
+		if(!$bDoesBucketExist) {
+			$this->createBucket($this->client, $sBucket);
 		}
 
-		// $endpoint = "https://".$sBucket.".".$sRegion.".".$sHost;
-		// $this->client = $this->getS3Client($endpoint);
-		$this->client = $client;
-
-		if (empty($sPrefix))
-		{
+		if (empty($sPrefix)) {
 			$sPrefix =  $this->getUser();
 		}
 
-		$path = '/' . $sPrefix;
-
-		parent::__construct($path, $sBucket, $this->client, $this->storage);
+		parent::__construct('/' . $sPrefix, $sBucket, $this->client, $this->storage);
 	}
 
-	protected function getS3Client($endpoint, $bucket_endpoint = false)
+	protected function getS3Client()
 	{
-		$oModule = S3Filestorage\Module::getInstance();
+		static $client = false;
+		if (!$client) {
+			$oModule = S3Filestorage\Module::getInstance();
 
-		$sRegion = $oModule->getConfig('Region');
-		$sAccessKey = $oModule->getConfig('AccessKey');
-		$sSecretKey = $oModule->getConfig('SecretKey');
+			$sRegion = $oModule->getConfig('Region');
+			$sAccessKey = $oModule->getConfig('AccessKey');
+			$sSecretKey = $oModule->getConfig('SecretKey');
 
-		$signature_version = (!$bucket_endpoint) ? 'v4-unsigned-body' : 'v4';
+			$aOptions = [
+				'region' => $sRegion,
+				'version' => 'latest',
+				'credentials' => [
+					'key'    => $sAccessKey,
+					'secret' => $sSecretKey,
+				],
+			];
+			$endpoint = $oModule->getConfig('Host');
+			if (!empty($endpoint)) {
+				$aOptions['endpoint'] = $endpoint;
+			}
+			$client = new S3Client($aOptions);
+		}
 
-		return S3Client::factory([
-			'region' => $sRegion,
-			'version' => 'latest',
-			'endpoint' => $endpoint,
-			'credentials' => [
-				'key'    => $sAccessKey,
-				'secret' => $sSecretKey,
-			],
-			// 'http' => ['verify' => false],
-			// 'bucket_endpoint' => $bucket_endpoint,
-			// 'signature_version' => $signature_version
-		]);
+		return $client;
 	}
 
 	protected function createBucket($client, $sBucket)
@@ -116,7 +101,7 @@ class Root extends Directory
 							'HEAD'
 						],
 						'AllowedOrigins' => [
-							(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]"
+							(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']
 						],
 						'MaxAgeSeconds' => 0,
 					],
@@ -126,10 +111,10 @@ class Root extends Directory
 		]);
 	}
 
-	public function getName()
+	public function getName() 
 	{
-        return 'personal';
-    }
+        return $this->storage;
+	}
 
 	public function setName($name)
 	{
@@ -145,18 +130,14 @@ class Root extends Directory
 	{
 		$iSize = 0;
 
-		if (!empty($sUserPublicId))
-		{
-			$oSearchResult = $this->client->getPaginator('ListObjectsV2', [
+		if (!empty($sUserPublicId)) {
+			$searchResult = $this->client->getPaginator('ListObjectsV2', [
 				'Bucket' => $this->bucket,
 				'Prefix' => $sUserPublicId . '/'
-			])
-			->search('Contents[?Size.to_number(@) != `0`].Size.to_number(@)');
-
-			foreach ($oSearchResult as $size)
-			{
-				$iSize += $size;
-			}
+			])->search('Contents[?Size.to_number(@) != `0`].Size.to_number(@)');
+			$iSize = array_sum(
+				iterator_to_array($searchResult)
+			);
 		}
 
 		return $iSize;
@@ -167,8 +148,7 @@ class Root extends Directory
 		$sUserSpaceLimitInMb = -1;
 
 		$oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
-		if ($oUser)
-		{
+		if ($oUser) {
 			$sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
 		}
 

@@ -14,6 +14,8 @@ namespace Afterlogic\DAV\FS\Local\Personal;
  */
 class Root extends Directory 
 {
+	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
+
 	public function __construct($sUserPublicId = null) 
 	{
 		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT;
@@ -49,7 +51,7 @@ class Root extends Directory
 
 	public function getName() 
 	{
-        return \Aurora\System\Enums\FileStorageType::Personal;
+        return $this->storage;
     }	
 	
 	public function setName($name) 

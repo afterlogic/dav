@@ -7,7 +7,7 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
-
+use Afterlogic\DAV\FS\S3\Personal\Root;
 use Aws\Common\Exception\MultipartUploadException;
 use Aws\Exception\MultipartUploadException as ExceptionMultipartUploadException;
 use Aws\S3\MultipartUploader;
@@ -30,8 +30,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	 * @var [string]
 	 */
 	protected $bucket;
+
 	protected $object;
+
     protected $objects;
+
     protected $storage;
 
 	/**
@@ -43,12 +46,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	 */
 	public function __construct($object, $bucket, $client, $storage = null)
 	{
-		if (is_string($object))
-		{
+		if (is_string($object)) {
 			$path = $object;
-		}
-		else
-		{
+		} else {
 			$path = $object['Key'];
 			$this->object = $object;
 		}
@@ -60,19 +60,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		$this->storage = $storage;
 	}
 
-	public function getIterator($bRenew = false)
-	{
-		if (!isset($this->objects) || $bRenew)
-		{
-			# list objects at given path when building the Directory.
-			# going that avoids listing several times
-			$this->objects = $this->client->getIterator('ListObjectsV2', [
-				'Bucket' => $this->bucket,
-				'Prefix' => rtrim($this->path, '/') . '/'
-			]);
-		}
-	}
-
 	public function Search($sPattern, $sPath = null)
 	{
 		return $this->getChildren($sPattern) ;
@@ -80,13 +67,41 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     protected function isCorporate($sPath)
     {
-        return \substr($sPath, 0, 9) === 'corporate';
+        return \substr($sPath, 0, 9) === \Aurora\System\Enums\FileStorageType::Corporate;
     }
 
     protected function isDirectory($sPath)
     {
         return \substr($sPath, -1) === '/';
     }
+
+	protected function getItem($object)
+	{
+		$result = null;
+		
+		if ($this->isDirectory($object['Key'])) {
+
+			if ($this->isCorporate($object['Key'])) {
+
+				$result = new Corporate\Directory($object, $this->bucket, $this->client, $this->storage);
+			} else {
+
+				$result = new Personal\Directory($object, $this->bucket, $this->client, $this->storage);
+			}
+		} else {
+			if ($this->isCorporate($object['Key'])) {
+
+				$result = new Corporate\File($object, $this->bucket, $this->client, $this->storage);
+			}
+			else {
+
+				$result = new Personal\File($object, $this->bucket, $this->client, $this->storage);
+			}
+		}
+		Root::$cache[\rtrim($result->path, '/')] = $result;
+
+		return $result;
+	}
 
 	public function getChildren($sPattern = null)
 	{
@@ -109,37 +124,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
 					$iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern))
 				{
-					if ($this->isDirectory($item['Key']))
-					{
-                        if ($this->isCorporate($item['Key']))
-                        {
-                            $children[] = new Corporate\Directory($item, $this->bucket, $this->client, $this->storage);
-                        }
-                        else
-                        {
-                            $children[] = new Personal\Directory($item, $this->bucket, $this->client, $this->storage);
-                        }
-					}
-					else
-					{
-                        if ($this->isCorporate($item['Key']))
-                        {
-                            $children[] = new Corporate\File($item, $this->bucket, $this->client, $this->storage);
-                        }
-                        else
-                        {
-                            $children[] = new Personal\File($item, $this->bucket, $this->client, $this->storage);
-                        }
-					}
+					$children[] = $this->getItem($item);
 				}
 			}
 		}
 
-		foreach ($children as $iKey => $oChild)
-		{
+		foreach ($children as $iKey => $oChild) {
 			$ext = strtolower(substr($oChild->getName(), -5));
-			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist'))
-			{
+			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist')) {
 				unset($children[$iKey]);
 			}
 		}
@@ -158,34 +150,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      */
 	function getChild($name)
 	{
-		$this->getIterator(true);
-		foreach ($this->objects as $object)
-		{
-			list($filePath,) = \Sabre\Uri\split($object['Key']);
-
-			if ($filePath === \rtrim($this->path, '/') && (strcmp($name, \basename($object['Key'])) === 0 || strcmp($name . '/', \basename($object['Key'])) === 0))
-			{
-				if (substr($object['Key'], -1) === '/')
-				{
-					if ($this->isCorporate($object['Key']))
-					{
-						return new Corporate\Directory($object, $this->bucket, $this->client, $this->storage);
-					}
-					else
-					{
-						return new Personal\Directory($object, $this->bucket, $this->client, $this->storage);
-					}
-				}
-				else
-				{
-					if ($this->isCorporate($object['Key']))
-					{
-						return new Corporate\File($object, $this->bucket, $this->client, $this->storage);
-					}
-					else
-					{
-						return new Personal\File($object, $this->bucket, $this->client, $this->storage);
-					}
+		$Path = rtrim($this->path, '/').'/'.$name;
+		if (isset(Root::$cache[$Path])) {
+			return Root::$cache[$Path];
+		} else {
+			foreach ($this->getChildren() as $oChild) {
+				if ($oChild->getName() === $name) {
+					return $oChild;
 				}
 			}
 		}
@@ -209,8 +180,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $Path = rtrim($this->path, '/').'/'.$name;
 
         $rData = $data;
-        if (!is_resource($data))
-        {
+        if (!is_resource($data)) {
             $rData = fopen('php://memory','r+');
             fwrite($rData, $data);
             rewind($rData);
@@ -245,16 +215,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 				$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
 				$aCurrentExtendedProps = $extendedProps;
-				if (!isset($aProps['ExtendedProps']))
-				{
-					foreach ($extendedProps as $sPropName => $propValue)
-					{
-						if ($propValue === null)
-						{
+				if (!isset($aProps['ExtendedProps'])) {
+					foreach ($extendedProps as $sPropName => $propValue) {
+						if ($propValue === null) {
 							unset($aCurrentExtendedProps[$sPropName]);
-						}
-						else
-						{
+						} else {
 							$aCurrentExtendedProps[$sPropName] = $propValue;
 						}
 					}
@@ -280,8 +245,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      */
     function getLastModified() {
 
-        if (isset($this->object))
-        {
+        if (isset($this->object)) {
             return $this->object['LastModified']->getTimestamp();
         }
 
@@ -306,11 +270,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         }
 
 		$sUserPublicId = $this->getUser();
-		$fromPath = str_replace($sUserPublicId, '', $sourceNode->getPath());
 		$toPath = rtrim(str_replace($sUserPublicId, '', $this->getPath()), '/');
 
-		$bIsFolder = ($sourceNode instanceof Directory);
-		list($fromPath, $oldname) = \Sabre\Uri\split($fromPath);
 
 		$this->copyObjectTo($this->getStorage(), $toPath, $targetName, true);
 
@@ -321,8 +282,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	public function childExists($name)
 	{
 		$oFile = null;
-		try
-		{
+		try {
 			$oFile = $this->getChild($name);
 		}
 		catch (\Exception $oEx) {}

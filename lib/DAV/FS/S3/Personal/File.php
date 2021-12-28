@@ -17,5 +17,5 @@ use Aws\S3\MultipartUploader;
  */
 class File extends \Afterlogic\DAV\FS\S3\File
 {
-    protected $storage = 'personal';
+    protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 }

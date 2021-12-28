@@ -14,18 +14,20 @@ namespace Afterlogic\DAV\FS\S3\Corporate;
  */
 trait NodeTrait
 {
-    /**
-     * Renames the node
-     *
-     * @param string $name The new name
-     * @return void
-     */
-    public function setName($name)
-    {
-		$path = str_replace($this->storage, '', $this->path);
+  protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
+  
+  /**
+   * Renames the node
+   *
+   * @param string $name The new name
+   * @return void
+   */
+  public function setName($name)
+  {
+    $path = str_replace($this->storage, '', $this->path);
 
-		list($path, $oldname) = \Sabre\Uri\split($path);
+    list($path, $oldname) = \Sabre\Uri\split($path);
 
-		$this->copyObjectTo($this->storage, $path, $name, true);
-	}
+    $this->copyObjectTo($this->storage, $path, $name, true);
+  }
 }

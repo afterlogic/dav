@@ -14,15 +14,10 @@ namespace Afterlogic\DAV\FS\S3\Corporate;
  */
 class Root extends \Afterlogic\DAV\FS\S3\Personal\Root 
 {
-	protected $storage = 'corporate';
+	protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
 
 	public function __construct($sUser = null)
 	{
 		parent::__construct($this->storage);
-	}
-	
-	public function getName() 
-	{
-        return \Aurora\System\Enums\FileStorageType::Corporate;
 	}
 }

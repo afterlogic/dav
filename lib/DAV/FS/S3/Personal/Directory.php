@@ -18,7 +18,7 @@ use Afterlogic\DAV\FS\Shared\Root;
  */
 class Directory extends \Afterlogic\DAV\FS\S3\Directory
 {
-	protected $storage = 'personal';
+	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 
 	public function getChildren($sPattern = null)
 	{

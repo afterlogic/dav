@@ -7,6 +7,9 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
+use Aws\Exception\MultipartUploadException;
+use Aws\S3\MultipartUploader;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -82,15 +85,13 @@ class File extends \Afterlogic\DAV\FS\File
             'ResponseContentType' => \Aurora\System\Utils::MimeContentType($fileName),
         ];
 
-        if ($bWithContentDisposition)
-        {
+        if ($bWithContentDisposition) {
             $aArgs['ResponseContentDisposition'] = "attachment; filename=\"". $fileName . "\"";
         }
 
         $oS3Filestorage = \Aurora\Modules\S3Filestorage\Module::getInstance();
         $iPresignedLinkLifetime = 60;
-        if ($oS3Filestorage)
-        {
+        if ($oS3Filestorage) {
             $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifeTimeMinutes', $iPresignedLinkLifetime);
         }
 
@@ -107,8 +108,7 @@ class File extends \Afterlogic\DAV\FS\File
     {
         $sUrl = null;
         $oObject = $this->getObject($bWithContentDisposition);
-        if ($oObject)
-        {
+        if ($oObject) {
             $sUrl = (string) $oObject->getUri();
         }
 
@@ -118,13 +118,11 @@ class File extends \Afterlogic\DAV\FS\File
 	public function get($bRedirectToUrl = true)
 	{
         $sUrl = $this->getUrl();
-        if (!empty($sUrl))
-        {
+        if (!empty($sUrl)) {
             $aPathInfo = pathinfo($this->path);
 
             if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') ||
-                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl)
-            {
+                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl) {
                 $context = stream_context_create(array(
                     "ssl"=>array(
                         "verify_peer"=>false,
@@ -132,11 +130,7 @@ class File extends \Afterlogic\DAV\FS\File
                     )
                 ));
                 return fopen($sUrl, 'rb', false, $context);
-            }
-            else
-            {
-                // $oRes = $this->getObject();
-                // echo $oRes['Body'];
+            } else {
                 \Aurora\System\Api::Location($sUrl);
                 exit;
             }
@@ -146,8 +140,7 @@ class File extends \Afterlogic\DAV\FS\File
 	public function getWithContentDisposition()
 	{
         $sUrl = $this->getUrl(true);
-        if (!empty($sUrl))
-        {
+        if (!empty($sUrl)) {
             \Aurora\System\Api::Location($sUrl);
             exit;
         }
@@ -161,8 +154,7 @@ class File extends \Afterlogic\DAV\FS\File
      */
     function getLastModified() {
 
-        if (isset($this->object))
-        {
+        if (isset($this->object)) {
             return $this->object['LastModified']->getTimestamp();
         }
 
@@ -173,10 +165,9 @@ class File extends \Afterlogic\DAV\FS\File
      *
      * @return int
      */
-    function getSize() {
-
-        if (isset($this->object))
-        {
+    function getSize() 
+    {
+        if (isset($this->object)) {
             return $this->object['Size'];
         }
 
@@ -184,8 +175,7 @@ class File extends \Afterlogic\DAV\FS\File
 
     public function getETag()
     {
-        if (isset($this->object))
-        {
+        if (isset($this->object)) {
             return $this->object['ETag'];
         }
     }

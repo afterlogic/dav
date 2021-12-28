@@ -379,7 +379,7 @@ class Server extends \Sabre\DAV\Server
 			$oResult = \Aurora\Modules\Core\Models\Tenant::select('Name')->find($iIdTenant);
 			if (isset($oResult) && isset($oResult->Name))
 			{
-				$sTanantName = (int) $oResult->Name;
+				$sTanantName = $oResult->Name;
 			}
 		}
 

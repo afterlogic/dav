@@ -14,7 +14,5 @@ namespace Afterlogic\DAV\FS\S3\Corporate;
  */
 class File extends \Afterlogic\DAV\FS\S3\Personal\File
 {
-    protected $storage = 'corporate';
-    
     use NodeTrait;
 }
