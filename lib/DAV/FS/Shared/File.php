@@ -54,7 +54,12 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
 
     public function put($data)
     {
-        return $this->node->put($data);
+        $aExtendedProps = $this->node->getProperty('ExtendedProps');
+        if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+            return $this->node->put($data);
+        } else {
+            return false;
+        }
     }
 
     public function getHistoryDirectory()
@@ -73,6 +78,11 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     }
 
     function patch($data, $rangeType, $offset = null) {
-        return $this->node->patch($data, $rangeType, $offset);
+        $aExtendedProps = $this->node->getProperty('ExtendedProps');
+        if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+            return $this->node->patch($data, $rangeType, $offset);
+        } else {
+            return false;
+        }
     }
 }

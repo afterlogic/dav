@@ -94,7 +94,10 @@ trait NodeTrait
     public function setName($name)
     {
         if ($this->isInherited) {
-            $this->node->setName($name);
+            $aExtendedProps = $this->node->getProperty('ExtendedProps');
+            if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+                $this->node->setName($name);
+            }
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
             $oNode = $pdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $this->getSharePath());
@@ -109,7 +112,10 @@ trait NodeTrait
     function delete()
     {
         if ($this->isInherited) {
-            $this->node->delete();
+            $aExtendedProps = $this->node->getProperty('ExtendedProps');
+            if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+                $this->node->delete();
+            }
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
             return $pdo->deleteShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getId(), $this->getSharePath());
