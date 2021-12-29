@@ -179,61 +179,67 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	{
         $Path = rtrim($this->path, '/').'/'.$name;
 
-        $rData = $data;
-        if (!is_resource($data)) {
-            $rData = fopen('php://memory','r+');
-            fwrite($rData, $data);
-            rewind($rData);
-        }
+		if ($this->childExists($name)) {
+			$oChild = $this->getChild($name);
+			return $oChild->put($data);
+		} else {
 
-        // Prepare the upload parameters.
-        $uploader = new MultipartUploader($this->client, $rData, [
-            'Bucket' => $this->bucket,
-			'Key'    => $Path,
-        ]);
+			$rData = $data;
+			if (!is_resource($data)) {
+				$rData = fopen('php://memory','r+');
+				fwrite($rData, $data);
+				rewind($rData);
+			}
 
-        // Perform the upload.
-        try
-        {
-			$uploader->upload();
+			// Prepare the upload parameters.
+			$uploader = new MultipartUploader($this->client, $rData, [
+				'Bucket' => $this->bucket,
+				'Key'    => $Path,
+			]);
 
-			$oFile = $this->getChild($name);
-			if ($oFile instanceof \Afterlogic\DAV\FS\File)
+			// Perform the upload.
+			try
 			{
+				$uploader->upload();
 
-			// 	if ($rangeType !== 0)
-			// 	{
-			// 		$oFile->patch($data, $rangeType, $offset);
-			// 	}
-
-				$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
-
-				if (!isset($aProps['Owner']))
+				$oFile = $this->getChild($name);
+				if ($oFile instanceof \Afterlogic\DAV\FS\File)
 				{
-					$aProps['Owner'] = $this->getUser();
-				}
 
-				$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
-				$aCurrentExtendedProps = $extendedProps;
-				if (!isset($aProps['ExtendedProps'])) {
-					foreach ($extendedProps as $sPropName => $propValue) {
-						if ($propValue === null) {
-							unset($aCurrentExtendedProps[$sPropName]);
-						} else {
-							$aCurrentExtendedProps[$sPropName] = $propValue;
+				// 	if ($rangeType !== 0)
+				// 	{
+				// 		$oFile->patch($data, $rangeType, $offset);
+				// 	}
+
+					$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
+
+					if (!isset($aProps['Owner']))
+					{
+						$aProps['Owner'] = $this->getUser();
+					}
+
+					$extendedProps['GUID'] = \Sabre\DAV\UUIDUtil::getUUID();
+					$aCurrentExtendedProps = $extendedProps;
+					if (!isset($aProps['ExtendedProps'])) {
+						foreach ($extendedProps as $sPropName => $propValue) {
+							if ($propValue === null) {
+								unset($aCurrentExtendedProps[$sPropName]);
+							} else {
+								$aCurrentExtendedProps[$sPropName] = $propValue;
+							}
 						}
 					}
-				}
-				$aProps['ExtendedProps'] = $aCurrentExtendedProps;
+					$aProps['ExtendedProps'] = $aCurrentExtendedProps;
 
-				$oFile->updateProperties($aProps);
+					$oFile->updateProperties($aProps);
+				}
+				return true;
 			}
-            return true;
-        }
-        catch (ExceptionMultipartUploadException $e)
-        {
-            return false;
-        }
+			catch (ExceptionMultipartUploadException $e)
+			{
+				return false;
+			}
+		}
 	}
 
 	function getQuotaInfo() {}
