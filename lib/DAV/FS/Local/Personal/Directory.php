@@ -87,7 +87,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		);
 		foreach ($aSharedFiles as $aSharedFile) {
 			$oChild = \Afterlogic\DAV\FS\Shared\Root::populateItem($aSharedFile);
-			if ($oChild) {
+			if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
 				$aChildren[] = $oChild;
 			} else {
 				$oPdo->deleteShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $aSharedFile['uid'], $sPath);
