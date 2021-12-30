@@ -109,14 +109,18 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
-        $sPath = 'files/' . $this->getStorage() . $this->getRelativePath() . '/' . $this->getName();
-        if ($this->node->childExists($name)) {
-            $sPath = $sPath . '/' . $name;
-		}
-        Server::checkPrivileges($sPath, '{DAV:}write');
+        if ($this->node) {
+            $sPath = 'files/' . $this->getStorage() . $this->getRelativePath() . '/' . $this->getName();
+            if ($this->node->childExists($name)) {
+                $sPath = $sPath . '/' . $name;
+            }
+            Server::checkPrivileges($sPath, '{DAV:}write');
 
-        if (!(is_array($extendedProps) && isset($extendedProps['InitializationVector']))) {
-            return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
+            if (!(is_array($extendedProps) && isset($extendedProps['InitializationVector']))) {
+                return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
