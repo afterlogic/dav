@@ -65,6 +65,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $aResult = [];
         if ($this->node) {
+            $this->node->setUser($this->getOwnerPublicId());
             $aChildren = $this->node->getChildren();
             foreach ($aChildren as $oChild) {
                 $oResult = false;
