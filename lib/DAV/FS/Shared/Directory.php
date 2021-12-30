@@ -59,6 +59,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
                     return false;
                 }
+
+                return $oChild;
             } else {
 
                 return false;
