@@ -34,7 +34,12 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     function getLastModified()
     {
-        return $this->node->getLastModified();
+        if ($this->node) {
+
+            return $this->node->getLastModified();
+        }
+
+        return 0;
     }
 
     /**
@@ -44,20 +49,32 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      */
     function getSize()
     {
-        return $this->node->getSize();
+        if ($this->node) {
+
+            return $this->node->getSize();
+        }
+
+        return 0;
     }
 
     function get($bRedirectToUrl = true)
     {
-        return $this->node->get($bRedirectToUrl);
+        if ($this->node) {
+
+            return $this->node->get($bRedirectToUrl);
+        }
+
+        return '';
     }
 
     public function put($data)
     {
         $aExtendedProps = $this->node->getProperty('ExtendedProps');
-        if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+        if ($this->node && !(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+
             return $this->node->put($data);
         } else {
+
             return false;
         }
     }
@@ -65,23 +82,28 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     public function getHistoryDirectory()
     {
         $oNode = null;
+        if ($this->node) {
 
-        list(, $owner) = \Sabre\Uri\split($this->getOwner());
-        Server::getInstance()->setUser($owner);
-        try
-        {
-            $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist');
+            list(, $owner) = \Sabre\Uri\split($this->getOwner());
+            Server::getInstance()->setUser($owner);
+            try
+            {
+                $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist');
+            }
+            catch (\Exception $oEx) {}
         }
-        catch (\Exception $oEx) {}
 
 		return $oNode;
     }
 
-    function patch($data, $rangeType, $offset = null) {
+    function patch($data, $rangeType, $offset = null) 
+    {
         $aExtendedProps = $this->node->getProperty('ExtendedProps');
-        if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+        if ($this->node && !(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+
             return $this->node->patch($data, $rangeType, $offset);
         } else {
+
             return false;
         }
     }

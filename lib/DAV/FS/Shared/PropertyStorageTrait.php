@@ -16,41 +16,67 @@ trait PropertyStorageTrait
 {
     public function getResourceInfoPath()
     {
-        $this->node->getResourceInfoPath();
+        if ($this->node) {
+            return $this->node->getResourceInfoPath();
+        } else {
+            return false;
+        }
     }
 
     public function getProperty($sName)
     {
-        return $this->node->getProperty($sName);
+        if ($this->node) {
+            return $this->node->getProperty($sName);
+        } else {
+            return false;
+        }
     }
 
     public function setProperty($sName, $mValue)
     {
-        $this->node->setProperty($sName, $mValue);
+        if ($this->node) {
+            $this->node->setProperty($sName, $mValue);
+        }
     }
 
     public function updateProperties($properties)
     {
-        return $this->node->updateProperties($properties);
+        if ($this->node) {
+            return $this->node->updateProperties($properties);
+        } else {
+            return false;
+        }
     }
 
     public function getProperties($properties)
     {
-        return $this->node->getProperties($properties);
+        if ($this->node) {
+            return $this->node->getProperties($properties);
+        } else {
+            return [];
+        }
     }
 
     public function getResourceData()
     {
-        return $this->node->getResourceData();
+        if ($this->node) {
+            return $this->node->getResourceData();
+        } else {
+            return ['properties' => []];
+        }
     }
 
     public function putResourceData(array $newData)
     {
-        $this->node->putResourceData($newData);
+        if ($this->node) {
+            $this->node->putResourceData($newData);
+        }
     }
 
     public function deleteResourceData()
     {
-        $this->node->deleteResourceData();
+        if ($this->node) {
+            $this->node->deleteResourceData();
+        }
     }
 }

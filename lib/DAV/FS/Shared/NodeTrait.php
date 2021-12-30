@@ -67,17 +67,29 @@ trait NodeTrait
 
     public function getStorage()
     {
-        return $this->node->getStorage();
+        if ($this->node) {
+            return $this->node->getStorage();
+        } else {
+            return 'unknown';
+        }
     }
 
     public function getRootPath()
     {
-        return $this->node->getRootPath();
+        if ($this->node) {
+            return $this->node->getRootPath();
+        } else {
+            return '';
+        }
     }
 
     public function getPath()
     {
-        return $this->node->getPath();
+        if ($this->node) {
+            return $this->node->getPath();
+        } else {
+            return '';
+        }
     }
 
     public function getName()
@@ -94,9 +106,11 @@ trait NodeTrait
     public function setName($name)
     {
         if ($this->isInherited) {
-            $aExtendedProps = $this->node->getProperty('ExtendedProps');
-            if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-                $this->node->setName($name);
+            if ($this->node) {
+                $aExtendedProps = $this->node->getProperty('ExtendedProps');
+                if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+                    $this->node->setName($name);
+                }
             }
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();
@@ -112,9 +126,11 @@ trait NodeTrait
     function delete()
     {
         if ($this->isInherited) {
-            $aExtendedProps = $this->node->getProperty('ExtendedProps');
-            if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-                $this->node->delete();
+            if ($this->node) {
+                $aExtendedProps = $this->node->getProperty('ExtendedProps');
+                if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+                    $this->node->delete();
+                }
             }
         } else {
             $pdo = new \Afterlogic\DAV\FS\Backend\PDO();

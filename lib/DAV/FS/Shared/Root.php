@@ -11,6 +11,8 @@ use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
 use LogicException;
 
+use function Sabre\Uri\split;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -51,49 +53,46 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 	{
 		$mResult = false;
 
-		if (is_array($aSharedFile))
-		{
+		if (is_array($aSharedFile)) {
+
 			$oServer = \Afterlogic\DAV\Server::createInstance();
 			$sCurrentUser = $oServer->getUser();
 			$oServer->setUser(basename($aSharedFile['owner']));
 			$oItem = null;
 
-			try
-			{
+			try {
+
 				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
 			}
-			catch (\Exception $oEx)
-			{
+			catch (\Exception $oEx) {
+
 				\Aurora\Api::LogException($oEx);
 			}
 			$oServer->setUser($sCurrentUser);
 
-			if ($oItem instanceof \Sabre\DAV\FS\Node)
-			{
+			if ($oItem instanceof \Sabre\DAV\FS\Node) {
+
 				$oItem->setAccess((int) $aSharedFile['access']);
 			}
 
-			if ($oItem instanceof \Afterlogic\DAV\FS\File)
-			{
+			if (!$aSharedFile['isdir']) {
+
 				$mResult = new File($aSharedFile['uid'], $oItem);
 			}
-			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory)
-			{
+			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
+
 				$mResult = new Directory($aSharedFile['uid'], $oItem);
 			}
 
-			if ($mResult)
-			{
-				$sRelativeNodePath = \str_replace(
-					$oItem->getName(),
-					'',
-					$aSharedFile['path']
-				);
-				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+			if ($mResult) {
+				
+				list($sRelativeNodePath, ) = split($aSharedFile['path']);
 				if ($sRelativeNodePath === '/') {
+
 					$sRelativeNodePath = '';
 				}
 				$mResult->setRelativeNodePath($sRelativeNodePath);
+				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
 				$mResult->setSharePath($aSharedFile['share_path']);
 				$mResult->setAccess((int) $aSharedFile['access']);
 			}
