@@ -29,34 +29,42 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     public function getChild($path)
     {
         if ($this->node) {
+
             $oChild = $this->node->getChild($path);
-            $aExtendedProps = $oChild->getProperty('ExtendedProps');
-            if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-                if ($oChild)
-                {
-                    if ($oChild instanceof \Afterlogic\DAV\FS\File)
-                    {
+            if ($oChild) {
+
+                $aExtendedProps = $oChild->getProperty('ExtendedProps');
+                if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
+    
+                    if ($oChild instanceof \Afterlogic\DAV\FS\File) {
+
                         $oChild = new File($oChild->getName(), $oChild);
                     }
-                    else if ($oChild instanceof \Afterlogic\DAV\FS\Directory)
-                    {
+                    else if ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
+
                         $oChild = new Directory($oChild->getName(), $oChild);
                     }
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName());
                     if ($aSharedFile) {
+
                         $oChild->setAccess($aSharedFile['access']);    
                     }
                     else {
+
                         $oChild->setInherited(true);
                         $oChild->setAccess($this->getAccess());    
                     }
+                } else {
+
+                    return false;
                 }
-                return $oChild;
             } else {
+
                 return false;
             }
         } else {
+
             return false;
         }
     }
