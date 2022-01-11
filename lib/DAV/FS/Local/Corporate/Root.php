@@ -18,7 +18,15 @@ class Root extends Directory
 
 	public function __construct() 
 	{
-		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE;
+		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT;
+		
+		if (!\file_exists($path))
+		{
+			\mkdir($path);
+		}
+
+		$path = $path . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_CORPORATE;
+
 		if (!file_exists($path))
 		{
 			\mkdir($path);
