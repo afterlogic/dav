@@ -72,7 +72,7 @@ class Root extends Directory
 			];
 			$endpoint = $oModule->getConfig('Host');
 			if (!empty($endpoint)) {
-				$aOptions['endpoint'] = $endpoint;
+				$aOptions['endpoint'] = 'https://' . $endpoint;
 			}
 			$client = new S3Client($aOptions);
 		}
