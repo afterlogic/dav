@@ -431,6 +431,7 @@ class Server extends \Sabre\DAV\Server
 	public static function getNodeForPath($path)
 	{
 		$oNode = false;
+		$path = str_replace('//', '/', $path);
 		self::getInstance()->setUser(self::getUser());
 		try {
 			$oNode = self::getInstance()->tree->getNodeForPath($path);
