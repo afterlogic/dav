@@ -53,7 +53,7 @@ class Constants
 	const DAV_PUBLIC_PRINCIPAL = 'caldav_public_user@localhost';
 	const DAV_TENANT_PRINCIPAL = 'dav_tenant_user@localhost';
 
-	const DAV_USER_AGENT = 'AfterlogicDAVClient';
+	const DAV_USER_AGENT = 'eMClient/8.2.1659.0';
 	const DAV_SERVER_NAME = 'AfterlogicDAVServer';
 
 	const FILESTORAGE_PRIVATE_QUOTA = 104857600;
