@@ -115,8 +115,13 @@ class File extends \Afterlogic\DAV\FS\File
         return $sUrl;
     }
 
-	public function get($bRedirectToUrl = true)
-	{
+    public function get($bRedirectToUrl = null)
+    {
+        if ($bRedirectToUrl === null) {
+            $oS3FilestorageModule = \Aurora\System\Api::GetModule('S3Filestorage');
+            $bRedirectToUrl = $oS3FilestorageModule ? $oS3FilestorageModule->getConfig('RedirectToOriginalFileURLs', true) : true;
+        }
+
         $sUrl = $this->getUrl();
         if (!empty($sUrl)) {
             $aPathInfo = pathinfo($this->path);
