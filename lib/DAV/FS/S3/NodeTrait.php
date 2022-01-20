@@ -228,4 +228,13 @@ trait NodeTrait
 		return ($this instanceof Directory);
 	}
 
+	public function getRelativePath()
+	{
+		list($sPath) = \Sabre\Uri\split($this->getPath());
+
+		$aPathItems =  explode('/', $sPath, 2);
+
+		return isset($aPathItems[1]) ? '/' . $aPathItems[1] : '';
+    }
+
 }

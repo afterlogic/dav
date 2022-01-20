@@ -57,13 +57,14 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 	public function getChild($name)
 	{	
 		$mResult = false;
+		
 		try {
 			$mResult = parent::getChild($name);
 		} catch (\Exception $oEx) {}
 
-		
-		if (!$mResult) {
-			$mResult = $this->getSharedChild($name);
+		$oSharedChild = $this->getSharedChild($name);
+		if ($oSharedChild) {
+			$mResult = $oSharedChild;
 		}
 
 		return $mResult;

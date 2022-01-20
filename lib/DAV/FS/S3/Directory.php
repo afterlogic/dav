@@ -98,7 +98,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 				$result = new Personal\File($object, $this->bucket, $this->client, $this->storage);
 			}
 		}
-		Root::$cache[\rtrim($result->path, '/')] = $result;
 
 		return $result;
 	}
@@ -108,35 +107,45 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		$children = [];
 
 		$Path =  rtrim(ltrim($this->path, '/'), '/') . '/';
-		$iSlashesCount = substr_count($Path, '/');
 
-		$results = $this->client->getPaginator('ListObjectsV2', [
-			'Bucket' => $this->bucket,
-			'Prefix' => $Path
-		]);
+		if (!isset(Root::$childrenCache[$Path]) || isset($sPattern)) {
 
-		foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item)
-		{
-			$sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
-			 if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern))
-			 {
-				$iItemSlashesCount = substr_count($item['Key'], '/');
-				if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
-					$iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern))
+			$iSlashesCount = substr_count($Path, '/');
+
+			$results = $this->client->getPaginator('ListObjectsV2', [
+				'Bucket' => $this->bucket,
+				'Prefix' => $Path
+			]);
+
+			foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item)
+			{
+				$sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
+				if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern))
 				{
-					$children[] = $this->getItem($item);
+					$iItemSlashesCount = substr_count($item['Key'], '/');
+					if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
+						$iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern))
+					{
+						$children[] = $this->getItem($item);
+					}
 				}
 			}
-		}
 
-		foreach ($children as $iKey => $oChild) {
-			$ext = strtolower(substr($oChild->getName(), -5));
-			if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist')) {
-				unset($children[$iKey]);
+			foreach ($children as $iKey => $oChild) {
+				$ext = strtolower(substr($oChild->getName(), -5));
+				if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist')) {
+					unset($children[$iKey]);
+				}
+			}
+
+			if ($sPattern) {
+				return $children;
+			} else {
+				Root::$childrenCache[$Path] = $children;
 			}
 		}
 
-        return $children;
+        return Root::$childrenCache[$Path];
 	}
 
     /**
@@ -151,11 +160,12 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	function getChild($name)
 	{
 		$Path = rtrim($this->path, '/').'/'.$name;
-		if (isset(Root::$cache[$Path])) {
-			return Root::$cache[$Path];
+		if (isset(Root::$childCache[$Path])) {
+			return Root::$childCache[$Path];
 		} else {
 			foreach ($this->getChildren() as $oChild) {
 				if ($oChild->getName() === $name) {
+					Root::$childCache[\rtrim($Path)] = $oChild;
 					return $oChild;
 				}
 			}

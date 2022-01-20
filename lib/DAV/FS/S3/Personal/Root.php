@@ -24,7 +24,9 @@ class Root extends Directory
 
 	protected $client = null;
 
-	public static $cache;
+	public static $childCache;
+
+	public static $childrenCache = [];
 
 	public function __construct($sPrefix = null)
 	{
