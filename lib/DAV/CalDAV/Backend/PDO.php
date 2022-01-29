@@ -36,7 +36,6 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 		$this->schedulingObjectTableName = $this->dBPrefix . Constants::T_SCHEDULINGOBJECTS;
 		$this->calendarSubscriptionsTableName = $this->dBPrefix . Constants::T_CALENDARSUBSCRIPTIONS;
 		$this->calendarInstancesTableName = $this->dBPrefix . Constants::T_CALENDARINSTANCES;
-
 	}
 
 	public function createCalendar($principalUri, $calendarUri, array $properties) {

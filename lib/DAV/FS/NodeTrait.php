@@ -11,6 +11,7 @@ use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
 use Afterlogic\DAV\Server;
+use Aurora\Api;
 use Aurora\System\Enums\FileStorageType;
 
 /**
@@ -104,17 +105,22 @@ trait NodeTrait
 
 	public function getSharedChild($name)
 	{
-		$oPdo = new PDO();
+		$oChild = false;
+		$SharedFiles = Api::GetModule('SharedFiles');
+		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
+			$oPdo = new PDO();
 
-		$sSharePath = '';
-		if (!empty($this->getRelativePath())) {
-			$sSharePath = $this->getRelativePath() . '/' . $this->getName();
-		} else if (!empty($this->getName()) && !$this->isRoot()) {
-			$sSharePath = '/' . $this->getName();
+			$sSharePath = '';
+			if (!empty($this->getRelativePath())) {
+				$sSharePath = $this->getRelativePath() . '/' . $this->getName();
+			} else if (!empty($this->getName()) && !$this->isRoot()) {
+				$sSharePath = '/' . $this->getName();
+			}
+			$aSharedFile = $oPdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
+			$oChild = Root::populateItem($aSharedFile);
 		}
-		$aSharedFile = $oPdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
 
-		return Root::populateItem($aSharedFile);
+		return $oChild;
 	}
 
 	public function checkFileName($name)

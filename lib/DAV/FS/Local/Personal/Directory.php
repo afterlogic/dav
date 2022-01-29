@@ -72,7 +72,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		$aChildren = [];
 
 		$SharedFiles = Api::GetModule('SharedFiles');
-		if ($SharedFiles) {
+		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
 			$oPdo = new PDO();
 
 			$sPath = '';

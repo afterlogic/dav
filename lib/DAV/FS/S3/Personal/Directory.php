@@ -10,6 +10,7 @@ namespace Afterlogic\DAV\FS\S3\Personal;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
+use Aurora\Api;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -31,24 +32,28 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 	public function getSharedChildren()
 	{
 		$aChildren = [];
-		$oPdo = new PDO();
 
-		$sPath = '';
-		$bIsRoot = $this->getRootPath() === $this->getPath();
-		if (!$bIsRoot) {
-			$sPath = $this->getRelativePath();
-			if (!empty($sPath))	{
-				$sPath = '/' . ltrim($sPath, '/') . '/' . $this->getName();
-			} else {
-				$sPath = '/' . $this->getName();
+		$SharedFiles = Api::GetModule('SharedFiles');
+		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
+			$oPdo = new PDO();
+
+			$sPath = '';
+			$bIsRoot = $this->getRootPath() === $this->getPath();
+			if (!$bIsRoot) {
+				$sPath = $this->getRelativePath();
+				if (!empty($sPath))	{
+					$sPath = '/' . ltrim($sPath, '/') . '/' . $this->getName();
+				} else {
+					$sPath = '/' . $this->getName();
+				}
 			}
-		}
-		$aSharedFiles = $oPdo->getSharedFilesForUser(
-			Constants::PRINCIPALS_PREFIX . $this->getUser(), 
-			$sPath
-		);
-		foreach ($aSharedFiles as $aSharedFile) {
-			$aChildren[] =  \Afterlogic\DAV\FS\Shared\Root::populateItem($aSharedFile);
+			$aSharedFiles = $oPdo->getSharedFilesForUser(
+				Constants::PRINCIPALS_PREFIX . $this->getUser(), 
+				$sPath
+			);
+			foreach ($aSharedFiles as $aSharedFile) {
+				$aChildren[] =  \Afterlogic\DAV\FS\Shared\Root::populateItem($aSharedFile);
+			}
 		}
 
 		return $aChildren;
@@ -72,16 +77,24 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 
 	public function getSharedChild($name)
 	{
-		$oPdo = new PDO();
+		$oChild = false;
 
-		$sSharePath = '';
-		if (!empty($this->getRelativePath())) {
-			$sSharePath = $this->getRelativePath() . '/' . $this->getName();
-		} else if (!empty($this->getName()) && !$this->isRoot()) {
-			$sSharePath = '/' . $this->getName();
+		$SharedFiles = Api::GetModule('SharedFiles');
+		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
+			$oPdo = new PDO();
+
+
+			$sSharePath = '';
+			if (!empty($this->getRelativePath())) {
+				$sSharePath = $this->getRelativePath() . '/' . $this->getName();
+			} else if (!empty($this->getName()) && !$this->isRoot()) {
+				$sSharePath = '/' . $this->getName();
+			}
+			$aSharedFile = $oPdo->getSharedFileByUid(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
+
+			$oChild = Root::populateItem($aSharedFile);
 		}
-		$aSharedFile = $oPdo->getSharedFileByUid(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
 
-		return Root::populateItem($aSharedFile);
+		return $oChild;
 	}
 }
