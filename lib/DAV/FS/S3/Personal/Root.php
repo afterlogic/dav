@@ -155,8 +155,8 @@ class Root extends Directory
 		}
 
  		return [
-			$this->getUsedSize($this->UserPublicId),
-			$sUserSpaceLimitInMb
+			(int) $this->getUsedSize($this->UserPublicId),
+			(int) $sUserSpaceLimitInMb
 		];
     }
 }

@@ -67,8 +67,8 @@ class Root extends Directory
 		{
 			$aQuota = \Aurora\System\Api::GetModuleDecorator('Files')->GetQuota($oUser->Id, $this->getName());
 			$mResult = [
-				$aQuota['Used'],
-				$aQuota['Limit']
+				(int) $aQuota['Used'],
+				(int) $aQuota['Limit']
 			];
 		}
 		
