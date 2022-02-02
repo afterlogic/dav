@@ -160,7 +160,16 @@ trait NodeTrait
 
     public function getRelativePath()
     {
-        return $this->getRelativeNodePath();
+        if ($this->isInherited()) {
+            return $this->node->getRelativePath();
+        } else {
+            $sharePath = $this->getSharePath();
+            if ($sharePath) {
+                return $sharePath;
+            } else {
+                return '';
+            }
+        }
     }
 
     public function getNode()
