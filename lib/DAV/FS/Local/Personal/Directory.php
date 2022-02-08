@@ -10,6 +10,7 @@ namespace Afterlogic\DAV\FS\Local\Personal;
 use Afterlogic\DAV\Constants;
 use \Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\HistoryDirectory;
+use Afterlogic\DAV\Server;
 use Aurora\Api;
 
 /**
@@ -111,5 +112,12 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		return $result;
 	}
 	
-	function getQuotaInfo() {}	
+	function getQuotaInfo() {
+		$oRoot = Server::getNodeForPath('files/personal');
+		if ($oRoot) {
+			return $oRoot->getQuotaInfo();
+		} else {
+			return [0, 0];
+		}
+	}	
 }

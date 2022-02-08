@@ -7,7 +7,9 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
+use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\S3\Personal\Root;
+use Afterlogic\DAV\Server;
 use Aws\Common\Exception\MultipartUploadException;
 use Aws\Exception\MultipartUploadException as ExceptionMultipartUploadException;
 use Aws\S3\MultipartUploader;
@@ -252,7 +254,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		}
 	}
 
-	function getQuotaInfo() {}
+	function getQuotaInfo() {
+		$oRoot = Server::getNodeForPath('files/personal');
+		if ($oRoot) {
+			return $oRoot->getQuotaInfo();
+		} else {
+			return [0, 0];
+		}
+	}	
 
     /**
      * Returns the last modification time, as a unix timestamp
