@@ -9,6 +9,9 @@ namespace Afterlogic\DAV\FS\Shared;
 
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
+use Aurora\Modules\Files\Enums\ErrorCodes;
+use Aurora\Modules\SharedFiles\Enums\Access;
+use Aurora\System\Exceptions\ApiException;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -112,8 +115,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	public function createDirectory($name)
 	{
         if ($this->node) {
-            $sPath = 'files/' . $this->getStorage() . $this->getRelativePath() . '/' . $this->getName();
-            Server::checkPrivileges($sPath, '{DAV:}write');
+            if ($this->node->getAccess() === Access::NoAccess || $this->node->getAccess() === Access::Read) {
+				throw new ApiException(ErrorCodes::NotPermitted);
+			}
             $this->node->createDirectory($name);
         }
     }
@@ -121,11 +125,16 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
         if ($this->node) {
-            $sPath = 'files/' . $this->getStorage() . $this->getRelativePath() . '/' . $this->getName();
+
+            if ($this->node->getAccess() === Access::NoAccess || $this->node->getAccess() === Access::Read) {
+				throw new ApiException(ErrorCodes::NotPermitted);
+			}
             if ($this->node->childExists($name)) {
-                $sPath = $sPath . '/' . $name;
-            }
-            Server::checkPrivileges($sPath, '{DAV:}write');
+				$oFile = $this->node->getChild();
+				if ($oFile->getAccess() === Access::NoAccess || $oFile->getAccess() === Access::Read) {
+					throw new ApiException(ErrorCodes::NotPermitted);
+				}
+			}
 
             if (!(is_array($extendedProps) && isset($extendedProps['InitializationVector']))) {
                 return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
