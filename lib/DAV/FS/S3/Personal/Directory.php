@@ -11,6 +11,7 @@ use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\Shared\Root;
 use Aurora\Api;
+use Sabre\DAV\Exception\NotFound;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -70,6 +71,10 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 		$oSharedChild = $this->getSharedChild($name);
 		if ($oSharedChild) {
 			$mResult = $oSharedChild;
+		}
+
+		if (!$mResult) {
+			throw new NotFound();
 		}
 
 		return $mResult;

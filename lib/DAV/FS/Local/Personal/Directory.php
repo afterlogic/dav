@@ -12,6 +12,7 @@ use \Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\HistoryDirectory;
 use Afterlogic\DAV\Server;
 use Aurora\Api;
+use Sabre\DAV\Exception\NotFound;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -35,6 +36,10 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		
 		if (!$mResult) {
 			$mResult = $this->getSharedChild($name);
+		}
+
+		if (!$mResult) {
+			throw new NotFound();
 		}
 
 		return $mResult;
