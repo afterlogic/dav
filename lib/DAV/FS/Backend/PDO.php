@@ -59,6 +59,7 @@ class PDO
         $fields[] = 'access';
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
+		$fields[] = 'group_id';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -91,6 +92,7 @@ SQL
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -114,6 +116,7 @@ SQL
         $fields[] = 'access';
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
+		$fields[] = 'group_id';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -138,6 +141,7 @@ SQL
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -161,6 +165,7 @@ SQL
         $fields[] = 'access';
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
+		$fields[] = 'group_id';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -184,7 +189,8 @@ SQL
 				'path' => $sharePath,
 				'access' => 2,
 				'isdir' => true,
-				'share_path' => ''
+				'share_path' => '',
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -208,6 +214,7 @@ SQL
         $fields[] = 'access';
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
+		$fields[] = 'group_id';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -232,6 +239,7 @@ SQL
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -255,6 +263,7 @@ SQL
         $fields[] = 'access';
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
+		$fields[] = 'group_id';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -279,6 +288,7 @@ SQL
 				'access' => (int) $row['access'],
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -294,13 +304,16 @@ SQL
 
 		$aResult = [];
 
-		$fields[] = 'id';
-        $fields[] = 'owner';
-        $fields[] = 'storage';
-        $fields[] = 'path';
-        $fields[] = 'principaluri';
-        $fields[] = 'access';
-		$fields[] = 'share_path';
+		$fields = [
+			'id',
+        	'owner',
+        	'storage',
+        	'path',
+       		'principaluri',
+        	'access',
+			'share_path',
+			'group_id'
+		];
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -318,6 +331,7 @@ SQL
 				'principaluri' => $row['principaluri'],
 				'access' => (int) $row['access'],
 				'share_path' => $row['share_path'],
+				'group_id' => $row['group_id'],
 			];
 		}
 
@@ -335,7 +349,7 @@ SQL
 	 * @param bool $isdir
 	 * @return int
 	 */
-	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '')
+	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '', $group_id = null)
 	{
 		$values = $fieldNames = [];
         $fieldNames[] = 'owner';
@@ -362,6 +376,11 @@ SQL
 		$fieldNames[] = 'share_path';
 		$values[':share_path'] = $share_path;
 
+		if (isset($group_id)) {
+			$fieldNames[] = 'group_id';
+			$values[':group_id'] = $group_id;			
+		}
+
 		$stmt = $this->pdo->prepare("INSERT INTO ".$this->sharedFilesTableName." (".implode(', ', $fieldNames).") VALUES (".implode(', ',array_keys($values)).")");
         $stmt->execute($values);
 
@@ -374,36 +393,36 @@ SQL
 		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path]);
 	}
 
-	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '')
+	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = null)
 	{
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ? AND share_path = ?');
-		return  $stmt->execute([$name, $principalUri, $uid, $share_path]);
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
+		return  $stmt->execute([$name, $principalUri, $uid, $share_path, $group_id]);
 	}
 
-	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath)
+	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath, $group_id = null)
 	{
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ? WHERE principaluri = ? AND uid = ? AND share_path = ?');
-		return  $stmt->execute([$newSharePath, $principalUri, $uid, $sharePath]);
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
+		return  $stmt->execute([$newSharePath, $principalUri, $uid, $sharePath, $group_id]);
 	}
 
-	public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath)
+	public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath, $group_id = null)
 	{
 		$stmt = $this->pdo->prepare(
 			'UPDATE ' . $this->sharedFilesTableName . '
 			SET share_path = REPLACE(share_path, ?, ?)
-			WHERE principaluri = ? AND share_path LIKE ?'
+			WHERE principaluri = ? AND share_path LIKE ? AND group_id = ?'
 		);
-		return  $stmt->execute([$sharePath, $newSharePath, $principalUri, $sharePath . '%']);
+		return  $stmt->execute([$sharePath, $newSharePath, $principalUri, $sharePath . '%', $group_id]);
 	}
 
-	public function updateShare($owner, $storage, $path,  $newStorage, $newPath)
+	public function updateShare($owner, $storage, $path,  $newStorage, $newPath, $group_id = null)
 	{
 		$stmt = $this->pdo->prepare(
 			"UPDATE " . $this->sharedFilesTableName . "
 			SET path = REPLACE(path, ?, ?), storage = ?
-			WHERE path LIKE ? AND owner = ? AND storage = ?"
+			WHERE path LIKE ? AND owner = ? AND storage = ? AND group_id = ?"
 		);
-		return  $stmt->execute([$path, $newPath, $newStorage, $path . '%', $owner, $storage]);
+		return  $stmt->execute([$path, $newPath, $newStorage, $path . '%', $owner, $storage, $group_id]);
 	}
 
 	/**
@@ -413,10 +432,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFile($owner, $storage, $path)
+	public function deleteSharedFile($owner, $storage, $path, $group_id = null)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE owner = ? AND storage = ? AND path = ?');
-        return $stmt->execute([$owner, $storage, $path]);
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path = ? AND group_id =?');
+        return $stmt->execute([$owner, $storage, $path, $group_id]);
 	}
 
 		/**
@@ -438,10 +457,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteShare($principaluri, $uid, $share_path = '')
+	public function deleteShare($principaluri, $uid, $share_path = '', $group_id = null)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ? AND share_path = ?');
-        return $stmt->execute([$principaluri, $uid, $share_path]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
+        return $stmt->execute([$principaluri, $uid, $share_path, $group_id]);
 	}
 
 	/**

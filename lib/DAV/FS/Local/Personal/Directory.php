@@ -7,11 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Local\Personal;
 
-use Afterlogic\DAV\Constants;
-use \Afterlogic\DAV\FS\Backend\PDO;
 use Afterlogic\DAV\FS\HistoryDirectory;
 use Afterlogic\DAV\Server;
-use Aurora\Api;
 use Sabre\DAV\Exception\NotFound;
 
 /**
@@ -21,6 +18,8 @@ use Sabre\DAV\Exception\NotFound;
  */
 class Directory extends \Afterlogic\DAV\FS\Local\Directory 
 {
+	use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
+
 	public function __construct($path) 
 	{
 		parent::__construct(\Aurora\System\Enums\FileStorageType::Personal, $path);
@@ -64,49 +63,6 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 
 		return $result;
     }
-	
-	public function getChildren()
-	{
-		return array_merge(
-			parent::getChildren(),
-			$this->getSharedChildren()
-		);
-	}
-
-	public function getSharedChildren()
-	{
-		$aChildren = [];
-
-		$SharedFiles = Api::GetModule('SharedFiles');
-		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
-			$oPdo = new PDO();
-
-			$sPath = '';
-			$bIsRoot = $this->getRootPath() === $this->getPath();
-			if (!$bIsRoot) {
-				$sPath = $this->getRelativePath();
-				if (!empty($sPath))	{
-					$sPath = '/' . ltrim($sPath, '/') . '/' . $this->getName();
-				} else {
-					$sPath = '/' . $this->getName();
-				}
-			}
-			$aSharedFiles = $oPdo->getSharedFilesForUser(
-				Constants::PRINCIPALS_PREFIX . $this->getUser(), 
-				$sPath
-			);
-			foreach ($aSharedFiles as $aSharedFile) {
-				$oChild = \Afterlogic\DAV\FS\Shared\Root::populateItem($aSharedFile);
-				if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
-					$aChildren[] = $oChild;
-				} else {
-					$oPdo->deleteShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $aSharedFile['uid'], $sPath);
-				}
-			}
-		}
-
-		return $aChildren;
-	}
 	
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
 	{

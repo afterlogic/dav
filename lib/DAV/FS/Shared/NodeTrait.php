@@ -29,6 +29,8 @@ trait NodeTrait
     protected $sharePath = '';
 
     protected $isInherited = false;
+
+    protected $groupId = null;
     
     public function getId()
     {
@@ -175,5 +177,15 @@ trait NodeTrait
     public function getNode()
     {
         return $this->node;
+    }
+
+    public function getGroupId()
+    {
+        return $this->groupId;
+    }
+
+    public function setGroupId($groupId)
+    {
+        $this->groupId = isset($groupId) ? (int) $groupId : null;
     }
 }

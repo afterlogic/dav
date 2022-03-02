@@ -103,26 +103,6 @@ trait NodeTrait
 		}
 	}
 
-	public function getSharedChild($name)
-	{
-		$oChild = false;
-		$SharedFiles = Api::GetModule('SharedFiles');
-		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
-			$oPdo = new PDO();
-
-			$sSharePath = '';
-			if (!empty($this->getRelativePath())) {
-				$sSharePath = $this->getRelativePath() . '/' . $this->getName();
-			} else if (!empty($this->getName()) && !$this->isRoot()) {
-				$sSharePath = '/' . $this->getName();
-			}
-			$aSharedFile = $oPdo->getSharedFileByUidWithPath(Constants::PRINCIPALS_PREFIX . $this->getUser(), $name, $sSharePath);
-			$oChild = Root::populateItem($aSharedFile);
-		}
-
-		return $oChild;
-	}
-
 	public function checkFileName($name)
 	{
 		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
