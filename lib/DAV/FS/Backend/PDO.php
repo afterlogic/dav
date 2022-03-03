@@ -387,10 +387,10 @@ SQL
         return $this->pdo->lastInsertId();
 	}
 
-	public function updateSharedFile($owner, $storage, $path, $principalUri, $access)
+	public function updateSharedFile($owner, $storage, $path, $principalUri, $access, $groupId = null)
 	{
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ?');
-		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path]);
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
+		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path, $groupId]);
 	}
 
 	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = null)
@@ -445,10 +445,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path)
+	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path, $group_id = null)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ?');
-        return $stmt->execute([$principaluri, $storage, $path]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
+        return $stmt->execute([$principaluri, $storage, $path, $group_id]);
 	}
 
 	/**
@@ -472,5 +472,18 @@ SQL
 	{
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? OR owner = ?');
         return $stmt->execute([$principalUri, $principalUri]);
+	}
+
+	/**
+	 *
+	 * @param string $owner
+	 * @param string $path
+	 * @param array $groupIds
+	 * @return bool
+	 */
+	public function deleteShareByGroupIds($principaluri, $storage, $uid, $groupIds)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND uid = ? AND group_id in (?)');
+        return $stmt->execute([$principaluri, $storage, $uid, implode(',', $groupIds)]);
 	}
 }
