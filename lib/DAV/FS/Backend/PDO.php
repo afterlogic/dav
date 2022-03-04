@@ -327,11 +327,11 @@ SQL
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			$aResult[] = [
-				'id' => $row['id'],
+				'id' => (int) $row['id'],
 				'principaluri' => $row['principaluri'],
 				'access' => (int) $row['access'],
 				'share_path' => $row['share_path'],
-				'group_id' => $row['group_id'],
+				'group_id' => (int) $row['group_id'],
 			];
 		}
 
@@ -349,7 +349,7 @@ SQL
 	 * @param bool $isdir
 	 * @return int
 	 */
-	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '', $group_id = null)
+	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '', $group_id = 0)
 	{
 		$values = $fieldNames = [];
         $fieldNames[] = 'owner';
@@ -387,25 +387,25 @@ SQL
         return $this->pdo->lastInsertId();
 	}
 
-	public function updateSharedFile($owner, $storage, $path, $principalUri, $access, $groupId = null)
+	public function updateSharedFile($owner, $storage, $path, $principalUri, $access, $groupId = 0)
 	{
 		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
 		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path, $groupId]);
 	}
 
-	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = null)
+	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = 0)
 	{
 		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `uid` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
 		return  $stmt->execute([$name, $principalUri, $uid, $share_path, $group_id]);
 	}
 
-	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath, $group_id = null)
+	public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath, $group_id = 0)
 	{
 		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
 		return  $stmt->execute([$newSharePath, $principalUri, $uid, $sharePath, $group_id]);
 	}
 
-	public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath, $group_id = null)
+	public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath, $group_id = 0)
 	{
 		$stmt = $this->pdo->prepare(
 			'UPDATE ' . $this->sharedFilesTableName . '
@@ -415,14 +415,14 @@ SQL
 		return  $stmt->execute([$sharePath, $newSharePath, $principalUri, $sharePath . '%', $group_id]);
 	}
 
-	public function updateShare($owner, $storage, $path,  $newStorage, $newPath, $group_id = null)
+	public function updateShare($owner, $storage, $path,  $newStorage, $newPath)
 	{
 		$stmt = $this->pdo->prepare(
 			"UPDATE " . $this->sharedFilesTableName . "
 			SET path = REPLACE(path, ?, ?), storage = ?
-			WHERE path LIKE ? AND owner = ? AND storage = ? AND group_id = ?"
+			WHERE path LIKE ? AND owner = ? AND storage = ?"
 		);
-		return  $stmt->execute([$path, $newPath, $newStorage, $path . '%', $owner, $storage, $group_id]);
+		return  $stmt->execute([$path, $newPath, $newStorage, $path . '%', $owner, $storage]);
 	}
 
 	/**
@@ -432,7 +432,7 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFile($owner, $storage, $path, $group_id = null)
+	public function deleteSharedFile($owner, $storage, $path, $group_id = 0)
 	{
         $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path = ? AND group_id =?');
         return $stmt->execute([$owner, $storage, $path, $group_id]);
@@ -445,10 +445,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path, $group_id = null)
+	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
-        return $stmt->execute([$principaluri, $storage, $path, $group_id]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ?');
+        return $stmt->execute([$principaluri, $storage, $path]);
 	}
 
 	/**
@@ -457,10 +457,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteShare($principaluri, $uid, $share_path = '', $group_id = null)
+	public function deleteShare($principaluri, $uid, $share_path = '')
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
-        return $stmt->execute([$principaluri, $uid, $share_path, $group_id]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND uid = ? AND share_path = ?');
+        return $stmt->execute([$principaluri, $uid, $share_path]);
 	}
 
 	/**

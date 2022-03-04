@@ -186,6 +186,6 @@ trait NodeTrait
 
     public function setGroupId($groupId)
     {
-        $this->groupId = isset($groupId) ? (int) $groupId : null;
+        $this->groupId = isset($groupId) ? (int) $groupId : 0;
     }
 }
