@@ -20,6 +20,8 @@ use function Sabre\Uri\split;
  */
 class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
+	use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
+
 //    use NodeTrait;
 
 	protected $pdo = null;
@@ -148,20 +150,22 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 	public function getChildren()
 	{
-		$aResult = [];
+		// $aResult = [];
 
-		$aSharedFiles = $this->pdo->getSharedFilesForUser(
-			Constants::PRINCIPALS_PREFIX . $this->getUser()
-		);
+		// $aSharedFiles = $this->pdo->getSharedFilesForUser(
+		// 	Constants::PRINCIPALS_PREFIX . $this->getUser()
+		// );
 
-		foreach ($aSharedFiles as $aSharedFile) {
-			$oSharedItem = self::populateItem($aSharedFile);
-			if ($oSharedItem) {
-				$aResult[] = $oSharedItem;
-			}
-		}
+		// foreach ($aSharedFiles as $aSharedFile) {
+		// 	$oSharedItem = self::populateItem($aSharedFile);
+		// 	if ($oSharedItem) {
+		// 		$aResult[] = $oSharedItem;
+		// 	}
+		// }
 
-		return $aResult;
+		// return $aResult;
+
+		return $this->getSharedChildren();
 	}
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])

@@ -18,14 +18,6 @@ use Aurora\System\Api;
  */
 trait DirectoryTrait
 {
-    public function getChildren($sPattern = null)
-	{
-		return array_merge(
-			parent::getChildren($sPattern),
-			$this->getSharedChildren()
-		);
-	}
-
 	public function getSharedChild($name)
 	{
 		$oChild = false;
@@ -44,8 +36,9 @@ trait DirectoryTrait
                 Constants::PRINCIPALS_PREFIX . $this->getUser(), 
                 $name, $sSharePath
             );
-
-			$oChild = Root::populateItem($aSharedFile);
+			if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
+				$oChild = Root::populateItem($aSharedFile);
+			}
 		}
 
 		return $oChild;
@@ -73,16 +66,18 @@ trait DirectoryTrait
 				Constants::PRINCIPALS_PREFIX . $this->getUser(), 
 				$sPath
 			);
-			foreach ($aSharedFiles as $aSharedFile) {
-				$oChild = Root::populateItem($aSharedFile);
-				if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
-					$aChildren[] = $oChild;
-				} else {
-					$oPdo->deleteShare(
-                        Constants::PRINCIPALS_PREFIX . $this->getUser(), 
-                        $aSharedFile['uid'], 
-                        $sPath
-                    );
+			foreach ($aSharedFiles as $key => $aSharedFile) {
+				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
+					$oChild = Root::populateItem($aSharedFile);
+					if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
+						$aChildren[] = $oChild;
+					} else {
+						$oPdo->deleteShare(
+							Constants::PRINCIPALS_PREFIX . $this->getUser(), 
+							$aSharedFile['uid'], 
+							$sPath
+						);
+					}
 				}
 			}
 		}

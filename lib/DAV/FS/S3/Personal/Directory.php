@@ -39,4 +39,12 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 
 		return $mResult;
 	}
+
+	public function getChildren($sPattern = null)
+	{
+		return array_merge(
+			parent::getChildren($sPattern),
+			$this->getSharedChildren()
+		);
+	}
 }

@@ -80,5 +80,13 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		} else {
 			return [0, 0];
 		}
-	}	
+	}
+
+	public function getChildren($sPattern = null)
+	{
+		return array_merge(
+			parent::getChildren($sPattern),
+			$this->getSharedChildren()
+		);
+	}
 }
