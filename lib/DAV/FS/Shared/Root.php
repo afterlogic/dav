@@ -150,21 +150,6 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 	public function getChildren()
 	{
-		// $aResult = [];
-
-		// $aSharedFiles = $this->pdo->getSharedFilesForUser(
-		// 	Constants::PRINCIPALS_PREFIX . $this->getUser()
-		// );
-
-		// foreach ($aSharedFiles as $aSharedFile) {
-		// 	$oSharedItem = self::populateItem($aSharedFile);
-		// 	if ($oSharedItem) {
-		// 		$aResult[] = $oSharedItem;
-		// 	}
-		// }
-
-		// return $aResult;
-
 		return $this->getSharedChildren();
 	}
 

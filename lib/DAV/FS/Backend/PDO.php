@@ -201,7 +201,7 @@ SQL
     /* @param string $uid
      * @return array
      */
-    public function getSharedFileByUidWithPath($principalUri, $uid, $sharePath = '') {
+    public function getSharedFileByUidWithPath($principalUri, $uid, $sharePath = '', $bWithoutGroup = false) {
 
 		$aResult = false;
 
@@ -218,9 +218,12 @@ SQL
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
+
+		$sWithoutGroup = $bWithoutGroup ? 'AND group_id = 0' : '';
+
         $stmt = $this->pdo->prepare(<<<SQL
 SELECT $fields FROM {$this->sharedFilesTableName}
-WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ? AND share_path = ?
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ? AND share_path = ? {$sWithoutGroup}
 SQL
         );
 
@@ -246,7 +249,7 @@ SQL
 		return $aResult;
 	}
 
-	    /* @param string $principalUri
+	/* @param string $principalUri
     /* @param string $uid
      * @return array
      */
@@ -275,9 +278,7 @@ SQL
 
 		$stmt->execute([$principalUri, $uid]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-		if ($row)
-		{
+		if ($row) {
 			$aResult = [
 				'id' => $row['id'],
 				'uid' => $row['uid'],
@@ -290,6 +291,55 @@ SQL
 				'share_path' => $row['share_path'],
 				'group_id' => $row['group_id'],
 			];
+		}
+
+		return $aResult;
+	}
+
+		/* @param string $principalUri
+    /* @param string $uid
+     * @return array
+     */
+    public function getSharedFilesByUid($principalUri, $uid) {
+
+		$aResult = [];
+
+		$fields[] = 'id';
+        $fields[] = 'owner';
+        $fields[] = 'principaluri';
+        $fields[] = 'storage';
+        $fields[] = 'path';
+        $fields[] = 'uid';
+        $fields[] = 'access';
+        $fields[] = 'isdir';
+		$fields[] = 'share_path';
+		$fields[] = 'group_id';
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT $fields FROM {$this->sharedFilesTableName}
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ?
+SQL
+        );
+
+		$stmt->execute([$principalUri, $uid]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		foreach ($rows as $row) {
+			if ($row) {
+				$aResult[] = [
+					'id' => $row['id'],
+					'uid' => $row['uid'],
+					'owner' => $row['owner'],
+					'principaluri' => $row['principaluri'],
+					'storage' => $row['storage'],
+					'path' => $row['path'],
+					'access' => (int) $row['access'],
+					'isdir' => (bool) $row['isdir'],
+					'share_path' => $row['share_path'],
+					'group_id' => $row['group_id'],
+				];
+			}
 		}
 
 		return $aResult;
@@ -445,10 +495,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path)
+	public function deleteSharedFileByPrincipalUri($principaluri, $storage, $path, $group_id = 0)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ?');
-        return $stmt->execute([$principaluri, $storage, $path]);
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
+        return $stmt->execute([$principaluri, $storage, $path, $group_id]);
 	}
 
 	/**

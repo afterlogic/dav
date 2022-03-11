@@ -9,6 +9,7 @@ namespace Afterlogic\DAV\FS\Shared;
 
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\FS\Backend\PDO;
+use Aurora\Modules\SharedFiles\Enums\Access;
 use Aurora\System\Api;
 
 /**
@@ -32,16 +33,49 @@ trait DirectoryTrait
 			} else if (!empty($this->getName()) && !$this->isRoot()) {
 				$sSharePath = '/' . $this->getName();
 			}
-			$aSharedFile = $oPdo->getSharedFileByUid(
+			$aSharedFiles = $oPdo->getSharedFilesByUid(
                 Constants::PRINCIPALS_PREFIX . $this->getUser(), 
                 $name, $sSharePath
             );
-			if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
-				$oChild = Root::populateItem($aSharedFile);
+
+			foreach ($aSharedFiles as $aSharedFile) {
+				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
+
+					if ($oChild) {
+						$sPath = '/' . ltrim($oChild->getRelativePath() . '/' . $oChild->getName(), '/');
+						if ($aSharedFile['path'] === $sPath) {
+
+							$this->populateAccess($oChild, $aSharedFile);
+						}
+					} else {
+						$oChild = Root::populateItem($aSharedFile);
+					}
+				}
 			}
 		}
 
 		return $oChild;
+	}
+
+	protected function populateAccess(&$oChild, $aSharedFile) 
+	{
+
+		// NoAccess = 0;
+		// Write	 = 1;
+		// Read   = 2;
+		// Reshare = 3;
+
+		$iAccess = $oChild->getAccess();
+		if ($aSharedFile['access'] !== Access::Read) {
+
+			if ($iAccess < $aSharedFile['access'] ) {
+				
+				$oChild->setAccess($aSharedFile['access']);
+			}
+		} elseif ($iAccess !== Access::Write || $iAccess !== Access::Reshare) {
+				
+			$oChild->setAccess($aSharedFile['access']);
+		}
 	}
 
 	public function getSharedChildren()
@@ -66,8 +100,25 @@ trait DirectoryTrait
 				Constants::PRINCIPALS_PREFIX . $this->getUser(), 
 				$sPath
 			);
-			foreach ($aSharedFiles as $key => $aSharedFile) {
+
+			foreach ($aSharedFiles as $aSharedFile) {
 				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
+					$bContinue= false;
+					foreach ($aChildren as $oChild) {
+						$sPath = '/' . ltrim($oChild->getRelativePath() . '/' . $oChild->getName(), '/');
+						if ($aSharedFile['path'] === $sPath) {
+
+							$this->populateAccess($oChild, $aSharedFile);
+
+							$bContinue = true;
+							break;
+						}
+					}
+
+					if ($bContinue) {
+						continue;
+					}
+
 					$oChild = Root::populateItem($aSharedFile);
 					if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
 						$aChildren[] = $oChild;

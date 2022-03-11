@@ -18,6 +18,8 @@ class Root extends \Sabre\DAV\Collection {
 
 	public static $aStoragesCache = null;
 
+	protected $path;
+
 	public function getName()
 	{
 		return 'files';
