@@ -59,22 +59,27 @@ trait DirectoryTrait
 
 	protected function populateAccess(&$oChild, $aSharedFile) 
 	{
-
 		// NoAccess = 0;
 		// Write	 = 1;
 		// Read   = 2;
 		// Reshare = 3;
 
-		$iAccess = $oChild->getAccess();
-		if ($aSharedFile['access'] !== Access::Read) {
+		if ((int) $aSharedFile['group_id'] === 0) {
+			
+			$oChild->setAccess($aSharedFile['access']);
+		} else {
 
-			if ($iAccess < $aSharedFile['access'] ) {
-				
+			$iAccess = $oChild->getAccess();
+			if ($aSharedFile['access'] !== Access::Read) {
+
+				if ($iAccess < $aSharedFile['access'] ) {
+					
+					$oChild->setAccess($aSharedFile['access']);
+				}
+			} elseif ($iAccess !== Access::Write || $iAccess !== Access::Reshare) {
+					
 				$oChild->setAccess($aSharedFile['access']);
 			}
-		} elseif ($iAccess !== Access::Write || $iAccess !== Access::Reshare) {
-				
-			$oChild->setAccess($aSharedFile['access']);
 		}
 	}
 
