@@ -388,6 +388,48 @@ SQL
 		return $aResult;
 	}
 
+		/* @param string $owner
+	 * @param string $storage
+	 * @param string $path
+     * @return array
+     */
+    public function getSharesByGroupId($groupId) {
+
+		$aResult = [];
+
+		$fields = [
+        	'owner',
+        	'storage',
+        	'path',
+        	'access',
+			'isdir',
+			'group_id'
+		];
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT DISTINCT $fields FROM {$this->sharedFilesTableName}
+WHERE {$this->sharedFilesTableName}.group_id = ?
+SQL
+        );
+
+		$stmt->execute([$groupId]);
+		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+		{
+			$aResult[] = [
+				'owner' => $row['owner'],
+				'storage' => $row['storage'],
+				'access' => (int) $row['access'],
+				'path' => $row['path'],
+				'isdir' => (int) $row['isdir'],
+				'group_id' => (int) $row['group_id'],
+			];
+		}
+
+		return $aResult;
+	}
+
 	/**
 	 *
 	 * @param string $owner
@@ -535,5 +577,18 @@ SQL
 	{
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND uid = ? AND group_id in (?)');
         return $stmt->execute([$principaluri, $storage, $uid, implode(',', $groupIds)]);
+	}
+
+		/**
+	 *
+	 * @param string $owner
+	 * @param string $path
+	 * @param array $groupIds
+	 * @return bool
+	 */
+	public function deleteShareByPrincipaluriAndGroupId($principaluri, $groupId)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE principaluri = ? group_id = ?');
+        return $stmt->execute([$principaluri, $groupId]);
 	}
 }
