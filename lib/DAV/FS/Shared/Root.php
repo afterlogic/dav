@@ -9,6 +9,7 @@ namespace Afterlogic\DAV\FS\Shared;
 
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
+use Aurora\Modules\SharedFiles\Enums\Access;
 use LogicException;
 
 use function Sabre\Uri\split;
@@ -115,6 +116,32 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 		return $bHasHistory;
 	}
 
+	protected function populateAccess(&$oChild, $aSharedFile) 
+	{
+		// NoAccess = 0;
+		// Write	 = 1;
+		// Read   = 2;
+		// Reshare = 3;
+
+		if ((int) $aSharedFile['group_id'] === 0) {
+			
+			$oChild->setAccess($aSharedFile['access']);
+		} else {
+
+			$iAccess = $oChild->getAccess();
+			if ($aSharedFile['access'] !== Access::Read) {
+
+				if ($iAccess < $aSharedFile['access'] ) {
+					
+					$oChild->setAccess($aSharedFile['access']);
+				}
+			} elseif ($iAccess !== Access::Write || $iAccess !== Access::Reshare) {
+					
+				$oChild->setAccess($aSharedFile['access']);
+			}
+		}
+	}
+
 	public function getChild($name)
 	{
 		$oChild = false;
@@ -127,21 +154,42 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
 			$new_name
 		);
-		
-		if (is_array($aSharedFile)) {
-			if (self::hasHistoryDirectory($name)) {
-				$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
-				$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
-			}
 
-			$oChild = self::populateItem($aSharedFile);
-		} else {
-			$aSharedFile = $this->pdo->getSharedFileBySharePath(
-				Constants::PRINCIPALS_PREFIX . Server::getUser(), 
-				'/' . trim($name, '/')
-			);
-			if ($aSharedFile) {
-				$oChild = Server::getNodeForPath('files/personal/' . trim($name, '/'));
+
+
+		$aSharedFiles = $this->pdo->getSharedFilesByUid(
+			Constants::PRINCIPALS_PREFIX . $this->getUser(), 
+			$new_name
+		);
+
+		foreach ($aSharedFiles as $aSharedFile) {
+			if (is_array($aSharedFile)) {
+				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
+
+					if (self::hasHistoryDirectory($name)) {
+						$aSharedFile['path'] = $aSharedFile['path'] . '.hist';
+						$aSharedFile['uid'] = $aSharedFile['uid'] . '.hist';
+					}
+
+					if ($oChild) {
+						$sPath = '/' . ltrim($oChild->getRelativePath() . '/' . $oChild->getName(), '/');
+						if ($aSharedFile['path'] === $sPath) {
+
+							$this->populateAccess($oChild, $aSharedFile);
+						}
+					} else {
+						$oChild = Root::populateItem($aSharedFile);
+					}
+				}
+			}
+			else {
+				$aSharedFile = $this->pdo->getSharedFileBySharePath(
+					Constants::PRINCIPALS_PREFIX . Server::getUser(), 
+					'/' . trim($name, '/')
+				);
+				if ($aSharedFile) {
+					$oChild = Server::getNodeForPath('files/personal/' . trim($name, '/'));
+				}
 			}
 		}
 
