@@ -388,7 +388,7 @@ SQL
 		return $aResult;
 	}
 
-		/* @param string $owner
+	/* @param string $owner
 	 * @param string $storage
 	 * @param string $path
      * @return array
@@ -415,6 +415,47 @@ SQL
         );
 
 		$stmt->execute([$groupId]);
+		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+		{
+			$aResult[] = [
+				'owner' => $row['owner'],
+				'storage' => $row['storage'],
+				'access' => (int) $row['access'],
+				'path' => $row['path'],
+				'isdir' => (int) $row['isdir'],
+				'group_id' => (int) $row['group_id'],
+			];
+		}
+
+		return $aResult;
+	}
+
+	public function getSharesByGroupIds($principalUri, $groupIds, $withPrincipal = true) {
+
+		$aResult = [];
+
+		$fields = [
+        	'owner',
+        	'storage',
+        	'path',
+        	'access',
+			'isdir',
+			'group_id',
+		];
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+
+		$condition = $withPrincipal ? '=' : '!=';
+		$sGroupIds = implode(', ', $groupIds);
+
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT DISTINCT $fields FROM {$this->sharedFilesTableName} 
+WHERE {$this->sharedFilesTableName}.group_id in ($sGroupIds) AND {$this->sharedFilesTableName}.principaluri $condition ?
+SQL
+        );
+
+		$stmt->execute([$principalUri]);
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			$aResult[] = [
