@@ -629,7 +629,7 @@ SQL
 	 */
 	public function deleteShareByPrincipaluriAndGroupId($principaluri, $groupId)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE principaluri = ? group_id = ?');
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE principaluri = ? AND group_id = ?');
         return $stmt->execute([$principaluri, $groupId]);
 	}
 }
