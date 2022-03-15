@@ -64,21 +64,22 @@ trait DirectoryTrait
 		// Read   = 2;
 		// Reshare = 3;
 
+		$iNewAccess = $aSharedFile['access'];
 		if ((int) $aSharedFile['group_id'] === 0) {
 			
-			$oChild->setAccess($aSharedFile['access']);
+			$oChild->setAccess($iNewAccess);
 		} else {
 
 			$iAccess = $oChild->getAccess();
-			if ($aSharedFile['access'] !== Access::Read) {
+			if ($iNewAccess !== Access::Read) {
 
-				if ($iAccess < $aSharedFile['access'] ) {
+				if ($iAccess < $iNewAccess) {
 					
-					$oChild->setAccess($aSharedFile['access']);
+					$oChild->setAccess($iNewAccess);
 				}
-			} elseif ($iAccess !== Access::Write || $iAccess !== Access::Reshare) {
+			} elseif ($iAccess !== Access::Write && $iAccess !== Access::Reshare) {
 					
-				$oChild->setAccess($aSharedFile['access']);
+				$oChild->setAccess($iNewAccess);
 			}
 		}
 	}
