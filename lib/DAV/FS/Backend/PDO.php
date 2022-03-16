@@ -430,32 +430,18 @@ SQL
 		return $aResult;
 	}
 
-	public function getSharesByGroupIds($principalUri, $groupIds, $withPrincipal = true) {
+	public function getSharesByPrincipalUriAndGroupId($principalUri, $groupId) {
 
 		$aResult = [];
 
-		$fields = [
-        	'owner',
-        	'storage',
-        	'path',
-        	'access',
-			'isdir',
-			'group_id',
-		];
-
-        // Making fields a comma-delimited list
-        $fields = implode(', ', $fields);
-
-		$condition = $withPrincipal ? '=' : '!=';
-		$sGroupIds = implode(', ', $groupIds);
-
         $stmt = $this->pdo->prepare(<<<SQL
-SELECT DISTINCT $fields FROM {$this->sharedFilesTableName} 
-WHERE {$this->sharedFilesTableName}.group_id in ($sGroupIds) AND {$this->sharedFilesTableName}.principaluri $condition ?
+SELECT DISTINCT storage, path, owner, access, isdir, group_id
+FROM au_adav_sharedfiles
+WHERE group_id = ? AND ? NOT IN (SELECT principaluri FROM au_adav_sharedfiles WHERE group_id = ?) 
 SQL
         );
 
-		$stmt->execute([$principalUri]);
+		$stmt->execute([$groupId, $principalUri, $groupId]);
 		while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
 		{
 			$aResult[] = [
@@ -631,5 +617,10 @@ SQL
 	{
         $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE principaluri = ? AND group_id = ?');
         return $stmt->execute([$principaluri, $groupId]);
+	}
+
+	public function deleteShareNotInGroups($principaluri, $groupIds) {
+        $stmt = $this->pdo->prepare('DELETE FROM au_adav_sharedfiles WHERE group_id NOT IN (' . implode(', ', $groupIds) . ') AND principaluri = ? AND group_id > 0');
+        return $stmt->execute([$principaluri]);
 	}
 }
