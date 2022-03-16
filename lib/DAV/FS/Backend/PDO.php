@@ -623,4 +623,10 @@ SQL
         $stmt = $this->pdo->prepare('DELETE FROM au_adav_sharedfiles WHERE group_id NOT IN (' . implode(', ', $groupIds) . ') AND principaluri = ? AND group_id > 0');
         return $stmt->execute([$principaluri]);
 	}
+
+	public function deleteSharesByGroupId($groupId)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id = ?');
+        return $stmt->execute([$groupId]);
+	}
 }
