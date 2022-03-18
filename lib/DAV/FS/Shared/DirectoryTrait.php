@@ -64,16 +64,18 @@ trait DirectoryTrait
 		// Read   = 2;
 		// Reshare = 3;
 
+		$iAccess = $oChild->getAccess();
 		$iNewAccess = $aSharedFile['access'];
-		if ((int) $aSharedFile['group_id'] === 0) {
+		if ((int) $aSharedFile['group_id'] === 0) { //personal sharing
 			
 			$oChild->setAccess($iNewAccess);
-		} else {
+			$oChild->setGroupId(0);
+			
+		} else { // group sharing
 
-			$iAccess = $oChild->getAccess();
 			if ($iNewAccess !== Access::Read) {
 
-				if ($iAccess < $iNewAccess) {
+				if ($iAccess < $iNewAccess || $iNewAccess === Access::NoAccess) {
 					
 					$oChild->setAccess($iNewAccess);
 				}
@@ -127,7 +129,9 @@ trait DirectoryTrait
 
 					$oChild = Root::populateItem($aSharedFile);
 					if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
-						$aChildren[] = $oChild;
+						if ($oChild->getAccess() !== Access::NoAccess) {
+							$aChildren[] = $oChild;
+						}
 					} else {
 						$oPdo->deleteShare(
 							Constants::PRINCIPALS_PREFIX . $this->getUser(), 
@@ -137,6 +141,12 @@ trait DirectoryTrait
 					}
 				}
 			}
+
+			$aChildren = array_filter(array_map(function ($oChild) {
+				if ($oChild->getAccess() !== Access::NoAccess) {
+					return $oChild;
+				}
+			}, $aChildren));
 		}
 
 		return $aChildren;
