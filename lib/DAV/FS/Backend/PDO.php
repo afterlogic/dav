@@ -551,10 +551,10 @@ SQL
 	 * @param string $path
 	 * @return bool
 	 */
-	public function deleteSharedFile($owner, $storage, $path, $group_id = 0)
+	public function deleteSharedFile($owner, $storage, $path)
 	{
-        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path = ? AND group_id =?');
-        return $stmt->execute([$owner, $storage, $path, $group_id]);
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path = ?');
+        return $stmt->execute([$owner, $storage, $path]);
 	}
 
 		/**
