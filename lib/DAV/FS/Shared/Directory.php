@@ -56,7 +56,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     else {
 
                         $oChild->setInherited(true);
-                        $oChild->setAccess($this->getAccess());    
+                        $oChild->setAccess($this->getAccess());
+                        $oChild->setOwnerPublicId($this->node->getUser());   
                     }
                 } else {
 
@@ -83,6 +84,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             foreach ($aChildren as $oChild) {
                 $oResult = false;
                 if ($oChild instanceof \Afterlogic\DAV\FS\File) {
+                    $oChild->setUser($this->getOwnerPublicId());
                     $aExtendedProps = $oChild->getProperty('ExtendedProps');
                     if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
                         $oResult = new File($oChild->getName(), $oChild);
@@ -96,6 +98,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     if ($aSharedFile) {
                         $oResult->setAccess($aSharedFile['access']);    
                     } else {
+                        $oResult->setOwnerPublicId($this->node->getUser());
                         $oResult->setAccess($this->node->getAccess());
                         $oResult->setInherited(true);
                     }

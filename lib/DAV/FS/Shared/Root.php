@@ -76,6 +76,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 			if ($oItem instanceof \Sabre\DAV\FS\Node) {
 
 				$oItem->setAccess((int) $aSharedFile['access']);
+				$oItem->setUser(basename($aSharedFile['owner']));
 			}
 
 			if (!$aSharedFile['isdir']) {
