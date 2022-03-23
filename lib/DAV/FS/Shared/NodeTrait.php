@@ -31,6 +31,8 @@ trait NodeTrait
     protected $isInherited = false;
 
     protected $groupId = null;
+
+    protected $initiator = '';
     
     public function getId()
     {
@@ -187,5 +189,15 @@ trait NodeTrait
     public function setGroupId($groupId)
     {
         $this->groupId = isset($groupId) ? (int) $groupId : 0;
+    }
+
+    public function getInitiator()
+    {
+        return $this->initiator;
+    }
+
+    public function setInitiator($initiator)
+    {
+        $this->initiator = $initiator;
     }
 }

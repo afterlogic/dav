@@ -65,10 +65,13 @@ trait DirectoryTrait
 		// Reshare = 3;
 
 		$iAccess = $oChild->getAccess();
+
+		$sNewInitiator = $aSharedFile['initiator'];
 		$iNewAccess = $aSharedFile['access'];
 		if ((int) $aSharedFile['group_id'] === 0) { //personal sharing
 			
 			$oChild->setAccess($iNewAccess);
+			$oChild->setInitiator($sNewInitiator);
 			$oChild->setGroupId(0);
 			
 		} else { // group sharing
@@ -78,10 +81,12 @@ trait DirectoryTrait
 				if ($iAccess < $iNewAccess || $iNewAccess === Access::NoAccess) {
 					
 					$oChild->setAccess($iNewAccess);
+					$oChild->setInitiator($sNewInitiator);
 				}
 			} elseif ($iAccess !== Access::Write && $iAccess !== Access::Reshare) {
 					
 				$oChild->setAccess($iNewAccess);
+				$oChild->setInitiator($sNewInitiator);
 			}
 		}
 	}

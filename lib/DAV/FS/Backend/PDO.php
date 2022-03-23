@@ -60,6 +60,7 @@ class PDO
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
+		$fields[] = 'initiator';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -93,6 +94,7 @@ SQL
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
 				'group_id' => $row['group_id'],
+				'initiator' => $row['initiator'],
 			];
 		}
 
@@ -117,6 +119,7 @@ SQL
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
+		$fields[] = 'initiator';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -142,6 +145,7 @@ SQL
 				'isdir' => (bool) $row['isdir'],
 				'share_path' => $row['share_path'],
 				'group_id' => $row['group_id'],
+				'initiator' => $row['initiator'],
 			];
 		}
 
@@ -314,6 +318,7 @@ SQL
         $fields[] = 'isdir';
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
+		$fields[] = 'initiator';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -338,6 +343,7 @@ SQL
 					'isdir' => (bool) $row['isdir'],
 					'share_path' => $row['share_path'],
 					'group_id' => $row['group_id'],
+					'initiator' => $row['initiator'],
 				];
 			}
 		}
@@ -435,7 +441,7 @@ SQL
 		$aResult = [];
 
         $stmt = $this->pdo->prepare(<<<SQL
-SELECT DISTINCT storage, path, owner, access, isdir, group_id
+SELECT DISTINCT storage, path, owner, access, isdir, group_id, initiator
 FROM au_adav_sharedfiles
 WHERE group_id = ? AND ? NOT IN (SELECT principaluri FROM au_adav_sharedfiles WHERE group_id = ?) 
 SQL
@@ -451,6 +457,7 @@ SQL
 				'path' => $row['path'],
 				'isdir' => (int) $row['isdir'],
 				'group_id' => (int) $row['group_id'],
+				'initiator' => $row['initiator'],
 			];
 		}
 
@@ -468,7 +475,7 @@ SQL
 	 * @param bool $isdir
 	 * @return int
 	 */
-	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '', $group_id = 0)
+	public function createSharedFile($owner, $storage, $path, $uid, $principalUri, $access, $isdir, $share_path = '', $group_id = 0, $initiator = '')
 	{
 		$values = $fieldNames = [];
         $fieldNames[] = 'owner';
@@ -500,16 +507,22 @@ SQL
 			$values[':group_id'] = $group_id;			
 		}
 
+		$fieldNames[] = 'initiator';
+		$values[':initiator'] = $initiator;
+
 		$stmt = $this->pdo->prepare("INSERT INTO ".$this->sharedFilesTableName." (".implode(', ', $fieldNames).") VALUES (".implode(', ',array_keys($values)).")");
         $stmt->execute($values);
 
         return $this->pdo->lastInsertId();
 	}
 
-	public function updateSharedFile($owner, $storage, $path, $principalUri, $access, $groupId = 0)
+	public function updateSharedFile($owner, $storage, $path, $principalUri, $access, $groupId = 0, $initiator = '')
 	{
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
-		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path, $groupId]);
+		if (!empty($initiator)) {
+			$initiator = ', initiator = ' . $this->pdo->quote($initiator);
+		}
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
+		return  $stmt->execute([$access, $initiator, $owner, $principalUri, $storage, $path, $groupId]);
 	}
 
 	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = 0)

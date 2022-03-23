@@ -51,6 +51,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName());
                     if ($aSharedFile) {
 
+                        $oChild->setInitiator($aSharedFile['initiator']);
                         $oChild->setAccess($aSharedFile['access']);    
                     }
                     else {
@@ -96,7 +97,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName());
                     if ($aSharedFile) {
-                        $oResult->setAccess($aSharedFile['access']);    
+                        $oResult->setAccess($aSharedFile['access']);   
+                        $oResult->setInitiator($aSharedFile['initiator']);
                     } else {
                         $oResult->setOwnerPublicId($this->node->getUser());
                         $oResult->setAccess($this->node->getAccess());
