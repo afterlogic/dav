@@ -138,7 +138,7 @@ class PDO
 	public function deleteReminder($eventId, $user = null)
 	{
 		$userWhere = '';
-		$params = array($eventId);
+		$params = array($this->getEventId($eventId));
 		if (isset($user))
 		{
 			$userWhere = ' AND user = ?';
