@@ -521,8 +521,8 @@ SQL
 		if (!empty($initiator)) {
 			$initiator = ', initiator = ' . $this->pdo->quote($initiator);
 		}
-		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ? ? WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
-		return  $stmt->execute([$access, $initiator, $owner, $principalUri, $storage, $path, $groupId]);
+		$stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET access = ?' . $initiator . ' WHERE owner = ? AND principaluri = ? AND storage = ? AND path = ? AND group_id = ?');
+		return  $stmt->execute([$access, $owner, $principalUri, $storage, $path, $groupId]);
 	}
 
 	public function updateSharedFileName($principalUri, $uid, $name, $share_path = '', $group_id = 0)
