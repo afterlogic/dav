@@ -53,7 +53,7 @@ trait DirectoryTrait
 				}
 			}
 
-			if ($oChild->getAccess() === Access::NoAccess) {
+			if ($oChild && $oChild->getAccess() === Access::NoAccess) {
 				$oChild = false;
 			}
 		}
