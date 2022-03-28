@@ -104,7 +104,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                         $oResult->setAccess($this->node->getAccess());
                         $oResult->setInherited(true);
                     }
-                    $aResult[] = $oResult;
+                    if ($oResult->getAccess() !== Access::NoAccess) {
+                        $aResult[] = $oResult;
+                    }
                 }
             }
         }
