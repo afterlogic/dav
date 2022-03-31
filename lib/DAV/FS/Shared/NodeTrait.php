@@ -33,6 +33,8 @@ trait NodeTrait
     protected $groupId = null;
 
     protected $initiator = '';
+
+    protected $dbProperties = [];
     
     public function getId()
     {
@@ -199,5 +201,15 @@ trait NodeTrait
     public function setInitiator($initiator)
     {
         $this->initiator = $initiator;
+    }
+
+    public function getDbProperties()
+    {
+        return is_array($this->dbProperties) ? $this->dbProperties : [];
+    }
+
+    public function setDbProperties($dbProperties)
+    {
+        $this->dbProperties = $dbProperties;
     }
 }
