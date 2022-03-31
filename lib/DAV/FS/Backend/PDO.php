@@ -61,6 +61,7 @@ class PDO
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
 		$fields[] = 'initiator';
+		$fields[] = 'Properties';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -95,6 +96,7 @@ SQL
 				'share_path' => $row['share_path'],
 				'group_id' => $row['group_id'],
 				'initiator' => $row['initiator'],
+				'properties' => $row['Properties'],
 			];
 		}
 
@@ -120,6 +122,7 @@ SQL
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
 		$fields[] = 'initiator';
+		$fields[] = 'Properties';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -146,6 +149,7 @@ SQL
 				'share_path' => $row['share_path'],
 				'group_id' => $row['group_id'],
 				'initiator' => $row['initiator'],
+				'properties' => $row['Properties'],
 			];
 		}
 
@@ -319,6 +323,7 @@ SQL
 		$fields[] = 'share_path';
 		$fields[] = 'group_id';
 		$fields[] = 'initiator';
+		$fields[] = 'Properties';
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
@@ -344,6 +349,7 @@ SQL
 					'share_path' => $row['share_path'],
 					'group_id' => $row['group_id'],
 					'initiator' => $row['initiator'],
+					'properties' => $row['Properties'],
 				];
 			}
 		}
