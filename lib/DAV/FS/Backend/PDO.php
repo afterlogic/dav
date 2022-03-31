@@ -442,8 +442,8 @@ SQL
 
         $stmt = $this->pdo->prepare(<<<SQL
 SELECT DISTINCT storage, path, owner, access, isdir, group_id, initiator
-FROM au_adav_sharedfiles
-WHERE group_id = ? AND ? NOT IN (SELECT principaluri FROM au_adav_sharedfiles WHERE group_id = ?) 
+FROM {$this->sharedFilesTableName}
+WHERE group_id = ? AND ? NOT IN (SELECT principaluri FROM {$this->sharedFilesTableName} WHERE group_id = ?) 
 SQL
         );
 
@@ -633,7 +633,7 @@ SQL
 	}
 
 	public function deleteShareNotInGroups($principaluri, $groupIds) {
-        $stmt = $this->pdo->prepare('DELETE FROM au_adav_sharedfiles WHERE group_id NOT IN (' . implode(', ', $groupIds) . ') AND principaluri = ? AND group_id > 0');
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id NOT IN (' . implode(', ', $groupIds) . ') AND principaluri = ? AND group_id > 0');
         return $stmt->execute([$principaluri]);
 	}
 
