@@ -101,6 +101,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 				$mResult->setAccess((int) $aSharedFile['access']);
 				$mResult->setGroupId($aSharedFile['group_id']);
 				$mResult->setInitiator($aSharedFile['initiator']);
+				$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
 			}
 		}
 		return $mResult;
@@ -152,12 +153,10 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 		if (isset($pathinfo['extension']) && $pathinfo['extension'] === 'hist') {
 			$new_name = $pathinfo['filename'];
 		}
-		$aSharedFile = $this->pdo->getSharedFileByUid(
-			\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
-			$new_name
-		);
-
-
+		// $aSharedFile = $this->pdo->getSharedFileByUid(
+		// 	\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->UserPublicId, 
+		// 	$new_name
+		// );
 
 		$aSharedFiles = $this->pdo->getSharedFilesByUid(
 			Constants::PRINCIPALS_PREFIX . $this->getUser(), 
