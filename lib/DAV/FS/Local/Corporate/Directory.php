@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\Local\Corporate;
 
+use Afterlogic\DAV\FS\HistoryDirectory;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -23,7 +25,18 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory {
     {
 		$path = $this->checkFileName($name);
 
-		return is_dir($path) ? new self($path) : new File($path);
+		if (is_dir($path)) {
+			$ext = strtolower(substr($name, -5));
+			if ($ext === '.hist') {
+				$result = new HistoryDirectory($this->getStorage(), $path);
+			} else {
+				$result = new self($path);
+			}
+		} else {
+			$result = new File($path);
+		}
+
+		return $result;
 	}		
 	
     function getQuotaInfo() { }	
