@@ -17,9 +17,4 @@ namespace Afterlogic\DAV\CalDAV;
 class Calendar extends \Sabre\CalDAV\Calendar {
 
     use CalendarTrait;
-
-    public function getProperties($requestedProperties)
-    {
-        return $this->_getProperties($this->calendarInfo, $requestedProperties);
-    }
 }

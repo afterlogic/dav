@@ -102,6 +102,29 @@ class PDO
 		return $cache;
 	}
 
+	public function getRemindersForCalendar($user, $calendaruri)
+	{
+		$result = [];
+        $stmt = $this->pdo->prepare('SELECT id, user, calendaruri, eventid, time, starttime, allday'
+				. ' FROM '.$this->table.' WHERE user = ? and calendaruri = ?');
+
+        $stmt->execute([$user, $calendaruri]);
+
+        while($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+		{
+            $result[] = array(
+                'id' => $row['id'],
+                'user' => $row['user'],
+                'calendaruri' => $row['calendaruri'],
+                'eventid' => $row['eventid'],
+                'time' => $row['time'],
+                'starttime' => $row['starttime'],
+				'allday' => $row['allday']
+				);
+		}
+		return $result;
+	}
+
 	public function addReminder($user, $calendarUri, $eventId, $time = null, $starttime = null, $allday = false)
 	{
 		$values = $fieldNames = array();
@@ -182,12 +205,31 @@ class PDO
 
 	public function updateReminder($uri, $data, $user)
 	{
-		$oApiCalendarDecorator =  \Aurora\System\Api::GetModuleDecorator('calendar');
+		$oCalendarModule =  \Aurora\System\Api::GetModule('Calendar');
 		if (self::isCalendar($uri) && self::isEvent($uri))
 		{
 			$calendarUri = trim($this->getCalendarUri($uri), '/');
 			$eventId = $this->getEventId($uri);
-			$this->deleteReminder($eventId, $user);
+			$oUser = \Afterlogic\DAV\Utils::GetUserByPublicId($user);
+
+			$aUsers = [];
+			$oCalendar = $oCalendarModule->getManager()->getCalendar($user, basename($calendarUri));
+			if ($oCalendar) {
+
+				$aCalendars = \Afterlogic\DAV\Backend::Caldav()->getCalendarInstances($oCalendar->IntId);
+
+				foreach ($aCalendars as $aCalendar) {
+					$aUsers[] = [
+						basename($aCalendar['principaluri']),
+						$aCalendar['uri']
+					];
+				}
+			}
+
+			foreach($aUsers as $aUser) {
+				$this->deleteReminder($eventId, $aUser[0]);
+			}
+
 			$data = str_replace('VTODO', 'VEVENT', $data);
 			$vCal = \Sabre\VObject\Reader::read($data);
 
@@ -197,7 +239,6 @@ class PDO
 			{
 				$iOffset = 0;
 				$iWorkDayStartsOffset = 0;
-				$oUser = \Afterlogic\DAV\Utils::GetUserByPublicId($user);
 				$oBaseEvent = $aBaseEvents[0];
 				$oNowDT = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
@@ -220,7 +261,6 @@ class PDO
 					//NextRepeat
 					if (isset($oBaseEvent->RRULE))
 					{
-						$oCalendar = ($oUser instanceof \Aurora\Modules\Core\Models\User) ? $oApiCalendarDecorator->getCalendar($user, $calendarUri) : false;
 						$oEndDT = \Aurora\Modules\Calendar\Classes\Helper::getRRuleIteratorNextRepeat($oNowDT, $oBaseEvent);
 						$aEvents = null;
 						if ($oCalendar && $user && $oEndDT)
@@ -273,11 +313,12 @@ class PDO
 					if ($iReminderTime !== false)
 					{
 						$iStartTS = $oStartDT->getTimestamp();
-						$this->addReminder($user, $calendarUri, $eventId, $iReminderTime - $iOffset, $iStartTS - $iOffset, $bAllDay);
+
+						foreach ($aUsers as $aUser) {
+							$this->addReminder($aUser[0], $aUser[1], $eventId, $iReminderTime - $iOffset, $iStartTS - $iOffset, $bAllDay);
+						}
 					}
-
 				}
-
 			}
 		}
 	}

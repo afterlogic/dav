@@ -57,7 +57,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		return $oCorporateCalendar && $oCorporateCalendar->getConfig('AllowShare');
 	}
 
-	protected function initCalendar($calendar/*, &$bHasDefault*/)
+	protected function initCalendar($calendar)
 	{
 		$oCalendar = null;
 
@@ -73,16 +73,53 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		return $oCalendar;
 	}
 
+	/**
+     * Returns a single calendar, by name
+     *
+     * @param string $name
+     * @return Calendar
+     */
+	protected function _getChild($name)
+	{
+        // Special nodes
+        if ($name === 'inbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
+            return new \Sabre\CalDAV\Schedule\Inbox($this->caldavBackend, $this->principalInfo['uri']);
+        }
+        if ($name === 'outbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
+            return new \Sabre\CalDAV\Schedule\Outbox($this->principalInfo['uri']);
+        }
+        if ($name === 'notifications' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport) {
+            return new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
+        }
+
+        // Calendars
+        foreach ($this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']) as $calendar) {
+			if ($calendar['uri'] === $name) {
+				return $this->initCalendar($calendar);
+			}
+        }
+
+        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) {
+            foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) {
+                if ($subscription['uri'] === $name) {
+                    return new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
+                }
+            }
+
+        }
+
+        throw new \Sabre\DAV\Exception\NotFound('Node with name \'' . $name . '\' could not be found');
+
+    }
+
 	protected function _getChildren()
 	{
 		$aChildren = [];
 		$calendars = $this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']);
-		$bHasDefault = false;
 		foreach ($calendars as $calendar)
 		{
-			$aChildren[] = $this->initCalendar($calendar, $bHasDefault);
+			$aChildren[] = $this->initCalendar($calendar);
 		}
-
 
 		$bCountOwnCalendars = 0;
 		foreach ($aChildren as $oCalendar)
@@ -247,7 +284,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		$oChild = false;
 		try
 		{
-			$oChild = parent::getChild($name);
+			$oChild = $this->_getChild($name);
 		}
 		catch (\Sabre\DAV\Exception\NotFound $oEx)
 		{

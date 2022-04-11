@@ -18,8 +18,78 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar {
 
     use \Afterlogic\DAV\CalDAV\CalendarTrait;
 
-    public function isOwned()
-    {
+    protected function updateReminders($principaluri, $calendarid, $currentInvites, array $sharees) {
+
+        $calendarInstances = $this->caldavBackend->getCalendarInstances($calendarid[0]);
+        $userCalendars = [];
+        foreach ($calendarInstances as $calendar) {
+            $userCalendars[basename($calendar['principaluri'])] = $calendar['uri'];
+        }
+        $reminders = \Afterlogic\DAV\Backend::Reminders()->getRemindersForCalendar(basename($principaluri), $this->getName());
+        if (is_array($reminders) && count($reminders) > 0) {
+
+            foreach ($sharees as $sharee) {
+
+                if ($sharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS) {
+                    if ($sharee->principal !== $principaluri) {
+                        foreach ($reminders as $reminder) {
+                            \Afterlogic\DAV\Backend::Reminders()->deleteReminder(
+                                $reminder['eventid'], 
+                                basename($sharee->principaluri)
+                            );
+                        }
+                    }
+                    continue;
+                }
+
+                foreach ($currentInvites as $oldSharee) {
+
+                    if ($oldSharee->href === $sharee->href) {
+                        continue 2;
+                    }
+
+                }
+
+                foreach ($reminders as $reminder) {
+
+                    $userPrincipal = basename($sharee->principal);
+                    if (isset($userCalendars[$userPrincipal]))
+                    {
+                        \Afterlogic\DAV\Backend::Reminders()->addReminder(
+                            $userPrincipal, 
+                            $userCalendars[$userPrincipal], 
+                            $reminder['eventid'], 
+                            $reminder['time'],
+                            $reminder['starttime'],
+                            $reminder['allday']
+                        );
+                    }
+                }
+            }
+        }
+    }
+    
+    public function isOwned() {
         return $this->getShareAccess() === \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER;
+    }
+
+    /**
+     * Updates the list of sharees.
+     *
+     * Every item must be a Sharee object.
+     *
+     * @param \Sabre\DAV\Xml\Element\Sharee[] $sharees
+     * @return void
+     */
+    function updateInvites(array $sharees) {
+        
+        $currentInvites = [];
+        $props = $this->getProperties(['id', 'principaluri']);
+        $currentInvites = $this->caldavBackend->getInvites($props['id']);
+
+        parent::updateInvites($sharees);
+        
+        $this->updateReminders($props['principaluri'], $props['id'], $currentInvites, $sharees);
+
     }
 }

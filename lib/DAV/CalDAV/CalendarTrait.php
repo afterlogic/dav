@@ -32,4 +32,9 @@ trait CalendarTrait
     {
         return (\substr($this->getName(), 0, \strlen(\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID)) === \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID);
     }
+
+    public function getProperties($requestedProperties)
+    {
+        return $this->_getProperties($this->calendarInfo, $requestedProperties);
+    }
 }

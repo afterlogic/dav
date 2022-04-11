@@ -361,4 +361,75 @@ SQL
 	 */
 	public function deleteNotification($sPrincipalUri, \Sabre\CalDAV\Xml\Notification\NotificationInterface $oNotification){ }
 
+	/**
+	 * Returns a list of calendar instances for calendar.
+	 *
+	 *
+	 * @param string $calendarId
+	 * @return array
+	 */	
+	public function getCalendarInstances($calendarId) 
+	{
+        $fields = array_values($this->propertyMap);
+        $fields[] = 'calendarid';
+        $fields[] = 'uri';
+        $fields[] = 'synctoken';
+        $fields[] = 'components';
+        $fields[] = 'principaluri';
+        $fields[] = 'transparent';
+        $fields[] = 'access';
+
+        // Making fields a comma-delimited list
+        $fields = implode(', ', $fields);
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT {$this->calendarInstancesTableName}.id as id, $fields FROM {$this->calendarInstancesTableName}
+    LEFT JOIN {$this->calendarTableName} ON
+        {$this->calendarInstancesTableName}.calendarid = {$this->calendarTableName}.id
+WHERE calendarid = ? ORDER BY calendarorder ASC
+SQL
+        );
+        $stmt->execute([$calendarId]);
+
+        $calendars = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+            $components = [];
+            if ($row['components']) {
+                $components = explode(',', $row['components']);
+            }
+
+            $calendar = [
+                'id'                                                                 => [(int)$row['calendarid'], (int)$row['id']],
+                'uri'                                                                => $row['uri'],
+                'principaluri'                                                       => $row['principaluri'],
+                '{' . \Sabre\CalDAV\Plugin::NS_CALENDARSERVER . '}getctag'                  => 'http://sabre.io/ns/sync/' . ($row['synctoken'] ? $row['synctoken'] : '0'),
+                '{http://sabredav.org/ns}sync-token'                                 => $row['synctoken'] ? $row['synctoken'] : '0',
+                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}supported-calendar-component-set' => new \Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet($components),
+                '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}schedule-calendar-transp'         => new \Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp($row['transparent'] ? 'transparent' : 'opaque'),
+                'share-resource-uri'                                                 => '/ns/share/' . $row['calendarid'],
+            ];
+
+            $calendar['share-access'] = (int)$row['access'];
+            // 1 = owner, 2 = readonly, 3 = readwrite
+            if ($row['access'] > 1) {
+                // We need to find more information about the original owner.
+                //$stmt2 = $this->pdo->prepare('SELECT principaluri FROM ' . $this->calendarInstancesTableName . ' WHERE access = 1 AND id = ?');
+                //$stmt2->execute([$row['id']]);
+
+                // read-only is for backwards compatbility. Might go away in
+                // the future.
+                $calendar['read-only'] = (int)$row['access'] === \Sabre\DAV\Sharing\Plugin::ACCESS_READ;
+            }
+
+            foreach ($this->propertyMap as $xmlName => $dbName) {
+                $calendar[$xmlName] = $row[$dbName];
+            }
+
+            $calendars[] = $calendar;
+
+        }
+
+        return $calendars;
+
+	}
 }
