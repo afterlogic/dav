@@ -215,27 +215,4 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 		}
 	}
 
-	/**
-     * Returns the last modification time, as a unix timestamp
-     *
-     * @return int
-     */
-    function getLastModified()
-    {
-        return 0;
-    }
-
-    /**
-     * Returns available diskspace information.
-     *
-     * @return array
-     */
-    public function getQuotaInfo()
-    {
-        return [
-            0,
-            0,
-        ];
-    }
-
 }

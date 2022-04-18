@@ -39,5 +39,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory {
 		return $result;
 	}		
 	
-    function getQuotaInfo() { }	
+    function getQuotaInfo() { 
+		return [0, 0];
+	}	
 }
