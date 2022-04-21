@@ -5,7 +5,7 @@
  * For full statements of the licenses see LICENSE-AFTERLOGIC and LICENSE-AGPL3 files.
  */
 
-namespace Afterlogic\DAV\CardDAV\Shared;
+namespace Afterlogic\DAV\CardDAV\SharedWithAll;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -30,25 +30,14 @@ class Card extends \Sabre\CardDAV\Card {
 
     }
 
-    public function getACL() {
-
-        $acl = [
+    public function getACL()
+    {
+        return [
             [
-                'privilege' => '{DAV:}read',
+                'privilege' => '{DAV:}all',
                 'principal' => $this->principalUri,
                 'protected' => true,
             ],
         ];
-
-        if (isset($this->addressBookInfo['access']) && $this->addressBookInfo['access'] == 2 || !isset($this->addressBookInfo['access'])) {
-            $acl[] = [
-                'privilege' => '{DAV:}write',
-                'principal' => $this->principalUri,
-                'protected' => true,
-            ];
-        }
-
-        return $acl;
-
     }
  }

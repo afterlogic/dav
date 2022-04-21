@@ -88,7 +88,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
     }
 
-    public function getSharedAddressBook($sPrincipalUri)
+    public function getSharedWithAllAddressBook($sPrincipalUri)
 	{
 		$sTenantPrincipal = $this->getTenantPrincipal(basename($sPrincipalUri));
 
@@ -135,6 +135,31 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
         }
         return $result;
 
+    }
+
+    public function getSharedAddressBooks($principalUri)
+	{
+        $stmt = $this->pdo->prepare('SELECT ab.id, sab.addressbookuri as uri, ab.displayname, ab.principaluri, ab.description, ab.synctoken, sab.access
+        FROM au_adav_addressbooks as ab, au_adav_shared_addressbooks as sab
+        WHERE ab.id = sab.addressbook_id AND sab.principaluri = ?');
+        $stmt->execute([$principalUri]);
+
+        $addressBooks = [];
+
+        foreach ($stmt->fetchAll() as $row) {
+            $addressBooks[] = [
+                'id' => $row['id'],
+                'uri' => $row['uri'],
+                'principaluri' => $row['principaluri'],
+                '{DAV:}displayname' => $row['displayname'] . ' (' . basename($row['principaluri']) . ')',
+                '{'.\Sabre\CardDAV\Plugin::NS_CARDDAV.'}addressbook-description' => $row['description'],
+                '{http://calendarserver.org/ns/}getctag' => $row['synctoken'],
+                '{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
+                'access' => $row['access'],
+            ];
+        }
+
+        return $addressBooks;
     }
 
 }

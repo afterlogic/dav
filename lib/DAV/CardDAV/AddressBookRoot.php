@@ -119,12 +119,21 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome {
 		$SharedContactsModule = \Aurora\System\Api::GetModule('SharedContacts');
 		if ($SharedContactsModule && !$SharedContactsModule->getConfig('Disabled', true)) {
 
-			$sharedAddressbook = $this->carddavBackend->getSharedAddressBook($this->principalUri);
-			$objs[] = new Shared\AddressBook(
+			$sharedWithAllAddressbook = $this->carddavBackend->getSharedWithAllAddressBook($this->principalUri);
+			$objs[] = new SharedWithAll\AddressBook(
 					$this->carddavBackend,
-					$sharedAddressbook,
+					$sharedWithAllAddressbook,
 					$this->principalUri
 			);
+
+			$sharedAddressbooks = $this->carddavBackend->getSharedAddressBooks($this->principalUri);
+			foreach ($sharedAddressbooks as $sharedAddressbook) {
+				$objs[] = new Shared\AddressBook(
+						$this->carddavBackend,
+						$sharedAddressbook,
+						$this->principalUri
+				);
+			}
 		}
         return $objs;
 
