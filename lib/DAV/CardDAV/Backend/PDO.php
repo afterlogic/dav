@@ -139,7 +139,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
     public function getSharedAddressBooks($principalUri)
 	{
-        $stmt = $this->pdo->prepare('SELECT ab.id, sab.addressbookuri as uri, ab.displayname, ab.principaluri, ab.description, ab.synctoken, sab.access
+        $stmt = $this->pdo->prepare('SELECT ab.id, sab.addressbookuri as uri, ab.displayname, ab.principaluri, ab.description, ab.synctoken, sab.access, sab.group_id
         FROM au_adav_addressbooks as ab, au_adav_shared_addressbooks as sab
         WHERE ab.id = sab.addressbook_id AND sab.principaluri = ?');
         $stmt->execute([$principalUri]);
@@ -156,6 +156,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
                 '{http://calendarserver.org/ns/}getctag' => $row['synctoken'],
                 '{http://sabredav.org/ns}sync-token' => $row['synctoken'] ? $row['synctoken'] : '0',
                 'access' => $row['access'],
+                'group_id' => $row['group_id']
             ];
         }
 

@@ -32,20 +32,24 @@ class Card extends \Sabre\CardDAV\Card {
 
     public function getACL() {
 
-        $acl = [
-            [
-                'privilege' => '{DAV:}read',
-                'principal' => $this->principalUri,
-                'protected' => true,
-            ],
-        ];
-
-        if (isset($this->addressBookInfo['access']) && $this->addressBookInfo['access'] == 2 || !isset($this->addressBookInfo['access'])) {
-            $acl[] = [
-                'privilege' => '{DAV:}write',
-                'principal' => $this->principalUri,
-                'protected' => true,
+        if ($this->addressBookInfo['access'] == Access::NoAccess) {
+            $acl = [];
+        } else {
+            $acl = [
+                [
+                    'privilege' => '{DAV:}read',
+                    'principal' => $this->principalUri,
+                    'protected' => true,
+                ],
             ];
+
+            if (isset($this->addressBookInfo['access']) && $this->addressBookInfo['access'] == 2 || !isset($this->addressBookInfo['access'])) {
+                $acl[] = [
+                    'privilege' => '{DAV:}write',
+                    'principal' => $this->principalUri,
+                    'protected' => true,
+                ];
+            }
         }
 
         return $acl;

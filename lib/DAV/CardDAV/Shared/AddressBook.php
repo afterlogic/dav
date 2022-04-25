@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CardDAV\Shared;
 
+use Aurora\Modules\Contacts\Enums\Access;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -28,23 +30,35 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
 
     function getACL() {
 
-        $acl = [
-            [
-                'privilege' => '{DAV:}read',
-                'principal' => $this->principalUri,
-                'protected' => true,
-            ],
-        ];
-
-        if ($this->addressBookInfo['access'] == 2) {
-            $acl[] = [
-                'privilege' => '{DAV:}write',
-                'principal' => $this->principalUri,
-                'protected' => true,
+        if ($this->addressBookInfo['access'] == Access::NoAccess) {
+            $acl = [];
+        } else {
+            $acl = [
+                [
+                    'privilege' => '{DAV:}read',
+                    'principal' => $this->principalUri,
+                    'protected' => true,
+                ],
             ];
+
+            if ($this->addressBookInfo['access'] == Access::Write) {
+                $acl[] = [
+                    'privilege' => '{DAV:}write',
+                    'principal' => $this->principalUri,
+                    'protected' => true,
+                ];
+            }
         }
 
         return $acl;
 
+    }
+
+    public function getAccess() {
+        return $this->addressBookInfo['access'];
+    }
+
+    public function setAccess($access) {
+        $this->addressBookInfo['access'] = $access;
     }
 }

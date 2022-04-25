@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
+use Aurora\Modules\Contacts\Enums\Access;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -128,14 +130,42 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome {
 
 			$sharedAddressbooks = $this->carddavBackend->getSharedAddressBooks($this->principalUri);
 			foreach ($sharedAddressbooks as $sharedAddressbook) {
-				$objs[] = new Shared\AddressBook(
-						$this->carddavBackend,
-						$sharedAddressbook,
-						$this->principalUri
-				);
+
+				if ($sharedAddressbook['principaluri'] != $this->principalUri) {
+
+					if (count($objs) > 0) {
+						foreach ($objs as $key => $val) {
+							if ($val instanceof Shared\AddressBook) {
+								$props = $val->getProperties(['id', 'access' ,'group_id']);
+								if ($props['id'] === $sharedAddressbook['id']) { // personal sharing
+									if ($sharedAddressbook['group_id'] == 0) {
+										$objs[$key]->setAccess((int) $sharedAddressbook['access']);
+									} else { //group sharing
+										if ($sharedAddressbook['access'] != Access::Read) {
+											if ((int) $props['access'] > (int) $sharedAddressbook['access'] || (int) $sharedAddressbook['access'] === Access::NoAccess) {
+												$objs[$key]->setAccess((int) $sharedAddressbook['access']);
+											}
+										} elseif ($props['access'] != Access::Write) {	
+											$objs[$key]->setAccess((int) $sharedAddressbook['access']);
+										}
+									}
+									continue 2;
+								}
+							}
+						}
+					}
+
+					$objs[] = new Shared\AddressBook(
+							$this->carddavBackend,
+							$sharedAddressbook,
+							$this->principalUri
+					);
+				}
 			}
+			$objs = array_filter($objs, function($obj) {
+				return !($obj instanceof Shared\AddressBook) || ($obj instanceof Shared\AddressBook && $obj->getAccess() != Access::NoAccess);
+			});
 		}
         return $objs;
-
     }
 }
