@@ -58,8 +58,9 @@ class Server extends \Sabre\DAV\Server
 		/* Initializing server */
 		$oTree = new Tree($this->rootNode);
  		parent::__construct($oTree);
-
-		$this->debugExceptions = true;
+ 
+		$oSettings = \Aurora\Api::GetSettings();
+		$this->debugExceptions = $oSettings->GetValue('LogStackTrace', false);
 		self::$exposeVersion = false;
 
 		$this->httpResponse->setHeader("X-Server", Constants::DAV_SERVER_NAME);
@@ -112,7 +113,6 @@ class Server extends \Sabre\DAV\Server
 		/* Locks Plugin */
 //                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
-		$oSettings = \Aurora\Api::GetSettings();
 		if ($oSettings->GetConf('EnableLogging', false))
 		{
 			/* Logs Plugin */
