@@ -228,12 +228,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node)
 	{
 		if ($node instanceof \Afterlogic\DAV\FS\Directory || $node instanceof \Afterlogic\DAV\FS\File) {
-		{
 			$propFind->handle('{DAV:}displayname', function () use ($node) {
 				return $node->getDisplayName();
 			});
 			if ($node instanceof \Afterlogic\DAV\FS\Shared\Directory || $node instanceof \Afterlogic\DAV\FS\Shared\File) {
-			{
 				$propFind->handle('{DAV:}share-path', function () use ($node) {
 					return $node->getSharePath();
 				});
