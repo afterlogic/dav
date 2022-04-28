@@ -93,11 +93,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	public function afterCreateFile($uri, \Sabre\DAV\ICollection $parent)
 	{
-		if (Backend\PDO::isEvent($uri))
-		{
+		if (Backend\PDO::isEvent($uri)) {
 			$node = $parent->getChild(Backend\PDO::getEventUri($uri));
-			if ($node)
-			{
+			if ($node) {
 				$this->updateReminder($uri, $node->get(), \Afterlogic\DAV\Server::getUser());
 			}
 		}
@@ -105,8 +103,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	public function afterWriteContent($uri, \Sabre\DAV\IFile $node)
 	{
-		if (Backend\PDO::isEvent($uri) && $node)
-		{
+		if (Backend\PDO::isEvent($uri) && $node) {
 			$this->updateReminder($uri, $node->get(), \Afterlogic\DAV\Server::getUser());
 		}
 	}

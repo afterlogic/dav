@@ -62,8 +62,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     {
     	\Aurora\System\Api::Log($request->getMethod() . ' ' . $request->getPath(), \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 
-		if ((bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false))
-		{
+		if ((bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false)) {
             \Aurora\System\Api::Log('OUT >>>>>>>>>>>>>>>>>>>>>>', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
             $rRequestBody = $request->getBodyAsStream();
             \rewind($rRequestBody);

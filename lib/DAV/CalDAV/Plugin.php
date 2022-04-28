@@ -38,12 +38,10 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         }
 
         $vobj = \Sabre\VObject\Reader::read($data);
-        if (isset($vobj->VEVENT->ORGANIZER))
-        {
+        if (isset($vobj->VEVENT->ORGANIZER)) {
             $sOrganizer = $vobj->VEVENT->ORGANIZER->getNormalizedValue();
             $iPos = strpos($sOrganizer, 'principals/');
-            if ($iPos !== false)
-            {
+            if ($iPos !== false) {
                 $sOrganizer = 'mailto:' . \trim(substr($sOrganizer, $iPos + 11), '/');
                 $vobj->VEVENT->ORGANIZER->setValue($sOrganizer);
                 $data = $vobj->serialize();

@@ -7,8 +7,6 @@
 
 namespace Afterlogic\DAV\FS;
 
-use function GuzzleHttp\json_encode;
-
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -82,8 +80,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	 */
 	public function getUser()
 	{
-		if (!isset($this->sUserPublicId))
-		{
+		if (!isset($this->sUserPublicId)) {
 			$this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
 		}
 		return $this->sUserPublicId;
@@ -129,8 +126,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		$sUser = $oServer->getUser();
 		$oServer->setUser($sUserPublicId);
 		$oNode = $oServer->tree->getNodeForPath('files/'. $sStorage);
-		if ($oNode)
-		{
+		if ($oNode) {
 			$sPath = $oNode->getPath();
 		}
 		$oServer->setUser($sUser);
@@ -158,11 +154,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
 
 		$oNode = $this->getNodeFromPath($sFilePath);
-		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
-		{
+		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node) {
 			$sUserPublicId = $this->getUser();
-			if ($sUserPublicId)
-			{
+			if ($sUserPublicId) {
 				$sType = $oNode->getStorage();
 
 				$this->sNewPath = $path;
@@ -182,12 +176,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 		list($sFilePath, $sFileName) = \Sabre\Uri\split($path);
 
 		$oNode = $this->getNodeFromPath($sFilePath);
-		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node)
-		{
+		if (isset($oNode) && $oNode instanceof \Sabre\DAV\FS\Node) {
 			$sUserPublicId = $this->getUser();
 
-			if ($sUserPublicId)
-			{
+			if ($sUserPublicId) {
  				$sType = $oNode->getStorage();
 
 				$oMin = $this->getMinModule();
@@ -195,8 +187,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 				$this->sOldID = implode('|', [$sUserPublicId, $sType, $sFilePath, $sFileName]);
 				$aData = $oMin->getMinByID($this->sOldID);
 
-				if (isset($this->sNewID) && !empty($aData['__hash__']))
-				{
+				if (isset($this->sNewID) && !empty($aData['__hash__'])) {
 					$aNewData = explode('|', $this->sNewID);
 					$aParams = [
 						'Type' => $aNewData[1],
@@ -205,9 +196,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 						'Size' => $aData['Size']
 					];
 					$oMin->updateMinByID($this->sOldID, $aParams, $this->sNewID);
-				}
-				else
-				{
+				} else {
 					$oMin->deleteMinByID($this->sOldID);
 				}
 			}
@@ -238,12 +227,15 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 			}
 		}
 
-		if ($node instanceof \Afterlogic\DAV\FS\File)
-		{
+		if ($node instanceof \Afterlogic\DAV\FS\File) {
 			$mExtendedProps = $node->getProperty('ExtendedProps');
 			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
-			$propFind->handle('{DAV:}extended-props-as-json', \json_encode($aExtendedProps));
-			$propFind->handle('{DAV:}extended-props', $aExtendedProps);
+			$propFind->handle('{DAV:}extended-props-as-json', function () use ($aExtendedProps) {
+				return \json_encode($aExtendedProps);
+			});
+			$propFind->handle('{DAV:}extended-props', function () use ($aExtendedProps) {
+				return $aExtendedProps;
+			});
 		}
 	}
 
@@ -259,15 +251,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	function methodGet($request, $response)
 	{
 		$node = $this->server->tree->getNodeForPath($request->getPath());
-		if ($node instanceof \Afterlogic\DAV\FS\File)
-		{
+		if ($node instanceof File) {
 			$mExtendedProps = $node->getProperty('ExtendedProps');
 			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
 			$aHeaderValues = [];
-			foreach ($aExtendedProps as $key => $value)
-			{
-				if ($key === 'ParanoidKey')
-				{
+			foreach ($aExtendedProps as $key => $value) {
+				if ($key === 'ParanoidKey') {
 					$value = \str_replace("\r\n", '\r\n', \addslashes(\trim($value, '"')));
 				}
 				$aHeaderValues[] = $key . "=" . '"' . $value . '"';
@@ -279,34 +268,23 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	function afterMethodPut($request, $response)
 	{
 		$node = $this->server->tree->getNodeForPath($request->getPath());
-		if ($node instanceof \Afterlogic\DAV\FS\File)
-		{
+		if ($node instanceof File) {
 			$mExtendedProps = $node->getProperty('ExtendedProps');
 			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
 
-			foreach ($request->getHeaders() as $sKey => $aHeader)
-			{
-				if (\strtolower($sKey) === 'extended-props')
-				{
+			foreach ($request->getHeaders() as $sKey => $aHeader) {
+				if (\strtolower($sKey) === 'extended-props') {
 					$aValues = \explode(";", $aHeader[0]);
-					foreach ($aValues as $sValue)
-					{
-						if (!empty($sValue))
-						{
+					foreach ($aValues as $sValue) {
+						if (!empty($sValue)) {
 							list($sKeyValue, $sValue) = \explode("=", \trim($sValue), 2);
 							$sValue = \trim($sValue, '"');
-							if (isset($aExtendedProps[$sKeyValue]) && empty($sValue))
-							{
+							if (isset($aExtendedProps[$sKeyValue]) && empty($sValue)) {
 								unset($aExtendedProps[$sKeyValue]);
-							}
-							else
-							{
-								if ($sKeyValue === 'ParanoidKey')
-								{
+							} else {
+								if ($sKeyValue === 'ParanoidKey') {
 									$aExtendedProps[$sKeyValue] = \stripslashes(\str_replace('\r\n', "\r\n", \trim($sValue, '"')));
-								}
-								else
-								{
+								} else {
 									$aExtendedProps[$sKeyValue] = \trim($sValue, '"');
 								}
 							}

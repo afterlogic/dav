@@ -39,15 +39,11 @@ class Plugin extends \Sabre\CardDAV\Plugin {
      * @return void
      */
     function httpAfterGet(RequestInterface $request, ResponseInterface $response) {
-        try
-        {
+        try {
             parent::httpAfterGet($request, $response);
-        }
-        catch (\Exception $oEx)
-        {
+        } catch (\Exception $oEx) {
             $mBody = $response->getBody();
-            if (is_resource($mBody))
-            {
+            if (is_resource($mBody)) {
                 \rewind($mBody);
             }
         }
