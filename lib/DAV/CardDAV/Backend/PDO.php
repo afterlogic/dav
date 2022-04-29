@@ -139,8 +139,9 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
     public function getSharedAddressBooks($principalUri)
 	{
+        $sDbPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
         $stmt = $this->pdo->prepare('SELECT ab.id, sab.addressbookuri as uri, ab.displayname, ab.principaluri, ab.description, ab.synctoken, sab.access, sab.group_id
-        FROM au_adav_addressbooks as ab, au_adav_shared_addressbooks as sab
+        FROM ' . $sDbPrefix . 'adav_addressbooks as ab, ' . $sDbPrefix . 'adav_shared_addressbooks as sab
         WHERE ab.id = sab.addressbook_id AND sab.principaluri = ?');
         $stmt->execute([$principalUri]);
 
