@@ -214,6 +214,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			{
 				$uploader->upload();
 
+				Root::$childrenCache = [];
 				$oFile = $this->getChild($name);
 				if ($oFile instanceof \Afterlogic\DAV\FS\File)
 				{
