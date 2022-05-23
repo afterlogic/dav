@@ -103,7 +103,7 @@ trait DirectoryTrait
 		if ($SharedFiles && !$SharedFiles->getConfig('Disabled', false)) {
 			$oPdo = new PDO();
 
-			$sPath = '';
+			$sPath = null;
 			$bIsRoot = $this->getRootPath() === $this->getPath();
 			if (!$bIsRoot) {
 				$sPath = $this->getRelativePath();
