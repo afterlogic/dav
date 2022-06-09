@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CardDAV\Shared;
 
+use Aurora\Modules\Contacts\Enums\Access;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -43,7 +45,7 @@ class Card extends \Sabre\CardDAV\Card {
                 ],
             ];
 
-            if (isset($this->addressBookInfo['access']) && $this->addressBookInfo['access'] == 2 || !isset($this->addressBookInfo['access'])) {
+            if (isset($this->addressBookInfo['access']) && $this->addressBookInfo['access'] == Access::Read || !isset($this->addressBookInfo['access'])) {
                 $acl[] = [
                     'privilege' => '{DAV:}write',
                     'principal' => $this->principalUri,

@@ -308,7 +308,7 @@ SQL
     /* @param string $uid
      * @return array
      */
-    public function getSharedFilesByUid($principalUri, $uid) {
+    public function getSharedFilesByUid($principalUri, $uid, $share_path = '') {
 
 		$aResult = [];
 
@@ -329,11 +329,11 @@ SQL
         $fields = implode(', ', $fields);
         $stmt = $this->pdo->prepare(<<<SQL
 SELECT $fields FROM {$this->sharedFilesTableName}
-WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ?
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND uid = ? AND share_path = ?
 SQL
         );
 
-		$stmt->execute([$principalUri, $uid]);
+		$stmt->execute([$principalUri, $uid, $share_path]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 		foreach ($rows as $row) {
 			if ($row) {
