@@ -65,7 +65,7 @@ trait NodeTrait
 			$sRegion = '.' . $this->client->getRegion();
 		}
 
-		return $this->bucket . $sRegion . "/" . \Aws\S3\S3Client::encodeKey($sKey);
+		return $this->bucket . "/" . \Aws\S3\S3Client::encodeKey($sKey);
 	}
 
 	public function updateMetadata($aUpdateMetadata)
