@@ -68,7 +68,7 @@ class PDO
 		if ($sharePath === null) {
  	       $stmt = $this->pdo->prepare(<<<SQL
 SELECT $fields FROM {$this->sharedFilesTableName}
-WHERE {$this->sharedFilesTableName}.principaluri = ?
+WHERE {$this->sharedFilesTableName}.principaluri = ? AND ({$this->sharedFilesTableName}.share_path IS NULL OR {$this->sharedFilesTableName}.share_path = '')
 SQL
         	);
 
