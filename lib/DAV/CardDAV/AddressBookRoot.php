@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\CardDAV;
 
+use Afterlogic\DAV\Constants;
 use Aurora\Modules\Contacts\Enums\Access;
 
 /**
@@ -63,6 +64,18 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome {
 	public function getChild($name) {
 
 		$this->init();
+		if ($name === Constants::ADDRESSBOOK_DEFAULT_NAME || $name === Constants::ADDRESSBOOK_COLLECTED_NAME) {
+			$abook = $this->carddavBackend->getAddressBookForUser($this->principalUri, $name);
+			if (!$abook) {
+				$this->carddavBackend->createAddressBook(
+					$this->principalUri,
+					$name,
+					[
+						'{DAV:}displayname' => $name === Constants::ADDRESSBOOK_DEFAULT_NAME ? Constants::ADDRESSBOOK_DEFAULT_DISPLAY_NAME : Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME
+					]
+				);
+			}
+		}
 		return parent::getChild($name);
 	}
 
@@ -87,16 +100,16 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome {
 
 			$this->carddavBackend->createAddressBook(
 				$this->principalUri,
-				\Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME,
+				Constants::ADDRESSBOOK_DEFAULT_NAME,
 				[
-					'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_DISPLAY_NAME
+					'{DAV:}displayname' => Constants::ADDRESSBOOK_DEFAULT_DISPLAY_NAME
 				]
 			);
 			$this->carddavBackend->createAddressBook(
 				$this->principalUri,
-				\Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME,
+				Constants::ADDRESSBOOK_COLLECTED_NAME,
 				[
-					'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME
+					'{DAV:}displayname' => Constants::ADDRESSBOOK_COLLECTED_DISPLAY_NAME
 				]
 			);
 			$aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
