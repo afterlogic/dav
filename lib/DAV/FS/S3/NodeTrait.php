@@ -169,7 +169,9 @@ trait NodeTrait
 					if (isset($aCopyResult['ETag']))
 					{
 						$sETag = \trim($aCopyResult['ETag'], '"');
-						$aCopyResultKeys[] = $aKeys[$sETag];
+						if (isset($aKeys[$sETag])) {
+							$aCopyResultKeys[] = $aKeys[$sETag];
+						}
 					}
 				}
 			}
@@ -180,7 +182,10 @@ trait NodeTrait
 				$this->client->deleteObjects([
 					'Bucket'  => $this->bucket,
 					'Delete' => [
-						'Objects' => array_map(function($sKey) {return ['Key' => $sKey];}, $aCopyResultKeys)
+						'Objects' => array_map(function($sKey) {
+								return ['Key' => $sKey];
+							}, $aCopyResultKeys
+						)
 					],
 				]);
 
