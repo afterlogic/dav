@@ -125,7 +125,7 @@ trait NodeTrait
                 throw new \Sabre\DAV\Exception\Conflict();
             }
     
-            $pdo->updateSharedFileName(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->name, $name, $this->getSharePath());
+            $pdo->updateSharedFileName(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->name, $name, $this->getSharePath(), $this->getGroupId());
         }
     }
 
