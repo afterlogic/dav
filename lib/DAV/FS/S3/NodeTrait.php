@@ -60,10 +60,10 @@ trait NodeTrait
 	public function getCopySource($sKey)
 	{
 		$sRegion = '';
-		if ($this->endsWith($this->client->getEndpoint(), 'amazonaws.com'))
-		{
-			$sRegion = '.' . $this->client->getRegion();
-		}
+		// if ($this->endsWith($this->client->getEndpoint(), 'amazonaws.com'))
+		// {
+		// 	$sRegion = '.' . $this->client->getRegion();
+		// }
 
 		return $this->bucket . $sRegion . "/" . \Aws\S3\S3Client::encodeKey($sKey);
 	}
