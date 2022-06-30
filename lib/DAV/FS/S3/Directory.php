@@ -312,6 +312,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			$oFile = $this->getChild($name);
 		}
 		catch (\Exception $oEx) {}
-		return ($oFile instanceof \Afterlogic\DAV\FS\File);
+		return ($oFile instanceof \Sabre\DAV\FS\Node);
 	}
 }
