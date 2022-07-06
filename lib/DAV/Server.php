@@ -175,12 +175,6 @@ class Server extends \Sabre\DAV\Server
 				)
 			);
 
-			// $this->rootNode->addChild(
-			// 	new CalDAV\CalendarRoot(
-			// 		Backend::Caldav()
-			// 	)
-			// );
-
 			/* Reminders Plugin */
 			$this->addPlugin(
 				new Reminders\Plugin(Backend::Reminders())
@@ -205,6 +199,11 @@ class Server extends \Sabre\DAV\Server
 
 			$this->addPlugin(
 				new CalDAV\Schedule\IMipPlugin()
+			);
+
+			/* Calendar subscriptions Plugin */
+			$this->addPlugin(
+				new \Sabre\CalDAV\Subscriptions\Plugin()
 			);
 		}
 	}
