@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
+use Afterlogic\DAV\FS\NodeTrait as FSNodeTrait;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -15,6 +17,8 @@ namespace Afterlogic\DAV\FS\S3;
 trait NodeTrait
 {
     use \Afterlogic\DAV\FS\HistoryDirectoryTrait;
+	use FSNodeTrait;
+	use PropertyStorageTrait;
 
 	public function getPath()
 	{
@@ -219,13 +223,27 @@ trait NodeTrait
      */
     public function setName($name)
     {
+		list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
+        list(, $newName) = \Sabre\Uri\split($name);
+        $newPath = $parentPath . '/' . $newName;
+
+		$this->setNameShared($name);
+
+        // We're deleting the existing resourcedata, and recreating it
+        // for the new path.
+        $resourceData = $this->getResourceData();
+        $this->deleteResourceData();
+
 		$sUserPublicId = $this->getUser();
-
 		$path = str_replace($sUserPublicId, '', $this->path);
-
 		list($path, $oldname) = \Sabre\Uri\split($path);
-
 		$this->copyObjectTo($this->getStorage(), $path, $name, true);
+
+
+        $this->path = $newPath;
+        $this->putResourceData($resourceData);
+
+		$this->setNameHistory($name);
 	}
 
 	public function isDirectoryObject()

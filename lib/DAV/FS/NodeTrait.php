@@ -259,6 +259,26 @@ trait NodeTrait
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
 
+		$this->setNameShared($name);
+
+        // We're deleting the existing resourcedata, and recreating it
+        // for the new path.
+        $resourceData = $this->getResourceData();
+        $this->deleteResourceData();
+
+        rename($this->path, $newPath);
+
+        $this->path = $newPath;
+        $this->putResourceData($resourceData);
+
+		$this->setNameHistory($name);
+    }
+
+	public function setNameShared($name)
+	{
+        list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
+        list(, $newName) = \Sabre\Uri\split($name);
+
 		$sRelativePath = $this->getRelativePath();
 
 		$oldPathForShare = $sRelativePath . '/' .$oldName;
@@ -270,39 +290,27 @@ trait NodeTrait
 		}
 		catch (\Exception $oEx) {}
 
-		if ($oNode)
-		{
+		if ($oNode) {
 			throw new \Sabre\DAV\Exception\Conflict();
 		}
 
         $oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles');
-        if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false))
-        {
+        if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false)) {
             $pdo = new Backend\PDO();
             $pdo->updateShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
 			$pdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oldPathForShare, $newPathForShare);
-        }
+        }		
+	}
 
-        // We're deleting the existing resourcedata, and recreating it
-        // for the new path.
-        $resourceData = $this->getResourceData();
-        $this->deleteResourceData();
-
-		$oHistoryNode = null;
-		if ($this instanceof File)
-		{
+	public function setNameHistory($name)
+	{
+		if ($this instanceof File) {
 			$oHistoryNode = $this->getHistoryDirectory();
-		}
-
-        rename($this->path, $newPath);
-        $this->path = $newPath;
-        $this->putResourceData($resourceData);
-
-		if ($oHistoryNode instanceof Directory)
-		{
-			$oHistoryNode->setName($name . '.hist');
-		}
-    }
+			if ($oHistoryNode instanceof Directory) {
+				$oHistoryNode->setName($name . '.hist');
+			}
+		}	
+	}
 
 	public function getShares()
 	{
