@@ -193,13 +193,13 @@ class Server extends \Sabre\DAV\Server
 				);
 			}
 
-			$this->addPlugin(
-				new CalDAV\Schedule\Plugin()
-			);
+			// $this->addPlugin(
+			// 	new CalDAV\Schedule\Plugin()
+			// );
 
-			$this->addPlugin(
-				new CalDAV\Schedule\IMipPlugin()
-			);
+			// $this->addPlugin(
+			// 	new CalDAV\Schedule\IMipPlugin()
+			// );
 
 			/* Calendar subscriptions Plugin */
 			$this->addPlugin(

@@ -115,43 +115,33 @@ trait NodeTrait
 		$sFullFromPath = $this->getPathForS3($this->getPath());
 		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));
 
-
 		$aProps = $this->getProperties([]);
-		if (!$bMove)
-		{
-			if (!isset($aProps['ExtendedProps']))
-			{
+		if (!$bMove) {
+			if (!isset($aProps['ExtendedProps'])) {
 				$aProps['ExtendedProps'] = [];
 			}
 			$aProps['ExtendedProps']['GUID'] =  \Sabre\DAV\UUIDUtil::getUUID();
 		}
 		$sToPathInfo = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/.sabredav');
-		if (!$this->isDirectoryObject())
-		{
+		if (!$this->isDirectoryObject()) {
 			$aToProps = $this->getResourceRawData($sToPathInfo);
 			$aToProps[$sNewName]['properties'] = $aProps;
 			$this->putResourceRawData($sToPathInfo, $aToProps);
 		}
-		if ($this->isDirectoryObject())
-		{
+		if ($this->isDirectoryObject()) {
 			$objects = $this->client->getIterator('ListObjectsV2', [
 				"Bucket" => $this->bucket,
 				"Prefix" => $sFullFromPath //must have the trailing forward slash "/"
 			]);
 
 			$aKeys = [];
-			foreach ($objects as $object)
-			{
-				$sETag = \trim($object['ETag'], '"');
-				$aKeys[$sETag] = $object['Key'];
+			foreach ($objects as $object) {
+				$aKeys[] = $object['Key'];
 			}
 
 			$batchCopyObject = [];
-			$aNewKeys = [];
-			foreach ($aKeys as $sETag => $sKey)
-			{
+			foreach ($aKeys as $sKey) {
 				$sNewKey = \str_replace($sFullFromPath, $sFullToPath, $sKey);
-				$aNewKeys[$sETag] = $sNewKey;
 				$batchCopyObject[] = $this->client->getCommand('CopyObject', [
 					'Bucket'     => $this->bucket,
 					'Key'        => $sNewKey,
@@ -160,54 +150,35 @@ trait NodeTrait
 			}
 
 			$oResults = \Aws\CommandPool::batch($this->client, $batchCopyObject);
-			$aCopyResultKeys = [];
-			foreach ($oResults as $oResult)
-			{
-				if ($oResult instanceof \Aws\S3\Exception\S3Exception)
-				{
+			foreach ($oResults as $oResult) {
+				if ($oResult instanceof \Aws\S3\Exception\S3Exception) {
 					\Aurora\Api::LogException($oResult, \Aurora\System\Enums\LogLevel::Full);
-				}
-				else if ($oResult instanceof \Aws\Result)
-				{
-					$aCopyResult = $oResult->get('CopyObjectResult');
-					if (isset($aCopyResult['ETag']))
-					{
-						$sETag = \trim($aCopyResult['ETag'], '"');
-						if (isset($aKeys[$sETag])) {
-							$aCopyResultKeys[] = $aKeys[$sETag];
-						}
-					}
 				}
 			}
 			$mResult = true;
 
-			if ($bMove)
-			{
+			if ($bMove) {
 				$this->client->deleteObjects([
 					'Bucket'  => $this->bucket,
 					'Delete' => [
 						'Objects' => array_map(function($sKey) {
 								return ['Key' => $sKey];
-							}, $aCopyResultKeys
+							}, $aKeys
 						)
 					],
 				]);
 
 				$this->deleteResourceData();
 			}
-		}
-		else
-		{
+		} else {
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
 				'Key' => $sFullToPath,
 				'CopySource' => $this->getCopySource($sFullFromPath)
 			]);
 
-			if ($res && $bMove)
-			{
+			if ($res && $bMove) {
 				$this->delete();
-
 				$mResult = true;
 			}
 		}
