@@ -8,6 +8,7 @@
 namespace Afterlogic\DAV\FS\S3;
 
 use Afterlogic\DAV\FS\NodeTrait as FSNodeTrait;
+use Afterlogic\DAV\Server;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -33,8 +34,7 @@ trait NodeTrait
 	protected function updateUsedSpace()
 	{
 		$oModuleManager = \Aurora\System\Api::GetModuleManager();
-		if ($oModuleManager->IsAllowedModule('PersonalFiles'))
-		{
+		if ($oModuleManager->IsAllowedModule('PersonalFiles')) {
 			\Aurora\Modules\PersonalFiles\Module::Decorator()->UpdateUsedSpace();
 		}
 	}
@@ -42,8 +42,7 @@ trait NodeTrait
 	public function getPathForS3($sPath)
 	{
 		$sStorage = substr($sPath , 0,  8);
-		if ($sStorage === 'personal')
-		{
+		if ($sStorage === 'personal') {
 			$sPath = substr_replace($sPath, $this->getUser(), 0, 8);
 		}
 
@@ -53,8 +52,7 @@ trait NodeTrait
 	public function endsWith($haystack, $needle)
 	{
 		$length = strlen($needle);
-		if ($length == 0)
-		{
+		if ($length == 0) {
 			return true;
 		}
 
@@ -63,13 +61,7 @@ trait NodeTrait
 
 	public function getCopySource($sKey)
 	{
-		$sRegion = '';
-		// if ($this->endsWith($this->client->getEndpoint(), 'amazonaws.com'))
-		// {
-		// 	$sRegion = '.' . $this->client->getRegion();
-		// }
-
-		return $this->bucket . $sRegion . "/" . \Aws\S3\S3Client::encodeKey($sKey);
+		return $this->bucket . "/" . \Aws\S3\S3Client::encodeKey($sKey);
 	}
 
 	public function updateMetadata($aUpdateMetadata)
@@ -83,14 +75,12 @@ trait NodeTrait
 
 		$aMetadata = [];
 		$sMetadataDirective = 'COPY';
-		if ($oObject)
-		{
+		if ($oObject) {
 			$aMetadata = $oObject->get('Metadata');
 			$sMetadataDirective = 'REPLACE';
 		}
 
-		if (is_array($aUpdateMetadata))
-		{
+		if (is_array($aUpdateMetadata)) {
 			$aMetadata = array_merge($aMetadata, $aUpdateMetadata);
 		}
 
@@ -110,7 +100,7 @@ trait NodeTrait
 		if ($sToStorage === 'shared') return false; // TODO:
 
 		$sUserPublicId = $this->getUser();
-		\Afterlogic\DAV\Server::getInstance()->setUser($sUserPublicId);
+		Server::getInstance()->setUser($sUserPublicId);
 
 		$sFullFromPath = $this->getPathForS3($this->getPath());
 		$sFullToPath = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/' . $sNewName . ($this->isDirectoryObject() ? '/' : ''));
@@ -122,12 +112,7 @@ trait NodeTrait
 			}
 			$aProps['ExtendedProps']['GUID'] =  \Sabre\DAV\UUIDUtil::getUUID();
 		}
-		$sToPathInfo = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/.sabredav');
-		if (!$this->isDirectoryObject()) {
-			$aToProps = $this->getResourceRawData($sToPathInfo);
-			$aToProps[$sNewName]['properties'] = $aProps;
-			$this->putResourceRawData($sToPathInfo, $aToProps);
-		}
+
 		if ($this->isDirectoryObject()) {
 			$objects = $this->client->getIterator('ListObjectsV2', [
 				"Bucket" => $this->bucket,
@@ -156,20 +141,6 @@ trait NodeTrait
 				}
 			}
 			$mResult = true;
-
-			// if ($bMove) {
-			// 	$this->client->deleteObjects([
-			// 		'Bucket'  => $this->bucket,
-			// 		'Delete' => [
-			// 			'Objects' => array_map(function($sKey) {
-			// 					return ['Key' => $sKey];
-			// 				}, $aKeys
-			// 			)
-			// 		],
-			// 	]);
-
-			// 	$this->deleteResourceData();
-			// }
 		} else {
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
@@ -178,6 +149,11 @@ trait NodeTrait
 			]);
 
 			if ($res) {
+				$sToPathInfo = $this->getPathForS3($sToStorage . \rtrim($sToPath, '/') . '/.sabredav');
+				$aToProps = $this->getResourceRawData($sToPathInfo);
+				$aToProps[$sNewName]['properties'] = $aProps;
+				$this->putResourceRawData($sToPathInfo, $aToProps);
+
 				$mResult = true;
 			}
 		}
@@ -233,5 +209,4 @@ trait NodeTrait
 
 		return isset($aPathItems[1]) ? '/' . $aPathItems[1] : '';
     }
-
 }

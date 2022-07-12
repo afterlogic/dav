@@ -18,21 +18,17 @@ trait PropertyStorageTrait
 
     public function getResourceRawData($path)
     {
-        if (!isset($this->cache[$path]))
-        {
+        if (!isset($this->cache[$path])) {
             $data = [];
             $oObject = false;
-            try
-            {
+            try {
                 $oObject = $this->client->getObject([
                         'Bucket' => $this->bucket,
                         'Key' => $path
                     ]
                 );
-            }
-            catch (\Exception $oEx){}
-            if ($oObject)
-            {
+            } catch (\Exception $oEx){}
+            if ($oObject) {
                 $mFileData = (string) $oObject['Body'];
                 $data = unserialize($mFileData);
             }
@@ -49,19 +45,16 @@ trait PropertyStorageTrait
     public function getResourceData()
     {
         $data = $this->getResourceRawData($this->getResourceInfoPath());
-        if (!isset($data[$this->getName()]))
-        {
+        if (!isset($data[$this->getName()])) {
             $data[$this->getName()] = ['properties' => []];
         }
 
         $data = $data[$this->getName()];
         if (!isset($data['properties'])) $data['properties'] = [];
 
-        if (!isset($data['properties']['ExtendedProps']))
-        {
+        if (!isset($data['properties']['ExtendedProps'])) {
             $aMetadata = $this->getMetadata();
-            if (isset($aMetadata[\strtolower('ExtendedProps')]))
-            {
+            if (isset($aMetadata[\strtolower('ExtendedProps')])) {
                 $data['properties']['ExtendedProps'] = \json_decode($aMetadata[\strtolower('ExtendedProps')], true);
             }
         }
@@ -91,14 +84,12 @@ trait PropertyStorageTrait
         ]);
 
         // Perform the upload.
-        try
-        {
+        try {
             $uploader->upload();
             $this->cache[$path] = $data;
             return true;
         }
-        catch (\Aws\Exception\MultipartUploadException $e)
-        {
+        catch (\Aws\Exception\MultipartUploadException $e) {
             return false;
         }
     }
@@ -112,8 +103,7 @@ trait PropertyStorageTrait
         $data = $this->getResourceRawData($path);
 
         // Unserializing and checking if the resource file contains data for this file
-        if (isset($data[$this->getName()]))
-        {
+        if (isset($data[$this->getName()])) {
             unset($data[$this->getName()]);
         }
 
@@ -128,14 +118,11 @@ trait PropertyStorageTrait
         ]);
 
         // Perform the upload.
-        try
-        {
+        try {
             $uploader->upload();
             $this->cache[$path] = $data;
             return true;
-        }
-        catch (\Aws\Exception\MultipartUploadException $e)
-        {
+        } catch (\Aws\Exception\MultipartUploadException $e) {
             return false;
         }
 
@@ -150,8 +137,7 @@ trait PropertyStorageTrait
         ]);
 
         $aMetadata = [];
-        if ($oObject)
-        {
+        if ($oObject) {
             $aMetadata = $oObject->get('Metadata');
         }
 
@@ -161,8 +147,7 @@ trait PropertyStorageTrait
     public function putResourceRawData($path, array $aData)
     {
         $data = $this->getResourceRawData($path);
-        foreach ($aData as $name => $newData)
-        {
+        foreach ($aData as $name => $newData) {
             $data[$name] = $newData;
         }
 
@@ -177,14 +162,11 @@ trait PropertyStorageTrait
         ]);
 
         // Perform the upload.
-        try
-        {
+        try {
             $uploader->upload();
             $this->cache[$path] = $data;
             return true;
-        }
-        catch (\Aws\Exception\MultipartUploadException $e)
-        {
+        } catch (\Aws\Exception\MultipartUploadException $e) {
             return false;
         }
     }

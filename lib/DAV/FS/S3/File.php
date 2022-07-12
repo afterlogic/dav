@@ -49,8 +49,7 @@ class File extends \Afterlogic\DAV\FS\File
     public function put($data)
 	{
         $rData = $data;
-        if (!is_resource($data))
-        {
+        if (!is_resource($data)) {
             $rData = fopen('php://memory','r+');
             fwrite($rData, $data);
             rewind($rData);
@@ -63,14 +62,11 @@ class File extends \Afterlogic\DAV\FS\File
         ]);
 
         // Perform the upload.
-        try
-        {
+        try {
             $uploader->upload();
 
             return true;
-        }
-        catch (MultipartUploadException $e)
-        {
+        } catch (MultipartUploadException $e) {
             return false;
         }
     }
@@ -150,7 +146,6 @@ class File extends \Afterlogic\DAV\FS\File
             exit;
         }
 	}
-
 
     /**
      * Returns the last modification time, as a unix timestamp

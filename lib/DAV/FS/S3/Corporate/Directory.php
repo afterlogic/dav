@@ -16,7 +16,5 @@ use Afterlogic\DAV\FS\S3\NodeTrait;
  */
 class Directory extends \Afterlogic\DAV\FS\S3\Personal\Directory
 {
-//    use NodeTrait;
-
     protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
 }

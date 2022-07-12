@@ -16,7 +16,5 @@ use Afterlogic\DAV\FS\S3\NodeTrait;
  */
 class File extends \Afterlogic\DAV\FS\S3\Personal\File
 {
-//    use NodeTrait;
-
     protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
 }
