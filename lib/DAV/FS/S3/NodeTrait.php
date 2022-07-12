@@ -157,19 +157,19 @@ trait NodeTrait
 			}
 			$mResult = true;
 
-			if ($bMove) {
-				$this->client->deleteObjects([
-					'Bucket'  => $this->bucket,
-					'Delete' => [
-						'Objects' => array_map(function($sKey) {
-								return ['Key' => $sKey];
-							}, $aKeys
-						)
-					],
-				]);
+			// if ($bMove) {
+			// 	$this->client->deleteObjects([
+			// 		'Bucket'  => $this->bucket,
+			// 		'Delete' => [
+			// 			'Objects' => array_map(function($sKey) {
+			// 					return ['Key' => $sKey];
+			// 				}, $aKeys
+			// 			)
+			// 		],
+			// 	]);
 
-				$this->deleteResourceData();
-			}
+			// 	$this->deleteResourceData();
+			// }
 		} else {
 			$res = $this->client->copyObject([
 				'Bucket' => $this->bucket,
@@ -177,10 +177,13 @@ trait NodeTrait
 				'CopySource' => $this->getCopySource($sFullFromPath)
 			]);
 
-			if ($res && $bMove) {
-				$this->delete();
+			if ($res) {
 				$mResult = true;
 			}
+		}
+
+		if ($bMove) {
+			$this->delete();
 		}
 
 		return $mResult;

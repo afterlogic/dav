@@ -572,8 +572,14 @@ SQL
 	 */
 	public function deleteSharedFile($owner, $storage, $path)
 	{
+		$result = false;
         $stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path = ?');
-        return $stmt->execute([$owner, $storage, $path]);
+        if ($stmt->execute([$owner, $storage, $path])) {
+			$stmt = $this->pdo->prepare('DELETE FROM ' . $this->sharedFilesTableName . ' WHERE owner = ? AND storage = ? AND path LIKE ?');
+			$result = $stmt->execute([$owner, $storage, $path . '/%']);
+		}
+
+		return $result;
 	}
 
 		/**
