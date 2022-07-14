@@ -177,6 +177,12 @@ class PDO
         $stmt->execute(array($calendarUri));
 	}
 
+	public function deleteRemindersByUser($user)
+	{
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE user = ?');
+        $stmt->execute(array($user));
+	}
+
 	public static function getEventId($uri)
 	{
 		return basename($uri, '.ics');

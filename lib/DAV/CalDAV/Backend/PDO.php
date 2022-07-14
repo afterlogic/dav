@@ -51,16 +51,26 @@ class PDO extends \Sabre\CalDAV\Backend\PDO implements \Sabre\CalDAV\Backend\Sha
 
 	public function deletePrincipalCalendars($principalUri)
 	{
-		$bResult = false;
-		$stmt = $this->pdo->prepare('SELECT calendarid, id FROM ' . $this->calendarInstancesTableName . ' where principaluri = ?');
+        $stmt = $this->pdo->prepare(<<<SQL
+SELECT {$this->calendarInstancesTableName}.calendarid, {$this->calendarInstancesTableName}.id FROM {$this->calendarInstancesTableName}
+WHERE principaluri = ?
+SQL
+        );
         $stmt->execute([$principalUri]);
-		$aCalendars = $stmt->fetchAll(\PDO::FETCH_NUM);
-		foreach ($aCalendars as $aCalendar)
-		{
-			$bResult = $this->deleteCalendar($aCalendar);
+		$rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		foreach ($rows as $row) {
+			$this->deleteCalendar([$row['calendarid'], $row['id']]);
 		}
+	}
 
-		return $bResult;
+	public function deleteSubscriptionsByPrincipal($principalUri)
+	{
+		$stmt = $this->pdo->prepare(<<<SQL
+		DELETE FROM {$this->calendarSubscriptionsTableName}
+		WHERE principaluri = ?
+		SQL
+		);
+		$stmt->execute([$principalUri]);
 	}
 
 	protected function getTenantPrincipal($sUserPublicId)
