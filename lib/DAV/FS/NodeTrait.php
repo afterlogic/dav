@@ -76,7 +76,12 @@ trait NodeTrait
 
 	public function getRelativePath()
 	{
-		list($sPath) = \Sabre\Uri\split($this->getPath());
+		$sPath = $this->getPath();
+		if ($sPath) {
+			list($sPath) = \Sabre\Uri\split($sPath);
+		} else {
+			$sPath = '';
+		}
 
 		$sFilesRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . '/';
 		$sPath = str_replace($sFilesRootPath, '', $sPath);
