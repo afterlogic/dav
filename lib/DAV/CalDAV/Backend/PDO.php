@@ -90,13 +90,7 @@ SQL
 		$calendar = false;
 
         $fields = array_values($this->propertyMap);
-        $fields[] = 'calendarid';
-        $fields[] = 'uri';
-        $fields[] = 'synctoken';
-        $fields[] = 'components';
-        $fields[] = 'principaluri';
-        $fields[] = 'transparent';
-        $fields[] = 'access';
+		array_push($fields, 'calendarid', 'uri', 'synctoken', 'components', 'principaluri', 'transparent', 'access');
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
