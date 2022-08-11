@@ -117,7 +117,7 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $modified,
                 $this->server->httpRequest,
                 $this->server->httpResponse,
-                false
+                true
             );
         } catch (\Exception $oEx) {}
     }

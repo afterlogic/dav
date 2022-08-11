@@ -7,6 +7,9 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
+use Afterlogic\DAV\Constants;
+use Afterlogic\DAV\Server;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -24,31 +27,15 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		parent::__construct($caldavBackend, $principalInfo);
 	}
 
-	public function init()
-	{
-		if (empty($this->principalInfo))
-		{
-			$this->principalInfo = \Afterlogic\DAV\Server::getCurrentPrincipalInfo();
-		}
-	}
-
-	public function getACL()
-	{
-		$this->init();
-		return parent::getACL();
-	}
-
-
 	protected function getTenantPrincipal($sUserPublicId)
 	{
-		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+		$sTenantPrincipal = 'default_' . Constants::DAV_TENANT_PRINCIPAL;
 		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
-		if ($oUser)
-		{
-			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+		if ($oUser) {
+			$sTenantPrincipal = $oUser->IdTenant . '_' . Constants::DAV_TENANT_PRINCIPAL;
 		}
 
-		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
+		return Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
 	}
 
 	protected function allowSharing()
@@ -61,56 +48,14 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 	{
 		$oCalendar = null;
 
-		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport)
-		{
+		if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SharingSupport) {
 			$oCalendar = new Shared\Calendar($this->caldavBackend, $calendar);
-		}
-		else
-		{
+		} else {
 			$oCalendar = new Calendar($this->caldavBackend, $calendar);
 		}
 
 		return $oCalendar;
 	}
-
-	/**
-     * Returns a single calendar, by name
-     *
-     * @param string $name
-     * @return Calendar
-     */
-	protected function _getChild($name)
-	{
-        // Special nodes
-        if ($name === 'inbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
-            return new \Sabre\CalDAV\Schedule\Inbox($this->caldavBackend, $this->principalInfo['uri']);
-        }
-        if ($name === 'outbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
-            return new \Sabre\CalDAV\Schedule\Outbox($this->principalInfo['uri']);
-        }
-        if ($name === 'notifications' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport) {
-            return new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
-        }
-
-        // Calendars
-        foreach ($this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']) as $calendar) {
-			if ($calendar['uri'] === $name) {
-				return $this->initCalendar($calendar);
-			}
-        }
-
-        if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) {
-            foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) {
-                if ($subscription['uri'] === $name) {
-                    return new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
-                }
-            }
-
-        }
-
-        throw new \Sabre\DAV\Exception\NotFound('Node with name \'' . $name . '\' could not be found');
-
-    }
 
 	protected function _getChildren()
 	{
@@ -135,10 +80,10 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		{
 			$aCreateCalendarResult = $this->caldavBackend->createCalendar(
 				$this->principalInfo['uri'],
-				\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID . '-' . \Sabre\DAV\UUIDUtil::getUUID(),
+				Constants::CALENDAR_DEFAULT_UUID . '-' . \Sabre\DAV\UUIDUtil::getUUID(),
 				[
 					'{DAV:}displayname' => \Aurora\Modules\Calendar\Module::getInstance()->i18n('CALENDAR_DEFAULT_NAME'),
-					'{http://apple.com/ns/ical/}calendar-color' => \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_COLOR
+					'{http://apple.com/ns/ical/}calendar-color' => Constants::CALENDAR_DEFAULT_COLOR
 				]
 			);
 
@@ -190,7 +135,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 				{
 					$calendar['id'] = $parentCalendar['id'];
 					$calendar['uri'] = $parentCalendar['uri'];
-					$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
+					$calendar['principaluri'] = Constants::PRINCIPALS_PREFIX . Server::getUser();
 				}
 
 				$oSharedWithAllCalendar = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
@@ -220,8 +165,6 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
      * @return array
      */
     public function getChildren() {
-
-		$this->init();
 
 		$aChildren = $this->_getChildren();
 
@@ -280,11 +223,36 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
      */
 	function getChild($name)
 	{
-		$this->init();
 		$oChild = false;
 		try
 		{
-			$oChild = $this->_getChild($name);
+			// Special nodes
+			if ($name === 'inbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
+				return new \Sabre\CalDAV\Schedule\Inbox($this->caldavBackend, $this->principalInfo['uri']);
+			}
+			if ($name === 'outbox' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\SchedulingSupport) {
+				return new \Sabre\CalDAV\Schedule\Outbox($this->principalInfo['uri']);
+			}
+			if ($name === 'notifications' && $this->caldavBackend instanceof \Sabre\CalDAV\Backend\NotificationSupport) {
+				return new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
+			}
+	
+			// Calendars
+			foreach ($this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']) as $calendar) {
+				if ($calendar['uri'] === $name) {
+					return $this->initCalendar($calendar);
+				}
+			}
+	
+			if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) {
+				foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) {
+					if ($subscription['uri'] === $name) {
+						return new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
+					}
+				}
+			}
+	
+			throw new \Sabre\DAV\Exception\NotFound('Node with name \'' . $name . '\' could not be found');
 		}
 		catch (\Sabre\DAV\Exception\NotFound $oEx)
 		{
@@ -322,7 +290,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 				{
 					$calendar['id'] = $parentCalendar['id'];
 					$calendar['uri'] = $parentCalendar['uri'];
-					$calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
+					$calendar['principaluri'] = Constants::PRINCIPALS_PREFIX . Server::getUser();
 
 					$oChild = new SharedWithAll\Calendar($this->caldavBackend, $calendar);
 					break;

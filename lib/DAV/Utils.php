@@ -14,52 +14,9 @@ namespace Afterlogic\DAV;
  */
 class Utils
 {
-	/*
-	 * @var $oUsersManager \CApiUsersManager
-	 */
-	public static $oUsersManager = null;
-
-	public static function getUsersManager()
-	{
-		if (null === self::$oUsersManager) {
-
-			self::$oUsersManager = \Aurora\System\Api::GetSystemManager('users');
-		}
-		return self::$oUsersManager;
-	}
-
 	public static function getCurrentAccount()
 	{
 		return \Afterlogic\DAV\Server::getUser();
-	}
-
-	public static function getTenantUser($oAccount)
-	{
-		$sEmail = 'default_' . Constants::DAV_TENANT_PRINCIPAL;
-		if ($oAccount->IdTenant > 0) {
-
-			$oApiTenantsMan = \Aurora\System\Api::GetSystemManager('tenants');
-			$oTenant = $oApiTenantsMan ? $oApiTenantsMan->getTenantById($oAccount->IdTenant) : null;
-			if ($oTenant) {
-
-				$sEmail = $oTenant->Login . '_' . Constants::DAV_TENANT_PRINCIPAL;
-			}
-		}
-
-		return $sEmail;
-	}
-
-	public static function getTenantPrincipalUri($principalUri)
-	{
-		$sTenantPrincipalUri = null;
-
-		$oAccount = self::GetAccountByLogin(basename($principalUri));
-		if ($oAccount) {
-			$aTenantEmail = self::getTenantUser($oAccount);
-			$sTenantPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $aTenantEmail;
-		}
-
-		return $sTenantPrincipalUri;
 	}
 
 	public static function ValidateClient($sClient)
@@ -75,7 +32,7 @@ class Utils
 
 		return $bIsSync;
 	}
-	//GetAccountByLogin
+
 	public static function GetUserByPublicId($sUserName)
 	{
 		$bPrevState =  \Aurora\System\Api::skipCheckUserRole(true);

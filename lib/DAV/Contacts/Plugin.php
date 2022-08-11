@@ -224,6 +224,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 					if ($this->getGroupFromDB($iUserId, $sUID)) {
 						$this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUID);
 					} else {
+						/**
+						 * @var \Sabre\VObject\Component\VCard
+						 */
 						$oVCard = \Sabre\VObject\Reader::read(
 							$sData,
 							\Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES

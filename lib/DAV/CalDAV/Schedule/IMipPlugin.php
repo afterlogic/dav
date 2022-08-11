@@ -2,6 +2,8 @@
 
 namespace Afterlogic\DAV\CalDAV\Schedule;
 
+use Afterlogic\DAV\Server;
+use Aurora\System\Api;
 use Sabre\DAV;
 use Sabre\VObject\ITip;
 
@@ -86,6 +88,7 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
             $recipient = $iTipMessage->recipientName . ' <' . $recipient . '>';
         }
 
+        $messageBody = $iTipMessage->message->serialize();
         $subject = 'SabreDAV iTIP message';
         switch (strtoupper($iTipMessage->method)) {
             case 'REPLY' :
@@ -93,6 +96,67 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
                 break;
             case 'REQUEST' :
                 $subject = $summary;
+                $server = Server::getInstance();
+                $aclPlugin = $server->getPlugin('acl');
+
+                // Local delivery is not available if the ACL plugin is not loaded.
+                if (!$aclPlugin) {
+                    return;
+                }
+                $caldavNS = '{'.\Sabre\CalDAV\Schedule\Plugin::NS_CALDAV.'}';
+                $principalUri = $aclPlugin->getPrincipalByUri($iTipMessage->sender);
+                if (!$principalUri) {
+                    $iTipMessage->scheduleStatus = '3.7;Could not find principal.';
+        
+                    return;
+                }
+                
+                $server->removeListener('propFind', [$aclPlugin, 'propFind']);
+                $result = $server->getProperties(
+                    $principalUri,
+                    [
+                        '{DAV:}principal-URL',
+                         $caldavNS.'calendar-home-set',
+                         $caldavNS.'schedule-default-calendar-URL',
+                    ]
+                );
+                $server->on('propFind', [$aclPlugin, 'propFind'], 20);
+
+                if (!isset($result[$caldavNS.'calendar-home-set'])) {
+                    $iTipMessage->scheduleStatus = '5.2;Could not locate a calendar-home-set';
+        
+                    return;
+                }
+                if (!isset($result[$caldavNS.'schedule-default-calendar-URL'])) {
+                    $iTipMessage->scheduleStatus = '5.2;Could not find a schedule-default-calendar-URL property';
+        
+                    return;
+                }
+                $homePath = $result[$caldavNS.'calendar-home-set']->getHref();
+                $calendarPath = $result[$caldavNS.'schedule-default-calendar-URL']->getHref();
+                $home = $server->tree->getNodeForPath($homePath);
+                $calendar = $server->tree->getNodeForPath($calendarPath);
+                $cal_props = $calendar->getProperties(['{DAV:}displayname']);
+                $sCalendarDisplayName = $cal_props['{DAV:}displayname'];
+
+                $oUser = Api::getAuthenticatedUser();
+                $sStartDateFormat = $iTipMessage->message->VEVENT->DTSTART->hasTime() ? 'D, F d, o, H:i' : 'D, F d, o';
+                $sStartDate = \Aurora\Modules\Calendar\Classes\Helper::getStrDate(
+                    $iTipMessage->message->VEVENT->DTSTART, 
+                    $oUser->DefaultTimeZone, 
+                    $sStartDateFormat
+                );
+
+                $messageBody =  \Aurora\Modules\CalendarMeetingsPlugin\Classes\Helper::createHtmlFromEvent(
+                    $calendar->getName(), 
+                    $iTipMessage->uid, 
+                    $oUser->PublicId, 
+                    $recipient, 
+                    $sCalendarDisplayName, 
+                    $sStartDate, 
+                    $iTipMessage->message->VEVENT->LOCATION, 
+                    $iTipMessage->message->VEVENT->DESCRIPTION
+                );
                 break;
             case 'CANCEL' :
                 $subject = 'Cancelled: ' . $summary;
@@ -108,7 +172,7 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
             $headers[] = 'X-Sabre-Version: ' . DAV\Version::VERSION;
         }
 
-        \Aurora\Modules\CalendarMeetingsPlugin\Classes\Helper::sendAppointmentMessage($senderEmail, $recipient, (string) $subject, $iTipMessage->message->serialize(), $iTipMessage->method);
+        \Aurora\Modules\CalendarMeetingsPlugin\Classes\Helper::sendAppointmentMessage($senderEmail, $recipient, (string) $subject, $iTipMessage->message->serialize(), $iTipMessage->method, $messageBody);
         $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
 
         return false;

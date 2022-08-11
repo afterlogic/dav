@@ -2,7 +2,8 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-use Sabre\DAVACL\PrincipalBackend;
+use Afterlogic\DAV\Server;
+use Sabre\DAV\MkCol;
 
 /**
  * Calendars collection
@@ -17,28 +18,69 @@ use Sabre\DAVACL\PrincipalBackend;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class CalendarRoot extends \Sabre\CalDAV\CalendarRoot {
+class CalendarRoot implements \Sabre\DAV\IExtendedCollection, \Sabre\DAVACL\IACL {
 
-    function __construct() {
+    use  \Sabre\DAVACL\ACLTrait;
 
-        parent::__construct(\Afterlogic\DAV\Backend::Principal(), \Afterlogic\DAV\Backend::CalDAV());
+    protected $calendarHome = null;
 
+    function __construct(\Sabre\CalDAV\Backend\BackendInterface $caldavBackend) {
+        $this->calendarHome = new CalendarHome($caldavBackend, Server::getCurrentPrincipalInfo());
     }
 
-    // /**
-    //  * This method returns a node for a principal.
-    //  *
-    //  * The passed array contains principal information, and is guaranteed to
-    //  * at least contain a uri item. Other properties may or may not be
-    //  * supplied by the authentication backend.
-    //  *
-    //  * @param array $principal
-    //  * @return \Sabre\DAV\INode
-    //  */
-    // function getChildForPrincipal(array $principal) {
+    public function getName() {
+        return $this->calendarHome->getName();
+    }
 
-    //     return new CalendarHome($this->caldavBackend, $principal);
+    public function setName($name) {
+        $this->calendarHome->setName($name);
+    }
 
-    // }
+    public function delete() {
+        $this->calendarHome->delete();
+    }
 
+    public function getLastModified() {
+        return $this->calendarHome->getLastModified();
+    }
+
+    public function getChildren() {
+        return $this->calendarHome->getChildren();
+    }
+
+    public function getChild($name) {
+        return $this->calendarHome->getChild($name);
+    }
+
+    public function childExists($name) {
+        return $this->calendarHome->childExists($name);
+    }
+
+    public function createFile($filename, $data = null) {
+        $this->calendarHome->createFile($filename, $data);
+    }
+
+    public function createDirectory($filename) {
+        $this->calendarHome->createDirectory($filename);
+    }
+
+    public function createExtendedCollection($name, MkCol $mkCol) {
+        $this->calendarHome->createExtendedCollection($name, $mkCol);
+    }
+
+    public function getOwner() {
+        return $this->calendarHome->getOwner();
+    }
+
+    public function getACL() {
+        return $this->calendarHome->getACL();
+    }
+
+    public function shareReply($href, $status, $calendarUri, $inReplyTo, $summary = null) {
+        return $this->calendarHome->shareReply($href, $status, $calendarUri, $inReplyTo, $summary);
+    }
+
+    public function getCalendarObjectByUID($uid) {
+        return $this->calendarHome->getCalendarObjectByUID($uid);
+    }
 }

@@ -7,11 +7,9 @@
 
 namespace Afterlogic\DAV;
 
-/**
- * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
- * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
- * @copyright Copyright (c) 2019, Afterlogic Corp.
- */
+use Aurora\Modules\Core\Models\Tenant;
+use Aurora\Modules\Core\Models\User;
+use Aurora\System\Api;
 class Server extends \Sabre\DAV\Server
 {
 	public static $sUserPublicId = null;
@@ -36,21 +34,15 @@ class Server extends \Sabre\DAV\Server
 	static public function getInstance()
 	{
 		static $oInstance = null;
-		if(is_null($oInstance))
-		{
+		if(is_null($oInstance)) {
 			$oInstance = new self();
 		}
 		return $oInstance;
 	}
 
-	public function __invoke()
-	{
-		return self::getInstance();
-	}
-
 	protected function isModuleEnabled($sModule)
 	{
-		return !\Aurora\System\Api::GetModuleManager()->getModuleConfigValue($sModule, 'Disabled', false);
+		return !Api::GetModuleManager()->getModuleConfigValue($sModule, 'Disabled', false);
 	}
 
 	protected function initServer()
@@ -59,7 +51,7 @@ class Server extends \Sabre\DAV\Server
 		$oTree = new Tree($this->rootNode);
  		parent::__construct($oTree);
  
-		$oSettings = \Aurora\Api::GetSettings();
+		$oSettings = Api::GetSettings();
 		$this->debugExceptions = $oSettings->GetValue('LogStackTrace', false);
 		self::$exposeVersion = false;
 
@@ -67,11 +59,10 @@ class Server extends \Sabre\DAV\Server
 		$this->httpResponse->setHeader('Cache-Control', 'no-cache');
 
 		/* Authentication Plugin */
-		$oAuthPlugin = 	new \Afterlogic\DAV\Auth\Plugin(new \Afterlogic\DAV\Auth\Backend\Basic());
+		$oAuthPlugin = 	new Auth\Plugin(new Auth\Backend\Basic());
 
-		if (\Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseDigestAuth', false))
-		{
-			$oAuthPlugin->addBackend(new \Afterlogic\DAV\Auth\Backend\Digest());
+		if (Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseDigestAuth', false)) {
+			$oAuthPlugin->addBackend(new Auth\Backend\Digest());
 		}
 		$this->addPlugin($oAuthPlugin);
 
@@ -81,9 +72,9 @@ class Server extends \Sabre\DAV\Server
 		$aclPlugin->allowUnauthenticatedAccess = false;
 		$aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
-		$mAdminPrincipal = \Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'AdminPrincipal', false);
+		$mAdminPrincipal = Api::GetModuleManager()->getModuleConfigValue('Dav', 'AdminPrincipal', false);
 		$aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
-						[Constants::PRINCIPALS_PREFIX . $mAdminPrincipal] : [];
+			[Constants::PRINCIPALS_PREFIX . $mAdminPrincipal] : [];
 		$this->addPlugin($aclPlugin);
 
 		/* DAV Sync Plugin */
@@ -92,8 +83,7 @@ class Server extends \Sabre\DAV\Server
 		);
 
 		/* HTML Frontend Plugin */
-		if (\Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseBrowserPlugin', false))
-		{
+		if (Api::GetModuleManager()->getModuleConfigValue('Dav', 'UseBrowserPlugin', false)) {
 			$this->addPlugin(
 				new \Sabre\DAV\Browser\Plugin()
 			);
@@ -111,10 +101,9 @@ class Server extends \Sabre\DAV\Server
 		);
 
 		/* Locks Plugin */
-//                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
+        // $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
 
-		if ($oSettings->GetConf('EnableLogging', false))
-		{
+		if ($oSettings->GetConf('EnableLogging', false)) {
 			/* Logs Plugin */
 			$this->addPlugin(new Logs\Plugin());
 		}
@@ -122,17 +111,15 @@ class Server extends \Sabre\DAV\Server
 
 	protected function initAddressbooks()
 	{
-		if ($this->isModuleEnabled('Contacts') && $this->isModuleEnabled('MobileSync'))
-		{
+		if ($this->isModuleEnabled('Contacts') && $this->isModuleEnabled('MobileSync')) {
 			$this->rootNode->addChild(
-					new CardDAV\AddressBookRoot(
-							Backend::Carddav()
-					)
+				new CardDAV\AddressBookRoot(
+					Backend::Carddav()
+				)
 			);
 
 			$carddavPlugin = new CardDAV\Plugin();
-			if ($this->isModuleEnabled('TeamContacts'))
-			{
+			if ($this->isModuleEnabled('TeamContacts')) {
 				$this->rootNode->addChild(new CardDAV\GAB\AddressBook(
 					'gab',
 					Constants::GLOBAL_CONTACTS
@@ -147,7 +134,6 @@ class Server extends \Sabre\DAV\Server
 				new Contacts\Plugin()
 			);
 
-
 			/* VCF Export Plugin */
 			$this->addPlugin(
 				new \Sabre\CardDAV\VCFExportPlugin()
@@ -157,8 +143,7 @@ class Server extends \Sabre\DAV\Server
 
 	protected function initCalendars()
 	{
-		if ($this->isModuleEnabled('Calendar') && $this->isModuleEnabled('MobileSync'))
-		{
+		if ($this->isModuleEnabled('Calendar') && $this->isModuleEnabled('MobileSync')) {
 			/* CalDAV Plugin */
 			$this->addPlugin(
 				new CalDAV\Plugin()
@@ -170,7 +155,7 @@ class Server extends \Sabre\DAV\Server
 			);
 
 			$this->rootNode->addChild(
-				new CalDAV\CalendarHome(
+				new CalDAV\CalendarRoot(
 					Backend::Caldav()
 				)
 			);
@@ -180,8 +165,7 @@ class Server extends \Sabre\DAV\Server
 				new Reminders\Plugin(Backend::Reminders())
 			);
 
-			if ($this->isModuleEnabled('CorporateCalendar'))
-			{
+			if ($this->isModuleEnabled('CorporateCalendar')) {
 				/* Sharing Plugin */
 				$this->addPlugin(
 					new \Sabre\DAV\Sharing\Plugin()
@@ -191,15 +175,17 @@ class Server extends \Sabre\DAV\Server
 				$this->addPlugin(
 					new \Sabre\CalDAV\SharingPlugin()
 				);
+
+				// Calendar Meetings
+				
+				// $this->addPlugin(
+				// 	new CalDAV\Schedule\Plugin()
+				// );
+	
+				// $this->addPlugin(
+				// 	new CalDAV\Schedule\IMipPlugin()
+				// );
 			}
-
-			// $this->addPlugin(
-			// 	new CalDAV\Schedule\Plugin()
-			// );
-
-			// $this->addPlugin(
-			// 	new CalDAV\Schedule\IMipPlugin()
-			// );
 
 			/* Calendar subscriptions Plugin */
 			$this->addPlugin(
@@ -211,8 +197,7 @@ class Server extends \Sabre\DAV\Server
 	protected function initFiles()
 	{
 		$sHeader = $this->httpRequest->getHeader('X-Client');
-		if ($this->isModuleEnabled('Files') && ($this->isModuleEnabled('MobileSync') || $sHeader === 'WebClient'))
-		{
+		if ($this->isModuleEnabled('Files') && ($this->isModuleEnabled('MobileSync') || $sHeader === 'WebClient')) {
 			$this->addPlugin(
 				new FS\Plugin()
 			);
@@ -222,10 +207,8 @@ class Server extends \Sabre\DAV\Server
 				new \Sabre\DAV\Browser\GuessContentType()
 			);
 
-			$oRoot = new \Afterlogic\DAV\FS\Root();
-
-			 if ($oRoot->getChildrenCount() > 0)
-			 {
+			$oRoot = new FS\Root();
+			 if ($oRoot->getChildrenCount() > 0) {
 				$this->rootNode->addChild($oRoot);
 			 }
 		}
@@ -246,16 +229,11 @@ class Server extends \Sabre\DAV\Server
 
 		$this->on('propFind', [$this, 'onPropFind']);
 
-		if (\Aurora\System\Api::GetPDO() && $this->isModuleEnabled('Dav'))
-		{
+		if (Api::GetPDO() && $this->isModuleEnabled('Dav')) {
 			$this->initServer();
-
 			$this->initAddressbooks();
-
 			$this->initCalendars();
-
 			$this->initFiles();
-
 			$this->initPrincipals();
 		}
     }
@@ -264,12 +242,9 @@ class Server extends \Sabre\DAV\Server
 	{
 		$sRequestUri = empty($_SERVER['REQUEST_URI']) ? '' : \trim($_SERVER['REQUEST_URI']);
 
-		if ($this->isModuleEnabled('Dav') && !strpos(urldecode($sRequestUri), '../'))
-		{
-			parent::exec();
-		}
-		else
-		{
+		if ($this->isModuleEnabled('Dav') && !strpos(urldecode($sRequestUri), '../')) {
+			parent::start();
+		} else {
 			echo 'Access denied';
 		}
 	}
@@ -277,22 +252,23 @@ class Server extends \Sabre\DAV\Server
 	public static function setUser($sUserPublicId)
 	{
 		self::$sUserPublicId = $sUserPublicId;
+		self::$oUser = Api::getUserById(
+			Api::getUserIdByPublicId($sUserPublicId)
+		);
 	}
 
 	public static function getUserObject()
 	{
-		if (null === self::$oUser)
-		{
-			self::$oUser = \Aurora\System\Api::getAuthenticatedUser();
+		if (null === self::$oUser) {
+			self::$oUser = Api::getAuthenticatedUser();
 		}
 		return self::$oUser;
 	}
 
 	public static function getUser()
 	{
-		if (null === self::$sUserPublicId)
-		{
-			self::$sUserPublicId = \Aurora\System\Api::getAuthenticatedUserPublicId();
+		if (null === self::$sUserPublicId) {
+			self::$sUserPublicId = Api::getAuthenticatedUserPublicId();
 		}
 		return self::$sUserPublicId;
 	}
@@ -306,20 +282,16 @@ class Server extends \Sabre\DAV\Server
 	{
 		$mPrincipal = [];
 
-		if (isset($sUserPublicId))
-		{
-			$aPrincipalProperties = \Afterlogic\DAV\Backend::Principal()->getPrincipalByPath(
-				\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUserPublicId
+		if (isset($sUserPublicId)) {
+			$aPrincipalProperties = Backend::Principal()->getPrincipalByPath(
+				Constants::PRINCIPALS_PREFIX . $sUserPublicId
 			);
 
-			if (isset($aPrincipalProperties['uri']))
-			{
+			if (isset($aPrincipalProperties['uri'])) {
 				$mPrincipal['uri'] = $aPrincipalProperties['uri'];
 				$mPrincipal['id'] = $aPrincipalProperties['id'];
-			}
-			else
-			{
-				$mPrincipal['uri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUserPublicId;
+			} else {
+				$mPrincipal['uri'] = Constants::PRINCIPALS_PREFIX . $sUserPublicId;
 				$mPrincipal['id'] = -1;
 			}
 		}
@@ -334,9 +306,8 @@ class Server extends \Sabre\DAV\Server
 	public static function getCurrentPrincipalInfo()
 	{
 		$principalInfo = [];
-		$sUserPublicId = \Afterlogic\DAV\Server::getUser();
-		if (!empty($sUserPublicId))
-		{
+		$sUserPublicId = self::getUser();
+		if (!empty($sUserPublicId)) {
 			$principalInfo = self::getPrincipalInfo($sUserPublicId);
 		}
 
@@ -345,12 +316,10 @@ class Server extends \Sabre\DAV\Server
 
 	public static function getTenantObject()
 	{
-		if (null === self::$oTenant)
-		{
+		if (null === self::$oTenant) {
 			$iIdTenant = self::getTenantId();
-			if ($iIdTenant)
-			{
-				self::$oTenant = \Aurora\Modules\Core\Models\Tenant::select('Name')->find($iIdTenant);
+			if ($iIdTenant) {
+				self::$oTenant = Tenant::select('Name')->find($iIdTenant);
 			}
 		}
 		return self::$oTenant;
@@ -359,9 +328,8 @@ class Server extends \Sabre\DAV\Server
 	public static function getTenantId()
 	{
 		$iIdTenant = false;
-		$oResult = \Aurora\Modules\Core\Models\User::select('IdTenant')->firstWhere('PublicId', self::getUser());
-		if (isset($oResult->IdTenant))
-		{
+		$oResult = User::select('IdTenant')->firstWhere('PublicId', self::getUser());
+		if (isset($oResult->IdTenant)) {
 			$iIdTenant = (int) $oResult->IdTenant;
 		}
 
@@ -373,11 +341,9 @@ class Server extends \Sabre\DAV\Server
 		$sTanantName = null;
 
 		$iIdTenant = self::getTenantId();
-		if ($iIdTenant)
-		{
-			$oResult = \Aurora\Modules\Core\Models\Tenant::select('Name')->find($iIdTenant);
-			if (isset($oResult) && isset($oResult->Name))
-			{
+		if ($iIdTenant) {
+			$oResult = Tenant::select('Name')->find($iIdTenant);
+			if (isset($oResult) && isset($oResult->Name)) {
 				$sTanantName = $oResult->Name;
 			}
 		}
@@ -394,31 +360,25 @@ class Server extends \Sabre\DAV\Server
 	public function onPropFind($propfind, \Sabre\DAV\INode $node)
 	{
 		$sUserPublicId = self::getUser();
-		if (isset($sUserPublicId))
-		{
-			if ($this->isModuleEnabled('TeamContacts'))
-			{
-				if ($this->rootNode->childExists('gab'))
-				{
+		if (isset($sUserPublicId)) {
+			if ($this->isModuleEnabled('TeamContacts')) {
+				if ($this->rootNode->childExists('gab')) {
 					$oTenant = self::getTenantObject();
 					$oUser = self::getUserObject();
 
 					$bIsModuleDisabledForTenant = isset($oTenant) ? $oTenant->isModuleDisabled('TeamContacts') : false;
 					$bIsModuleDisabledForUser = isset($oUser) ? $oUser->isModuleDisabled('TeamContacts') : false;
 
-					if ($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser)
-					{
+					if ($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser) {
 						$this->rootNode->deleteChild('gab');
 
 						$carddavPlugin = $this->getPlugin('carddav');
-						if ($carddavPlugin)
-						{
+						if ($carddavPlugin) {
 							$carddavPlugin->directories = [];
 						}
 
 						$aclPlugin = $this->getPlugin('acl');
-						if ($aclPlugin)
-						{
+						if ($aclPlugin) {
 							$aclPlugin->hideNodesFromListings = true;
 						}
 					}
@@ -442,7 +402,8 @@ class Server extends \Sabre\DAV\Server
 
 	public static function checkPrivileges($path, $priv)
 	{
-		$oServer = \Afterlogic\DAV\Server::getInstance();
+		$oServer = self::getInstance();
+		/** @var \Sabre\DAVACL\Plugin $oAclPlugin*/
 		$oAclPlugin = $oServer->getPlugin('acl');
 		$oAclPlugin->checkPrivileges($path, $priv);
 	}
