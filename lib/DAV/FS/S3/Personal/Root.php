@@ -18,8 +18,10 @@ use Aurora\System\Api;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends Directory
+class Root extends Directory implements \Sabre\DAV\Sync\ISyncCollection
 {
+	use \Afterlogic\DAV\FS\StorageTrait;
+	
 	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 
 	protected $client = null;

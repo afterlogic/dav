@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
+use Afterlogic\DAV\Server;
 use Aws\Exception\MultipartUploadException;
 use Aws\S3\MultipartUploader;
 
@@ -44,6 +45,9 @@ class File extends \Afterlogic\DAV\FS\File
 		$this->deleteResourceData();
         $this->deleteShares();
         $this->deleteHistoryDirectory();
+
+        $oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
 	}
 
     public function put($data)

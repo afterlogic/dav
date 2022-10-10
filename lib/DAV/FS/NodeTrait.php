@@ -277,6 +277,9 @@ trait NodeTrait
         $this->putResourceData($resourceData);
 
 		$this->setNameHistory($name);
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $oldName, 3);
+		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
     }
 
 	public function setNameShared($name)

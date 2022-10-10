@@ -30,6 +30,16 @@ class PDO
 	protected $sharedFilesTableName;
 
 	/**
+	 * @var string
+	 */
+	protected $filesChangesTableName;
+
+	/**
+	 * @var string
+	 */
+	protected $filesStoragesTableName;
+
+	/**
 	 * Creates the backend
 	 */
 	public function __construct()
@@ -41,6 +51,8 @@ class PDO
 			$this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
 		}
 		$this->sharedFilesTableName = $this->dBPrefix.'adav_sharedfiles';
+		$this->filesChangesTableName = $this->dBPrefix.'adav_files_changes';
+		$this->filesStoragesTableName = $this->dBPrefix.'adav_files_storages';
 	}
 
     /* @param string $principalUri
@@ -654,4 +666,178 @@ SQL
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id = ?');
         return $stmt->execute([$groupId]);
 	}
+
+	/**
+     * The getChanges method returns all the changes that have happened, since
+     * the specified syncToken in the specified file storage.
+     *
+     * This function should return an array, such as the following:
+     *
+     * [
+     *   'syncToken' => 'The current synctoken',
+     *   'added'   => [
+     *      'new.txt',
+     *   ],
+     *   'modified'   => [
+     *      'modified.txt',
+     *   ],
+     *   'deleted' => [
+     *      'foo.php.bak',
+     *      'old.txt'
+     *   ]
+     * ];
+     *
+     * The returned syncToken property should reflect the *current* syncToken
+     * of the calendar, as reported in the {http://sabredav.org/ns}sync-token
+     * property this is needed here too, to ensure the operation is atomic.
+     *
+     * If the $syncToken argument is specified as null, this is an initial
+     * sync, and all members should be reported.
+     *
+     * The modified property is an array of nodenames that have changed since
+     * the last token.
+     *
+     * The deleted property is an array with nodenames, that have been deleted
+     * from collection.
+     *
+     * The $syncLevel argument is basically the 'depth' of the report. If it's
+     * 1, you only have to report changes that happened only directly in
+     * immediate descendants. If it's 2, it should also include changes from
+     * the nodes below the child collections. (grandchildren)
+     *
+     * The $limit argument allows a client to specify how many results should
+     * be returned at most. If the limit is not specified, it should be treated
+     * as infinite.
+     *
+     * If the limit (infinite or not) is higher than you're willing to return,
+     * you should throw a Sabre\DAV\Exception\TooMuchMatches() exception.
+     *
+     * If the syncToken is expired (due to data cleanup) or unknown, you must
+     * return null.
+     *
+     * The limit is 'suggestive'. You are free to ignore it.
+     *
+     * @param mixed  $storage
+     * @param string $syncToken
+     * @param int    $syncLevel
+     * @param int    $limit
+     *
+     * @return array
+     */
+    public function getChanges($principaluri, $storage , $syncToken, $syncLevel, $limit = null)
+    {
+        $result = [
+            'added' => [],
+            'modified' => [],
+            'deleted' => [],
+        ];
+
+        if ($syncToken) {
+            $query = 'SELECT uri, operation, synctoken FROM '.$this->filesChangesTableName.' WHERE synctoken >= ?  AND principaluri = ? AND storage = ? ORDER BY synctoken';
+            if ($limit > 0) {
+                // Fetch one more raw to detect result truncation
+                $query .= ' LIMIT '.((int) $limit + 1);
+            }
+
+            // Fetching all changes
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([$syncToken, $principaluri, $storage]);
+
+            $changes = [];
+
+            // This loop ensures that any duplicates are overwritten, only the
+            // last change on a node is relevant.
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $changes[$row['uri']] = $row;
+            }
+            $currentToken = null;
+
+            $result_count = 0;
+            foreach ($changes as $uri => $operation) {
+                if (!is_null($limit) && $result_count >= $limit) {
+                    $result['result_truncated'] = true;
+                    break;
+                }
+
+                if (null === $currentToken || $currentToken < $operation['synctoken'] + 1) {
+                    // SyncToken in CalDAV perspective is consistently the next number of the last synced change event in this class.
+                    $currentToken = $operation['synctoken'] + 1;
+                }
+
+                ++$result_count;
+                switch ($operation['operation']) {
+                    case 1:
+                        $result['added'][] = $uri;
+                        break;
+                    case 2:
+                        $result['modified'][] = $uri;
+                        break;
+                    case 3:
+                        $result['deleted'][] = $uri;
+                        break;
+                }
+            }
+
+            if (!is_null($currentToken)) {
+                $result['syncToken'] = $currentToken;
+            } else {
+                // This means returned value is equivalent to syncToken
+                $result['syncToken'] = $syncToken;
+            }
+        } else {
+			$currentToken = $this->getSyncToken($principaluri, $storage);
+
+            if (is_null($currentToken)) {
+                return null;
+            }
+            $result['syncToken'] = $currentToken;
+        }
+
+        return $result;
+    }
+
+	public function getSyncToken($principaluri, $storage)
+	{
+		$stmt = $this->pdo->prepare('SELECT synctoken FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
+		$stmt->execute([$principaluri, $storage]);
+		$currentToken = $stmt->fetchColumn(0);
+
+		if (!$currentToken) {
+			$currentToken = 1;
+			$stmt = $this->pdo->prepare('INSERT INTO '.$this->filesStoragesTableName.' (principaluri, storage, synctoken) VALUES (?, ?, ?)');
+			$stmt->execute([
+				$principaluri,
+				$storage,
+				$currentToken
+			]);
+		}
+		return $currentToken;
+	}
+
+    /**
+     * Adds a change record to the calendarchanges table.
+     *
+     * @param mixed  $principaluri
+     * @param mixed  $storage
+     * @param string $objectUri
+     * @param int    $operation  1 = add, 2 = modify, 3 = delete
+     */
+    public function addChange($principaluri, $storage, $objectUri, $operation)
+    {
+        $stmt = $this->pdo->prepare('INSERT INTO '.$this->filesChangesTableName.' (uri, synctoken, principaluri, storage, operation) SELECT ?, synctoken, ?, ?, ? FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
+        $stmt->execute([
+            $objectUri,
+            $principaluri,
+            $storage,
+            $operation,
+			$principaluri,
+            $storage
+        ]);
+        $stmt = $this->pdo->prepare('UPDATE '.$this->filesStoragesTableName.' SET synctoken = synctoken + 1 WHERE principaluri = ? AND storage = ?');
+        $stmt->execute([
+            $principaluri,
+			$storage
+        ]);
+    }
+
 }

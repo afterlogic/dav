@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Afterlogic\DAV\Server;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -44,6 +46,9 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
 		$this->deleteResourceData();
 
         $this->deleteHistoryDirectory();
+
+        $oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
 
 		return $result;
     }

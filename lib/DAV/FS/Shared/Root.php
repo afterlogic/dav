@@ -19,9 +19,10 @@ use function Sabre\Uri\split;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
+class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL, \Sabre\DAV\Sync\ISyncCollection {
 
 	use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
+	use \Afterlogic\DAV\FS\StorageTrait;
 
 //    use NodeTrait;
 
@@ -213,6 +214,9 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 		{
 			throw new \Sabre\DAV\Exception\Forbidden();
 		}
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
 	}
 
 }

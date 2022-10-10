@@ -194,6 +194,9 @@ trait NodeTrait
         $this->putResourceData($resourceData);
 
 		$this->setNameHistory($name);
+
+		$oRootNode->addChange($this->getRelativePath() . '/' . $oldname, 3);
+		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
 	}
 
 	public function isDirectoryObject()

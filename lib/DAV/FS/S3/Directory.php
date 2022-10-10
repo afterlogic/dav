@@ -185,15 +185,22 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 			'Bucket' => $this->bucket,
 			'Key' => $Path
 		]);
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
 	}
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
         $Path = rtrim($this->path, '/').'/'.$name;
 
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+
 		if ($this->childExists($name)) {
 			$oChild = $this->getChild($name);
-			return $oChild->put($data);
+			$result = $oChild->put($data);
+			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 2);
+			return $result;
 		} else {
 
 			$rData = $data;
@@ -245,7 +252,10 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 					$aProps['ExtendedProps'] = $aCurrentExtendedProps;
 
 					$oFile->updateProperties($aProps);
+
+					$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
 				}
+				
 				return true;
 			}
 			catch (ExceptionMultipartUploadException $e)
@@ -285,6 +295,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		);
 
 		$this->deleteShares();
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
 	}
 
 	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)

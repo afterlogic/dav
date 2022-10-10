@@ -79,18 +79,31 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		if ($this->childExists($name)) throw new \Sabre\DAV\Exception\Conflict('Can\'t create a directory');
 
 		parent::createDirectory($name);
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
     }
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
 	{
 		$result = false;
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		
+		$bIsNew = false;
 		if (!$this->childExists($name)) {
 			$result = parent::createFile($name);
+			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+			$bIsNew = true;
 		}
 		$oFile = $this->getChild($name);
 
 		if ($oFile instanceof \Afterlogic\DAV\FS\File) {
 			$oFile->patch($data, $rangeType, $offset);
+		}
+
+		if (!$bIsNew) {
+			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 2);
 		}
 
 		$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
@@ -161,6 +174,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
         $this->deleteShares();
 
 		$this->updateQuota();
+
+		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
+		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
 
 		return true;
 	}
