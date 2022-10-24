@@ -187,7 +187,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		]);
 
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+		$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 1);
 	}
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
@@ -199,7 +199,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		if ($this->childExists($name)) {
 			$oChild = $this->getChild($name);
 			$result = $oChild->put($data);
-			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 2);
+			$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 2);
 			return $result;
 		} else {
 
@@ -253,7 +253,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
 					$oFile->updateProperties($aProps);
 
-					$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+					$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 1);
 				}
 				
 				return true;
@@ -297,7 +297,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 		$this->deleteShares();
 
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
+		$oRootNode->addChange($this->getRelativePathWithName() . '/' . $this->getName(), 3);
 	}
 
 	function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)

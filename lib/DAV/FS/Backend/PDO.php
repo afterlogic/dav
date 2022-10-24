@@ -748,7 +748,7 @@ SQL
             // This loop ensures that any duplicates are overwritten, only the
             // last change on a node is relevant.
             while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-                $changes[$row['uri']] = $row;
+                $changes[\ltrim($row['uri'], '/')] = $row;
             }
             $currentToken = null;
 

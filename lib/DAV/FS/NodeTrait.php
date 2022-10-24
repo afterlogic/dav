@@ -89,6 +89,11 @@ trait NodeTrait
 		return isset($aPathItems[2]) ? '/' . $aPathItems[2] : '';
     }
 
+	public function getRelativePathWithName()
+	{
+		return ($this->isRoot()) ? $this->getRelativePath() : $this->getRelativePath() . '/' . $this->getName();
+	}
+
 	public function isRoot()
 	{
 		return ($this->getRootPath() === $this->getPath());

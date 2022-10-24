@@ -81,7 +81,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		parent::createDirectory($name);
 
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+		$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 1);
     }
 
 	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
@@ -93,7 +93,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$bIsNew = false;
 		if (!$this->childExists($name)) {
 			$result = parent::createFile($name);
-			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+			$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 1);
 			$bIsNew = true;
 		}
 		$oFile = $this->getChild($name);
@@ -103,7 +103,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		}
 
 		if (!$bIsNew) {
-			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 2);
+			$oRootNode->addChange($this->getRelativePathWithName() . '/' . $name, 2);
 		}
 
 		$aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
@@ -176,7 +176,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$this->updateQuota();
 
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
+		$oRootNode->addChange($this->getRelativePathWithName() . '/' . $this->getName(), 3);
 
 		return true;
 	}
