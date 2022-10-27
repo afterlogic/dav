@@ -27,9 +27,9 @@ trait StorageTrait
 		return $pdo->getChanges($this->getOwner(), $this->getName(), $syncToken, $syncLevel, $limit);
 	}
 
-	public function addChange($objectUri, $operation)
+	public function addChange($objectUri, $operation, $newname = '')
 	{
 		$pdo = new Backend\PDO();
-		return $pdo->addChange($this->getOwner(), $this->getName(), $objectUri, $operation);
+		return $pdo->addChange($this->getOwner(), $this->getName(), $objectUri, $operation, $newname);
 	}
 }

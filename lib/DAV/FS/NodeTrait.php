@@ -283,8 +283,13 @@ trait NodeTrait
 
 		$this->setNameHistory($name);
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePath() . '/' . $oldName, 3);
-		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+
+		if ($this instanceof \Afterlogic\DAV\FS\File) {
+			$oRootNode->addChange($this->getRelativePath() . '/' . $oldName, 3);
+			$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+		} else if ($this instanceof \Afterlogic\DAV\FS\Directory) {
+			$oRootNode->addChange($this->getRelativePath() . '/' . $oldName, 2, $name);
+		}
     }
 
 	public function setNameShared($name)

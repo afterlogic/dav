@@ -733,7 +733,7 @@ SQL
         ];
 
         if ($syncToken) {
-            $query = 'SELECT uri, operation, synctoken FROM '.$this->filesChangesTableName.' WHERE synctoken >= ?  AND principaluri = ? AND storage = ? ORDER BY synctoken';
+            $query = 'SELECT uri, newuri, operation, synctoken FROM '.$this->filesChangesTableName.' WHERE synctoken >= ?  AND principaluri = ? AND storage = ? ORDER BY synctoken';
             if ($limit > 0) {
                 // Fetch one more raw to detect result truncation
                 $query .= ' LIMIT '.((int) $limit + 1);
@@ -770,6 +770,9 @@ SQL
                         $result['added'][] = $uri;
                         break;
                     case 2:
+						if (!empty($operation['newuri'])) {
+							$uri = [$uri, \ltrim($operation['newuri'], '/')];
+						}
                         $result['modified'][] = $uri;
                         break;
                     case 3:
@@ -822,11 +825,12 @@ SQL
      * @param string $objectUri
      * @param int    $operation  1 = add, 2 = modify, 3 = delete
      */
-    public function addChange($principaluri, $storage, $objectUri, $operation)
+    public function addChange($principaluri, $storage, $objectUri, $operation, $newname = '')
     {
-        $stmt = $this->pdo->prepare('INSERT INTO '.$this->filesChangesTableName.' (uri, synctoken, principaluri, storage, operation) SELECT ?, synctoken, ?, ?, ? FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
+        $stmt = $this->pdo->prepare('INSERT INTO '.$this->filesChangesTableName.' (uri, newuri, synctoken, principaluri, storage, operation) SELECT ?, ?, synctoken, ?, ?, ? FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
         $stmt->execute([
             $objectUri,
+			$newname,
             $principaluri,
             $storage,
             $operation,
