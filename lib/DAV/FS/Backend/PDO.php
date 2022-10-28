@@ -767,13 +767,13 @@ SQL
                 ++$result_count;
                 switch ($operation['operation']) {
                     case 1:
-                        $result['added'][] = $uri;
+                        $result['added'][] = [$uri, $operation['synctoken']];
                         break;
                     case 2:
-                        $result['modified'][] = $uri;
+                        $result['modified'][] = [$uri, $operation['synctoken']];
                         break;
                     case 3:
-                        $result['deleted'][] = $uri;
+                        $result['deleted'][] = [$uri, $operation['synctoken']];
                         break;
                 }
             }
@@ -824,14 +824,14 @@ SQL
      */
     public function addChange($principaluri, $storage, $objectUri, $operation)
     {
-        $stmt = $this->pdo->prepare('INSERT INTO '.$this->filesChangesTableName.' (uri, synctoken, principaluri, storage, operation) SELECT ?, synctoken, ?, ?, ? FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
+		$syncToken = $this->getSyncToken($principaluri, $storage);
+        $stmt = $this->pdo->prepare('INSERT INTO '.$this->filesChangesTableName.' (uri, synctoken, principaluri, storage, operation) VALUES (?, ?, ?, ?, ?)');
         $stmt->execute([
             $objectUri,
+			$syncToken,
             $principaluri,
             $storage,
-            $operation,
-			$principaluri,
-            $storage
+            $operation
         ]);
         $stmt = $this->pdo->prepare('UPDATE '.$this->filesStoragesTableName.' SET synctoken = synctoken + 1 WHERE principaluri = ? AND storage = ?');
         $stmt->execute([

@@ -257,6 +257,21 @@ trait NodeTrait
 		$this->access = $access;
 	}
 
+	protected function getDirectoryContents($dir)
+	{
+		$result = []; 
+
+		$rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
+
+		foreach ($rii as $file) {
+			if ($file->getFilename() !== '.' && $file->getFilename() !== '..' && $file->getFilename() !== '.sabredav') {
+				$result[] = $file->getPathname(); 
+			}
+		}
+
+		return $result;
+	}
+
 	/**
      * Renames the node
      *
@@ -276,6 +291,8 @@ trait NodeTrait
         $resourceData = $this->getResourceData();
         $this->deleteResourceData();
 
+		$oldDirectoryContents = $this->getDirectoryContents($this->path);
+
         rename($this->path, $newPath);
 
         $this->path = $newPath;
@@ -284,7 +301,13 @@ trait NodeTrait
 		$this->setNameHistory($name);
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
 		$oRootNode->addChange($this->getRelativePath() . '/' . $oldName, 3);
+		foreach ($oldDirectoryContents as $item) {
+			$oRootNode->addChange(str_replace($this->getRootPath(), '', $item), 3);
+		}
 		$oRootNode->addChange($this->getRelativePath() . '/' . $name, 1);
+		foreach ($this->getDirectoryContents($newPath) as $item) {
+			$oRootNode->addChange(str_replace($this->getRootPath(), '', $item), 1);
+		}
     }
 
 	public function setNameShared($name)

@@ -88,7 +88,7 @@ class Server extends \Sabre\DAV\Server
 
 		/* DAV Sync Plugin */
 		$this->addPlugin(
-			new \Sabre\DAV\Sync\Plugin()
+			new \Afterlogic\DAV\Sync\Plugin()
 		);
 
 		/* HTML Frontend Plugin */
