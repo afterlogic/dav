@@ -176,7 +176,10 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$this->updateQuota();
 
 		$oRootNode = Server::getNodeForPath('files/' . $this->getStorage());
-		$oRootNode->addChange($this->getRelativePathWithName() . '/' . $this->getName(), 3);
+
+		if ($this->getName() !== '.sabredav') {
+			$oRootNode->addChange($this->getRelativePath() . '/' . $this->getName(), 3);
+		}
 
 		return true;
 	}
