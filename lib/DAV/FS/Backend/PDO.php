@@ -796,6 +796,22 @@ SQL
         return $result;
     }
 
+	public function changeExists($principaluri, $storage, $objectUri)
+	{
+		$result = false;
+		$stmt = $this->pdo->prepare('SELECT uri FROM '.$this->filesChangesTableName.' WHERE principaluri = ? AND storage = ? AND uri = ? ORDER BY synctoken');
+		$stmt->execute([
+			$principaluri,
+			$storage,
+			$objectUri
+		]);
+		if($stmt->fetch(\PDO::FETCH_ASSOC)) {
+			$result = true;
+		}
+
+		return $result;
+	}
+
 	public function getSyncToken($principaluri, $storage)
 	{
 		$stmt = $this->pdo->prepare('SELECT synctoken FROM '.$this->filesStoragesTableName.' WHERE principaluri = ? AND storage = ?');
