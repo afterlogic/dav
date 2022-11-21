@@ -52,7 +52,7 @@ class Plugin extends \Sabre\DAV\Sync\Plugin
                 $responses[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props);
             }
         }
-        catch (\Sabre\DAV\Exception\NotFound) {
+        catch (\Sabre\DAV\Exception\NotFound $ex) {
 
         }
 
