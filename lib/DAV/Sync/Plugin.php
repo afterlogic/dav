@@ -21,6 +21,24 @@ use Sabre\HTTP\RequestInterface;
  */
 class Plugin extends \Sabre\DAV\Sync\Plugin
 {
+   protected function getPropertiesForMultiplePaths($fullPaths, $properties, &$result)
+   {
+        try {
+            foreach ($this->server->getPropertiesForMultiplePaths($fullPaths, $properties) as $fullPath => $props) {
+                // The 'Property_Response' class is responsible for generating a
+                // single {DAV:}response xml element.
+                $result[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props);
+                unset($fullPaths[$fullPath]);
+            }
+        }
+        catch (\Sabre\DAV\Exception\NotFound $ex) {
+            $fullPath = array_shift($fullPaths);
+            if (count($fullPaths) > 0) {
+                $this->getPropertiesForMultiplePaths($fullPaths, $properties, $result);
+            }
+        }
+   }
+    
     /**
      * Sends the response to a sync-collection request.
      *
@@ -30,43 +48,21 @@ class Plugin extends \Sabre\DAV\Sync\Plugin
     protected function sendSyncCollectionResponse($syncToken, $collectionUrl, array $added, array $modified, array $deleted, array $properties, bool $resultTruncated = false)
     {
         $fullPaths = [];
-        $syncTokens = null;
+        // Pre-fetching children, if this is possible.
         // Pre-fetching children, if this is possible.
         foreach (array_merge($added, $modified) as $item) {
-            if (is_array($item)) {
-                $syncTokens[$collectionUrl.'/'.$item[0]] = $item[1];
-                $item = $item[0];
-            }
-            $fullPath = $collectionUrl.'/'.$item;
+            $fullPath = $collectionUrl.'/'.$item[0];
             $fullPaths[] = $fullPath;
         }
 
         $responses = [];
-        try {
-            foreach ($this->server->getPropertiesForMultiplePaths($fullPaths, $properties) as $fullPath => $props) {
-                // The 'Property_Response' class is responsible for generating a
-                // single {DAV:}response xml element.
-                if (isset($syncTokens[$fullPath])) {
-                    $props[200]['{DAV:}item-sync-token'] = $syncTokens[$fullPath];
-                }
-                $responses[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props);
-            }
-        }
-        catch (\Sabre\DAV\Exception\NotFound $ex) {
-
-        }
+        $this->getPropertiesForMultiplePaths($fullPaths, $properties, $responses);
 
         // Deleted items also show up as 'responses'. They have no properties,
         // and a single {DAV:}status element set as 'HTTP/1.1 404 Not Found'.
         foreach ($deleted as $item) {
-            $props = [];
-            if (is_array($item)) {
-                $props[200]['{DAV:}item-sync-token'] = $item[1];
-                $item = $item[0];
-            }
-            $fullPath = $collectionUrl.'/'.$item;
-
-            $responses[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props, 404);
+            $fullPath = $collectionUrl.'/'.$item[0];
+            $responses[] = new \Sabre\DAV\Xml\Element\Response($fullPath, [], 404);
         }
         if ($resultTruncated) {
             $responses[] = new \Sabre\DAV\Xml\Element\Response($collectionUrl.'/', [], 507);
