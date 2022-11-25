@@ -69,7 +69,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 			}
 			catch (\Exception $oEx) {
 
-				\Aurora\Api::LogException($oEx);
+				//\Aurora\Api::LogException($oEx);
 			}
 			$oServer->setUser($sCurrentUser);
 
@@ -77,31 +77,31 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 				$oItem->setAccess((int) $aSharedFile['access']);
 				$oItem->setUser(basename($aSharedFile['owner']));
-			}
 
-			if (!$aSharedFile['isdir']) {
+				if (!$aSharedFile['isdir']) {
 
-				$mResult = new File($aSharedFile['uid'], $oItem);
-			}
-			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
-
-				$mResult = new Directory($aSharedFile['uid'], $oItem);
-			}
-
-			if ($mResult) {
-				
-				list($sRelativeNodePath, ) = split($aSharedFile['path']);
-				if ($sRelativeNodePath === '/') {
-
-					$sRelativeNodePath = '';
+					$mResult = new File($aSharedFile['uid'], $oItem);
 				}
-				$mResult->setRelativeNodePath($sRelativeNodePath);
-				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
-				$mResult->setSharePath($aSharedFile['share_path']);
-				$mResult->setAccess((int) $aSharedFile['access']);
-				$mResult->setGroupId($aSharedFile['group_id']);
-				$mResult->setInitiator($aSharedFile['initiator']);
-				$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+				else if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
+
+					$mResult = new Directory($aSharedFile['uid'], $oItem);
+				}
+
+				if ($mResult) {
+					
+					list($sRelativeNodePath, ) = split($aSharedFile['path']);
+					if ($sRelativeNodePath === '/') {
+
+						$sRelativeNodePath = '';
+					}
+					$mResult->setRelativeNodePath($sRelativeNodePath);
+					$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+					$mResult->setSharePath($aSharedFile['share_path']);
+					$mResult->setAccess((int) $aSharedFile['access']);
+					$mResult->setGroupId($aSharedFile['group_id']);
+					$mResult->setInitiator($aSharedFile['initiator']);
+					$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+				}
 			}
 		}
 		return $mResult;
