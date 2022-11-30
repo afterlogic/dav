@@ -99,7 +99,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 		$oFile = $this->getChild($name);
 
 		if ($oFile instanceof \Afterlogic\DAV\FS\File) {
-			$oFile->patch($data, $rangeType, $offset);
+			$result = $oFile->patch($data, $rangeType, $offset);
 		}
 
 		if (!$bIsNew) {
