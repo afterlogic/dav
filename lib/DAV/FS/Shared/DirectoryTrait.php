@@ -142,11 +142,11 @@ trait DirectoryTrait
 							$aChildren[] = $oChild;
 						}
 					} else {
-						$oPdo->deleteShare(
-							Constants::PRINCIPALS_PREFIX . $this->getUser(), 
-							$aSharedFile['uid'], 
-							$sPath
-						);
+						// $oPdo->deleteShare(
+						// 	Constants::PRINCIPALS_PREFIX . $this->getUser(), 
+						// 	$aSharedFile['uid'], 
+						// 	$sPath
+						// );
 					}
 				}
 			}
