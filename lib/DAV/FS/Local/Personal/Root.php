@@ -75,5 +75,10 @@ class Root extends Directory
 				(int) $aQuota['Limit']
 			];
 		}
-    }	
+    }
+
+	public function getRelativePath()
+	{
+		return "";
+	}
 }

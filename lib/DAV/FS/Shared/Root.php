@@ -10,6 +10,7 @@ namespace Afterlogic\DAV\FS\Shared;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\SharedFiles\Enums\Access;
+use Aurora\System\Api;
 use LogicException;
 
 use function Sabre\Uri\split;
@@ -65,9 +66,12 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 			try {
 
+				Api::Log('populateItem: owner: ' . basename($aSharedFile['owner']) . 'files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
 				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
 			}
-			catch (\Sabre\DAV\Exception\NotFound $oEx) {}
+			catch (\Sabre\DAV\Exception\NotFound $oEx) {
+				Api::Log('populateItem: item not found' );
+			}
 			$oServer->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Sabre\DAV\FS\Node) {
