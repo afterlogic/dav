@@ -10,7 +10,6 @@ namespace Afterlogic\DAV;
 use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\ICollection;
 use Sabre\DAV\IMultiGet;
-use Sabre\Uri;
 
 use function Sabre\Uri\split;
 
@@ -68,7 +67,7 @@ class Tree extends \Sabre\DAV\Tree
        // Finding common parents
        $parents = [];
        foreach ($paths as $path) {
-           list($parent, $node) = Uri\splt($path);
+           list($parent, $node) = split($path);
            if (!isset($parents[$parent])) {
                $parents[$parent] = [$node];
            } else {
