@@ -59,20 +59,16 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 
 		if (is_array($aSharedFile)) {
 
-			$oServer = \Afterlogic\DAV\Server::createInstance();
-			$sCurrentUser = $oServer->getUser();
-			$oServer->setUser(basename($aSharedFile['owner']));
 			$oItem = null;
 
 			try {
 
 				Api::Log('populateItem: owner: ' . basename($aSharedFile['owner']) . 'files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
-				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
+				$oItem = \Afterlogic\DAV\Server::getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'), basename($aSharedFile['owner']));
 			}
 			catch (\Sabre\DAV\Exception\NotFound $oEx) {
 				Api::Log('populateItem: item not found' );
 			}
-			$oServer->setUser($sCurrentUser);
 
 			if ($oItem instanceof \Sabre\DAV\FS\Node) {
 

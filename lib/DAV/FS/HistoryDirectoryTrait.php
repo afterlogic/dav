@@ -21,9 +21,8 @@ trait HistoryDirectoryTrait
         $oNode = null;
         if ($this instanceof File) {
             list(, $owner) = \Sabre\Uri\split($this->getOwner());
-            Server::getInstance()->setUser($owner);
             try {
-                $oNode = Server::getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist');
+                $oNode = Server::getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist', $owner);
             }
             catch (\Exception $oEx) {}
         }
