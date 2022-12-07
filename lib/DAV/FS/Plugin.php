@@ -122,14 +122,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	{
 		$sPath = null;
 
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$sUser = $oServer->getUser();
-		$oServer->setUser($sUserPublicId);
-		$oNode = $oServer->tree->getNodeForPath('files/'. $sStorage);
+		$oNode = \Afterlogic\DAV\Server::getNodeForPath('files/'. $sStorage, $sUserPublicId);
 		if ($oNode) {
 			$sPath = $oNode->getPath();
 		}
-		$oServer->setUser($sUser);
 
 		return $sPath;
 	}
@@ -139,9 +135,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 	 */
 	public function getNodeFromPath($path)
 	{
-		$oServer = \Afterlogic\DAV\Server::getInstance();
-		$oServer->setUser($this->getUser());
-		return $oServer->tree->getNodeForPath($path);
+		return \Afterlogic\DAV\Server::getNodeForPath($path, $this->getUser());
 	}
 
 	/**
@@ -250,7 +244,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	function methodGet($request, $response)
 	{
-		$node = $this->server->tree->getNodeForPath($request->getPath());
+		$node = \Afterlogic\DAV\Server::getNodeForPath($request->getPath());
 		if ($node instanceof File) {
 			$mExtendedProps = $node->getProperty('ExtendedProps');
 			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];
@@ -267,7 +261,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin {
 
 	function afterMethodPut($request, $response)
 	{
-		$node = $this->server->tree->getNodeForPath($request->getPath());
+		$node = \Afterlogic\DAV\Server::getNodeForPath($request->getPath());
 		if ($node instanceof File) {
 			$mExtendedProps = $node->getProperty('ExtendedProps');
 			$aExtendedProps = is_array($mExtendedProps) ? $mExtendedProps : [];

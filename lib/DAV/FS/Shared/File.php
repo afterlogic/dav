@@ -85,10 +85,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         if ($this->node) {
 
             list(, $owner) = \Sabre\Uri\split($this->getOwner());
-            Server::getInstance()->setUser($owner);
-            try
-            {
-                $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist');
+            try {
+                $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist', $owner);
             }
             catch (\Exception $oEx) {}
         }

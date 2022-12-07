@@ -9,6 +9,7 @@ namespace Afterlogic\DAV\FS\Local\Personal;
 
 use Afterlogic\DAV\FS\HistoryDirectory;
 use Afterlogic\DAV\Server;
+use Aurora\System\Api;
 use Sabre\DAV\Exception\NotFound;
 
 /**
@@ -38,6 +39,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		}
 
 		if (!$mResult) {
+			Api::Log('File ' . $this->getPath() . '/' . $name . ' not found');
 			throw new NotFound();
 		}
 

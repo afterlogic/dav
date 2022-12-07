@@ -42,7 +42,7 @@ trait DirectoryTrait
 				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
 
 					if ($oChild) {
-						$sPath = '/' . ltrim($oChild->getRelativePath() . '/' . $oChild->getName(), '/');
+						$sPath = '/' . ltrim($oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName(), '/');
 						if ($aSharedFile['path'] === $sPath) {
 
 							$this->populateAccess($oChild, $aSharedFile);
@@ -122,7 +122,7 @@ trait DirectoryTrait
 				if ($aSharedFile['owner'] !== $aSharedFile['principaluri']) {
 					$bContinue= false;
 					foreach ($aChildren as $oChild) {
-						$sPath = '/' . ltrim($oChild->getRelativePath() . '/' . $oChild->getName(), '/');
+						$sPath = '/' . ltrim($oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName(), '/');
 						if ($aSharedFile['path'] === $sPath) {
 
 							$this->populateAccess($oChild, $aSharedFile);
@@ -141,12 +141,6 @@ trait DirectoryTrait
 						if ($oChild->getAccess() !== Access::NoAccess) {
 							$aChildren[] = $oChild;
 						}
-					} else {
-						// $oPdo->deleteShare(
-						// 	Constants::PRINCIPALS_PREFIX . $this->getUser(), 
-						// 	$aSharedFile['uid'], 
-						// 	$sPath
-						// );
 					}
 				}
 			}

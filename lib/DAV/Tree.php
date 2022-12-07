@@ -9,6 +9,7 @@ namespace Afterlogic\DAV;
 
 use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\ICollection;
+use Sabre\DAV\IMultiGet;
 
 use function Sabre\Uri\split;
 
@@ -28,6 +29,10 @@ class Tree extends \Sabre\DAV\Tree
    function getNodeForPath($path) {
 
        $path = trim($path, '/');
+
+       if (isset($this->cache[Server::getUser()][$path])) {
+        return $this->cache[Server::getUser()][$path];
+    }
 
        // Is it the root node?
        if (!strlen($path)) {
@@ -51,8 +56,70 @@ class Tree extends \Sabre\DAV\Tree
 
        }
 
+       $this->cache[Server::getUser()][$path] = $node;
+
        return $node;
 
+   }
+
+   public function getMultipleNodes($paths)
+   {
+       // Finding common parents
+       $parents = [];
+       foreach ($paths as $path) {
+           list($parent, $node) = split($path);
+           if (!isset($parents[$parent])) {
+               $parents[$parent] = [$node];
+           } else {
+               $parents[$parent][] = $node;
+           }
+       }
+
+       $result = [];
+
+       foreach ($parents as $parent => $children) {
+           $parentNode = $this->getNodeForPath($parent);
+           if ($parentNode instanceof IMultiGet) {
+               foreach ($parentNode->getMultipleChildren($children) as $childNode) {
+                   $fullPath = $parent.'/'.$childNode->getName();
+                   $result[$fullPath] = $childNode;
+                   $this->cache[Server::getUser()][$fullPath] = $childNode;
+               }
+           } else {
+               foreach ($children as $child) {
+                   $fullPath = $parent.'/'.$child;
+                   $result[$fullPath] = $this->getNodeForPath($fullPath);
+               }
+           }
+       }
+
+       return $result;
+   }
+
+   public function getChildren($path)
+   {
+       $node = $this->getNodeForPath($path);
+       $basePath = trim($path, '/');
+       if ('' !== $basePath) {
+           $basePath .= '/';
+       }
+
+       foreach ($node->getChildren() as $child) {
+           $this->cache[Server::getUser()][$basePath.$child->getName()] = $child;
+           yield $child;
+       }
+   }
+
+   public function markDirty($path)
+   {
+       // We don't care enough about sub-paths
+       // flushing the entire cache
+       $path = trim($path, '/');
+       foreach ($this->cache[Server::getUser()] as $nodePath => $node) {
+           if ('' === $path || $nodePath == $path || 0 === strpos((string) $nodePath, $path.'/')) {
+               unset($this->cache[Server::getUser()][$nodePath]);
+           }
+       }
    }
 
 }

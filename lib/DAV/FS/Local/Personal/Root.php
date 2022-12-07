@@ -77,5 +77,10 @@ class Root extends Directory implements \Sabre\DAV\Sync\ISyncCollection
 				(int) $aQuota['Limit']
 			];
 		}
-    }	
+    }
+
+	public function getRelativePath()
+	{
+		return "";
+	}
 }

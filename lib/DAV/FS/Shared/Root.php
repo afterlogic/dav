@@ -10,6 +10,7 @@ namespace Afterlogic\DAV\FS\Shared;
 use Afterlogic\DAV\Constants;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\SharedFiles\Enums\Access;
+use Aurora\System\Api;
 use LogicException;
 
 use function Sabre\Uri\split;
@@ -59,46 +60,47 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL, \
 
 		if (is_array($aSharedFile)) {
 
-			$oServer = \Afterlogic\DAV\Server::createInstance();
-			$sCurrentUser = $oServer->getUser();
-			$oServer->setUser(basename($aSharedFile['owner']));
 			$oItem = null;
 
 			try {
 
-				$oItem = $oServer->tree->getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
+				Api::Log('populateItem: owner: ' . basename($aSharedFile['owner']) . 'files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'));
+				$oItem = \Afterlogic\DAV\Server::getNodeForPath('files/' . $aSharedFile['storage'] . '/' .  trim($aSharedFile['path'], '/'), basename($aSharedFile['owner']));
 			}
-			catch (\Sabre\DAV\Exception\NotFound $oEx) {}
-			$oServer->setUser($sCurrentUser);
+			catch (\Exception $oEx) {
+
+				\Aurora\Api::LogException($oEx);
+			}
 
 			if ($oItem instanceof \Sabre\DAV\FS\Node) {
 
 				$oItem->setAccess((int) $aSharedFile['access']);
 				$oItem->setUser(basename($aSharedFile['owner']));
+			}
 
-				if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
+			if (!$aSharedFile['isdir']) {
 
-					$mResult = new Directory($aSharedFile['uid'], $oItem);
-				} else {
+				$mResult = new File($aSharedFile['uid'], $oItem);
+			}
+			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
 
-					$mResult = new File($aSharedFile['uid'], $oItem);
+				$mResult = new Directory($aSharedFile['uid'], $oItem);
+			}
+
+			if ($mResult) {
+				
+				list($sRelativeNodePath, ) = split($aSharedFile['path']);
+				if ($sRelativeNodePath === '/') {
+
+					$sRelativeNodePath = '';
 				}
-
-				if ($mResult) {
-					
-					list($sRelativeNodePath, ) = split($aSharedFile['path']);
-					if ($sRelativeNodePath === '/') {
-
-						$sRelativeNodePath = '';
-					}
-					$mResult->setRelativeNodePath($sRelativeNodePath);
-					$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
-					$mResult->setSharePath($aSharedFile['share_path']);
-					$mResult->setAccess((int) $aSharedFile['access']);
-					$mResult->setGroupId($aSharedFile['group_id']);
-					$mResult->setInitiator($aSharedFile['initiator']);
-					$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
-				}
+				$mResult->setRelativeNodePath($sRelativeNodePath);
+				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+				$mResult->setSharePath($aSharedFile['share_path']);
+				$mResult->setAccess((int) $aSharedFile['access']);
+				$mResult->setGroupId($aSharedFile['group_id']);
+				$mResult->setInitiator($aSharedFile['initiator']);
+				$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
 			}
 		}
 		return $mResult;
