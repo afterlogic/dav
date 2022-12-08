@@ -96,7 +96,9 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL {
 					$mResult->setAccess((int) $aSharedFile['access']);
 					$mResult->setGroupId($aSharedFile['group_id']);
 					$mResult->setInitiator($aSharedFile['initiator']);
-					$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+					if (isset($aSharedFile['properties'])) {
+						$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+					}
 				}
 			}
 		}
