@@ -76,31 +76,32 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL, \
 
 				$oItem->setAccess((int) $aSharedFile['access']);
 				$oItem->setUser(basename($aSharedFile['owner']));
-			}
 
-			if (!$aSharedFile['isdir']) {
+				if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
 
-				$mResult = new File($aSharedFile['uid'], $oItem);
-			}
-			else if ($oItem instanceof \Afterlogic\DAV\FS\Directory) {
+					$mResult = new Directory($aSharedFile['uid'], $oItem);
+				} else {
 
-				$mResult = new Directory($aSharedFile['uid'], $oItem);
-			}
-
-			if ($mResult) {
-				
-				list($sRelativeNodePath, ) = split($aSharedFile['path']);
-				if ($sRelativeNodePath === '/') {
-
-					$sRelativeNodePath = '';
+					$mResult = new File($aSharedFile['uid'], $oItem);
 				}
-				$mResult->setRelativeNodePath($sRelativeNodePath);
-				$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
-				$mResult->setSharePath($aSharedFile['share_path']);
-				$mResult->setAccess((int) $aSharedFile['access']);
-				$mResult->setGroupId($aSharedFile['group_id']);
-				$mResult->setInitiator($aSharedFile['initiator']);
-				$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+
+				if ($mResult) {
+					
+					list($sRelativeNodePath, ) = split($aSharedFile['path']);
+					if ($sRelativeNodePath === '/') {
+
+						$sRelativeNodePath = '';
+					}
+					$mResult->setRelativeNodePath($sRelativeNodePath);
+					$mResult->setOwnerPublicId(basename($aSharedFile['owner']));
+					$mResult->setSharePath($aSharedFile['share_path']);
+					$mResult->setAccess((int) $aSharedFile['access']);
+					$mResult->setGroupId($aSharedFile['group_id']);
+					$mResult->setInitiator($aSharedFile['initiator']);
+					if (isset($aSharedFile['properties'])) {
+						$mResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+					}
+				}
 			}
 		}
 		return $mResult;
