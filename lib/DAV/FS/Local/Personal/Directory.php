@@ -39,7 +39,6 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		}
 
 		if (!$mResult) {
-			Api::Log('File ' . $this->getPath() . '/' . $name . ' not found');
 			throw new NotFound();
 		}
 
