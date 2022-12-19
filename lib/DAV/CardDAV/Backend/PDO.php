@@ -16,7 +16,7 @@ use Afterlogic\DAV\Constants;
  */
 class PDO extends \Sabre\CardDAV\Backend\PDO
 {
-    protected \PDO $pdo;
+//    protected \PDO $pdo;
 
     protected function getTenantPrincipal($sUserPublicId)
     {
