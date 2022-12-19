@@ -12,6 +12,6 @@ namespace Afterlogic\DAV\CardDAV;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class AddressBook extends \Sabre\CardDAV\AddressBook {
-
+class AddressBook extends \Sabre\CardDAV\AddressBook
+{
 }

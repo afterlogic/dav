@@ -17,12 +17,11 @@ use Sabre\DAVACL\PrincipalBackend;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class CalendarRoot extends \Sabre\CalDAV\CalendarRoot {
-
-    function __construct() {
-
+class CalendarRoot extends \Sabre\CalDAV\CalendarRoot
+{
+    public function __construct()
+    {
         parent::__construct(\Afterlogic\DAV\Backend::Principal(), \Afterlogic\DAV\Backend::CalDAV());
-
     }
 
     // /**
@@ -40,5 +39,4 @@ class CalendarRoot extends \Sabre\CalDAV\CalendarRoot {
     //     return new CalendarHome($this->caldavBackend, $principal);
 
     // }
-
 }

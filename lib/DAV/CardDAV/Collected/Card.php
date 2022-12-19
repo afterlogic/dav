@@ -14,17 +14,15 @@ use Sabre\DAV\Exception\Forbidden;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Card extends \Sabre\CardDAV\Card {
-
+class Card extends \Sabre\CardDAV\Card
+{
     /**
      * Deletes the card
      *
      * @return void
      */
-    function delete() {
-
+    public function delete()
+    {
 //        throw new Forbidden();
-
     }
-
 }

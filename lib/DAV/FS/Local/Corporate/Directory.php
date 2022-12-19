@@ -14,32 +14,33 @@ use Afterlogic\DAV\FS\HistoryDirectory;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Directory extends \Afterlogic\DAV\FS\Local\Directory {
-    
-	public function __construct($path) 
-	{
-		parent::__construct(\Aurora\System\Enums\FileStorageType::Corporate, $path);
-	}
-
-	public function getChild($name) 
+class Directory extends \Afterlogic\DAV\FS\Local\Directory
+{
+    public function __construct($path)
     {
-		$path = $this->checkFileName($name);
+        parent::__construct(\Aurora\System\Enums\FileStorageType::Corporate, $path);
+    }
 
-		if (is_dir($path)) {
-			$ext = strtolower(substr($name, -5));
-			if ($ext === '.hist') {
-				$result = new HistoryDirectory($this->getStorage(), $path);
-			} else {
-				$result = new self($path);
-			}
-		} else {
-			$result = new File($path);
-		}
+    public function getChild($name)
+    {
+        $path = $this->checkFileName($name);
 
-		return $result;
-	}		
-	
-    function getQuotaInfo() { 
-		return [0, 0];
-	}	
+        if (is_dir($path)) {
+            $ext = strtolower(substr($name, -5));
+            if ($ext === '.hist') {
+                $result = new HistoryDirectory($this->getStorage(), $path);
+            } else {
+                $result = new self($path);
+            }
+        } else {
+            $result = new File($path);
+        }
+
+        return $result;
+    }
+
+    public function getQuotaInfo()
+    {
+        return [0, 0];
+    }
 }

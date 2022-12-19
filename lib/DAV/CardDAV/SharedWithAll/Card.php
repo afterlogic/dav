@@ -12,22 +12,21 @@ namespace Afterlogic\DAV\CardDAV\SharedWithAll;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Card extends \Sabre\CardDAV\Card {
+class Card extends \Sabre\CardDAV\Card
+{
+    protected $principalUri;
 
-   protected $principalUri;
-
-	/**
+    /**
      * Constructor
      *
      * @param \Sabre\CardDAV\Backend\BackendInterface $carddavBackend
      * @param array $addressBookInfo
      * @param array $cardData
      */
-    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend,array $addressBookInfo,array $cardData,$principalUri) {
-
+    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, array $cardData, $principalUri)
+    {
         parent::__construct($carddavBackend, $addressBookInfo, $cardData);
-		$this->principalUri = $principalUri;
-
+        $this->principalUri = $principalUri;
     }
 
     public function getACL()
@@ -40,4 +39,4 @@ class Card extends \Sabre\CardDAV\Card {
             ],
         ];
     }
- }
+}

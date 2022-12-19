@@ -4,7 +4,6 @@
 echo "SabreDAV migrate script for version 3.2\n";
 
 if ($argc < 2) {
-
     echo <<<HELLO
 
 This script help you migrate from a 3.1 database to 3.2 and later
@@ -37,7 +36,6 @@ php {$argv[0]} sqlite:data/sabredav.db
 HELLO;
 
     exit();
-
 }
 
 // There's a bunch of places where the autoloader could be, so we'll try all of
@@ -71,14 +69,13 @@ $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
 switch ($driver) {
-
-    case 'mysql' :
+    case 'mysql':
         echo "Detected MySQL.\n";
         break;
-    case 'sqlite' :
+    case 'sqlite':
         echo "Detected SQLite.\n";
         break;
-    default :
+    default:
         echo "Error: unsupported driver: " . $driver . "\n";
         die(-1);
 }
@@ -93,8 +90,9 @@ try {
     echo "calendarinstances does not yet exist. Creating table and migrating data.\n";
 
     switch ($driver) {
-        case 'mysql' :
-            $pdo->exec("
+        case 'mysql':
+            $pdo->exec(
+                "
 CREATE TABLE ".$prefix."calendarinstances (
     id INTEGER UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     calendarid INTEGER UNSIGNED NOT NULL,
@@ -116,7 +114,7 @@ CREATE TABLE ".$prefix."calendarinstances (
     UNIQUE(calendarid, share_href)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 "
-        );
+            );
             $pdo->exec("
 INSERT INTO ".$prefix."calendarinstances
     (
@@ -143,8 +141,9 @@ SELECT
 FROM ".$prefix."calendars
 ");
             break;
-        case 'sqlite' :
-            $pdo->exec("
+        case 'sqlite':
+            $pdo->exec(
+                "
 CREATE TABLE ".$prefix."calendarinstances (
     id integer primary key asc NOT NULL,
     calendarid integer,
@@ -165,7 +164,7 @@ CREATE TABLE ".$prefix."calendarinstances (
     UNIQUE (calendarid, share_href)
 );
 "
-        );
+            );
             $pdo->exec("
 INSERT INTO ".$prefix."calendarinstances
     (
@@ -193,7 +192,6 @@ FROM ".$prefix."calendars
 ");
             break;
     }
-
 }
 try {
     $result = $pdo->query("SELECT * FROM ".$prefix."calendars LIMIT 1");
@@ -212,59 +210,57 @@ try {
         echo "The calendars table has " . $columnCount . " columns.\n";
         $migrateCalendars = true;
     }
-
 } catch (Exception $e) {
     echo "calendars table does not exist. This is a major problem. Exiting.\n";
     exit(-1);
 }
 
 if ($migrateCalendars) {
-
     $calendarBackup = 'calendars_3_1_' . $backupPostfix;
     echo "Backing up 'calendars' to '", $calendarBackup, "'\n";
 
     switch ($driver) {
-        case 'mysql' :
+        case 'mysql':
             $pdo->exec("RENAME TABLE ".$prefix."calendars TO " . $calendarBackup);
             break;
-        case 'sqlite' :
+        case 'sqlite':
             $pdo->exec("ALTER TABLE ".$prefix."calendars RENAME TO " . $calendarBackup);
             break;
-
     }
 
     echo "Creating new calendars table.\n";
     switch ($driver) {
-        case 'mysql' :
-            $pdo->exec("
+        case 'mysql':
+            $pdo->exec(
+                "
 CREATE TABLE ".$prefix."calendars (
     id INTEGER UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
     synctoken INTEGER UNSIGNED NOT NULL DEFAULT '1',
     components VARBINARY(21)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 "
-);
+            );
             break;
-        case 'sqlite' :
-            $pdo->exec("
+        case 'sqlite':
+            $pdo->exec(
+                "
 CREATE TABLE ".$prefix."calendars (
     id integer primary key asc NOT NULL,
     synctoken integer DEFAULT 1 NOT NULL,
     components text NOT NULL
 );
 "
-        );
+            );
             break;
-
     }
 
     echo "Migrating data from old to new table\n";
 
-    $pdo->exec("
+    $pdo->exec(
+        "
 INSERT INTO ".$prefix."calendars (id, synctoken, components) SELECT id, synctoken, COALESCE(components,\"VEVENT,VTODO,VJOURNAL\") as components FROM $calendarBackup
 "
     );
-
 }
 
 

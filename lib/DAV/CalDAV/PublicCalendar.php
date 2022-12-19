@@ -14,6 +14,6 @@ namespace Afterlogic\DAV\CalDAV;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class PublicCalendar extends \Sabre\CalDAV\SharedCalendar {
-
+class PublicCalendar extends \Sabre\CalDAV\SharedCalendar
+{
 }

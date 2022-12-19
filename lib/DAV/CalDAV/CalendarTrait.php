@@ -18,10 +18,8 @@ trait CalendarTrait
     {
         $response = [];
 
-        foreach ($calendarInfo as $propName => $propValue)
-        {
-            if (!is_null($propValue) && (in_array($propName, $requestedProperties) || count($requestedProperties) === 0))
-            {
+        foreach ($calendarInfo as $propName => $propValue) {
+            if (!is_null($propValue) && (in_array($propName, $requestedProperties) || count($requestedProperties) === 0)) {
                 $response[$propName] = $calendarInfo[$propName];
             }
         }

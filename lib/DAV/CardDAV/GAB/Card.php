@@ -12,8 +12,8 @@ namespace Afterlogic\DAV\CardDAV\GAB;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
-
+class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard
+{
     /**
      * Contact info
      *
@@ -26,10 +26,9 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @param array $cardInfo
      */
-    public function __construct(array $cardInfo) {
-
+    public function __construct(array $cardInfo)
+    {
         $this->_cardInfo = $cardInfo;
-
     }
 
     /**
@@ -37,10 +36,9 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @return void
      */
-    public function getName() {
-
+    public function getName()
+    {
         return $this->_cardInfo['uri'];
-
     }
 
     /**
@@ -48,10 +46,9 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @return string
      */
-    public function getContentType() {
-
+    public function getContentType()
+    {
         return 'text/x-vcard; charset=utf-8';
-
     }
 
     /**
@@ -59,10 +56,9 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @return string
      */
-    public function get() {
-
+    public function get()
+    {
         return $this->_cardInfo['carddata'];
-
     }
 
     /**
@@ -70,10 +66,9 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @return int
      */
-    public function getLastModified() {
-
+    public function getLastModified()
+    {
         return $this->_cardInfo['lastmodified'];
-
     }
 
     /**
@@ -81,14 +76,13 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
      *
      * @return int
      */
-    public function getSize() {
-
+    public function getSize()
+    {
         return strlen($this->_cardInfo['carddata']);
-
     }
 
-    function getETag() {
-
+    public function getETag()
+    {
         if (isset($this->cardData['etag'])) {
             return $this->cardData['etag'];
         } else {
@@ -100,6 +94,5 @@ class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard {
                 return null;
             }
         }
-
     }
 }

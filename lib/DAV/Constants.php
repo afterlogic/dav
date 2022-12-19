@@ -14,55 +14,55 @@ namespace Afterlogic\DAV;
  */
 class Constants
 {
-	const T_ACCOUNTS = 'awm_accounts';
-	const T_PRINCIPALS = 'adav_principals';
-	const T_GROUPMEMBERS = 'adav_groupmembers';
+    public const T_ACCOUNTS = 'awm_accounts';
+    public const T_PRINCIPALS = 'adav_principals';
+    public const T_GROUPMEMBERS = 'adav_groupmembers';
 
-	const T_CALENDARS = 'adav_calendars';
-	const T_CALENDARCHANGES = 'adav_calendarchanges';
-	const T_CALENDAROBJECTS = 'adav_calendarobjects';
-	const T_SCHEDULINGOBJECTS = 'adav_schedulingobjects';
-	const T_CALENDARSUBSCRIPTIONS = 'adav_calendarsubscriptions';
-	const T_REMINDERS = 'adav_reminders';
-	const T_CALENDARINSTANCES = 'adav_calendarinstances';
+    public const T_CALENDARS = 'adav_calendars';
+    public const T_CALENDARCHANGES = 'adav_calendarchanges';
+    public const T_CALENDAROBJECTS = 'adav_calendarobjects';
+    public const T_SCHEDULINGOBJECTS = 'adav_schedulingobjects';
+    public const T_CALENDARSUBSCRIPTIONS = 'adav_calendarsubscriptions';
+    public const T_REMINDERS = 'adav_reminders';
+    public const T_CALENDARINSTANCES = 'adav_calendarinstances';
 
-	const T_ADDRESSBOOKS = 'adav_addressbooks';
-	const T_ADDRESSBOOKCHANGES = 'adav_addressbookchanges';
-	const T_CARDS = 'adav_cards';
+    public const T_ADDRESSBOOKS = 'adav_addressbooks';
+    public const T_ADDRESSBOOKCHANGES = 'adav_addressbookchanges';
+    public const T_CARDS = 'adav_cards';
 
-	const T_LOCKS = 'adav_locks';
-	const T_CACHE = 'adav_cache';
+    public const T_LOCKS = 'adav_locks';
+    public const T_CACHE = 'adav_cache';
 
-	const GLOBAL_CONTACTS = 'Global Contacts';
-	const CALENDAR_DEFAULT_NAME = 'My calendar';
-	const CALENDAR_DEFAULT_COLOR = '#f09650';
-	const CALENDAR_DEFAULT_UUID = 'MyCalendar';
+    public const GLOBAL_CONTACTS = 'Global Contacts';
+    public const CALENDAR_DEFAULT_NAME = 'My calendar';
+    public const CALENDAR_DEFAULT_COLOR = '#f09650';
+    public const CALENDAR_DEFAULT_UUID = 'MyCalendar';
 
-	const TASKS_DEFAULT_NAME = 'My tasks';
-	const TASKS_DEFAULT_COLOR = '#f68987';
+    public const TASKS_DEFAULT_NAME = 'My tasks';
+    public const TASKS_DEFAULT_COLOR = '#f68987';
 
-	const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';
-	const ADDRESSBOOK_DEFAULT_NAME_OLD = 'Default';
-	const ADDRESSBOOK_DEFAULT_DISPLAY_NAME = 'Address Book';
-	const ADDRESSBOOK_DEFAULT_DISPLAY_NAME_OLD = 'General';
-	const ADDRESSBOOK_COLLECTED_NAME = 'Collected';
-	const ADDRESSBOOK_COLLECTED_DISPLAY_NAME = 'Collected Addresses';
-	const ADDRESSBOOK_SHARED_WITH_ALL_NAME = 'SharedWithAll';
-	const ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME = 'Shared With All';
+    public const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';
+    public const ADDRESSBOOK_DEFAULT_NAME_OLD = 'Default';
+    public const ADDRESSBOOK_DEFAULT_DISPLAY_NAME = 'Address Book';
+    public const ADDRESSBOOK_DEFAULT_DISPLAY_NAME_OLD = 'General';
+    public const ADDRESSBOOK_COLLECTED_NAME = 'Collected';
+    public const ADDRESSBOOK_COLLECTED_DISPLAY_NAME = 'Collected Addresses';
+    public const ADDRESSBOOK_SHARED_WITH_ALL_NAME = 'SharedWithAll';
+    public const ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME = 'Shared With All';
 
-	const DAV_PUBLIC_PRINCIPAL = 'caldav_public_user@localhost';
-	const DAV_TENANT_PRINCIPAL = 'dav_tenant_user@localhost';
+    public const DAV_PUBLIC_PRINCIPAL = 'caldav_public_user@localhost';
+    public const DAV_TENANT_PRINCIPAL = 'dav_tenant_user@localhost';
 
-	const DAV_USER_AGENT = 'eMClient/8.2.1659.0';
-	const DAV_SERVER_NAME = 'AfterlogicDAVServer';
+    public const DAV_USER_AGENT = 'eMClient/8.2.1659.0';
+    public const DAV_SERVER_NAME = 'AfterlogicDAVServer';
 
-	const FILESTORAGE_PRIVATE_QUOTA = 104857600;
-	const FILESTORAGE_CORPORATE_QUOTA = 1048576000;
+    public const FILESTORAGE_PRIVATE_QUOTA = 104857600;
+    public const FILESTORAGE_CORPORATE_QUOTA = 1048576000;
 
-	const FILESTORAGE_PATH_ROOT = '/files';
-	const FILESTORAGE_PATH_PERSONAL = '/private';
-	const FILESTORAGE_PATH_CORPORATE = '/corporate';
-	const FILESTORAGE_PATH_SHARED = '/shared';
+    public const FILESTORAGE_PATH_ROOT = '/files';
+    public const FILESTORAGE_PATH_PERSONAL = '/private';
+    public const FILESTORAGE_PATH_CORPORATE = '/corporate';
+    public const FILESTORAGE_PATH_SHARED = '/shared';
 
-	const PRINCIPALS_PREFIX = 'principals/';
+    public const PRINCIPALS_PREFIX = 'principals/';
 }

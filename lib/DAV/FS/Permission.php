@@ -14,7 +14,7 @@ namespace Afterlogic\DAV\FS;
  */
 class Permission
 {
-    const Write = 1;
-    const Read = 2;
-    const Reshare = 3;
+    public const Write = 1;
+    public const Read = 2;
+    public const Reshare = 3;
 }

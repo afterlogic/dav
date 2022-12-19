@@ -14,9 +14,9 @@ use Aurora\System\Enums\LogLevel;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Client extends \Sabre\DAV\Client {
-
-	/**
+class Client extends \Sabre\DAV\Client
+{
+    /**
      * Performs an HTTP options request
      *
      * This method returns all the features from the 'DAV:' header as an array.
@@ -26,95 +26,79 @@ class Client extends \Sabre\DAV\Client {
      * @return array
      */
     public function options_ex()
-	{
-	    $response = array();
-		$response = $this->request('OPTIONS');
-		$result = array();
-		$result['custom-server'] = false;
+    {
+        $response = array();
+        $response = $this->request('OPTIONS');
+        $result = array();
+        $result['custom-server'] = false;
 
-		if(isset($response['headers']['x-server']) &&
-				($response['headers']['x-server'] == Constants::DAV_SERVER_NAME) != null)
-		{
-			$result['custom-server'] = true;
-		}
-
-        if (!isset($response['headers']['dav']))
-		{
-			$result['features'] = array();
+        if (isset($response['headers']['x-server']) &&
+                ($response['headers']['x-server'] == Constants::DAV_SERVER_NAME) != null) {
+            $result['custom-server'] = true;
         }
-		else
-		{
-			$features = explode(',', $response['headers']['dav'][0]);
-			foreach($features as &$v)
-			{
-				$v = trim($v);
-			}
-			$result['features'] = $features;
-		}
 
-		if (!isset($response['headers']['allow']))
-		{
-			$result['allow'] = array();
+        if (!isset($response['headers']['dav'])) {
+            $result['features'] = array();
+        } else {
+            $features = explode(',', $response['headers']['dav'][0]);
+            foreach ($features as &$v) {
+                $v = trim($v);
+            }
+            $result['features'] = $features;
         }
-		else
-		{
-			$allow = explode(',', $response['headers']['allow'][0]);
-			foreach($allow as &$v)
-			{
-				$v = trim($v);
-			}
-			$result['allow'] = $allow;
-		}
-		return $result;
+
+        if (!isset($response['headers']['allow'])) {
+            $result['allow'] = array();
+        } else {
+            $allow = explode(',', $response['headers']['allow'][0]);
+            foreach ($allow as &$v) {
+                $v = trim($v);
+            }
+            $result['allow'] = $allow;
+        }
+        return $result;
     }
 
-	public function request($method, $url = '', $body = null, $headers = array())
-	{
-		$headers['user-agent'] = Constants::DAV_USER_AGENT;
+    public function request($method, $url = '', $body = null, $headers = array())
+    {
+        $headers['user-agent'] = Constants::DAV_USER_AGENT;
 
-		$sLog = "REQUEST: ".$method;
-		if ($url != '')
-		{
-			$sLog = $sLog." ".$url;
-		}
-		if ($body != null)
-		{
-			$sLog = $sLog."\r\nBody:\r\n".$body;
-		}
-		\Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
-		\Aurora\System\Api::LogObject($headers, LogLevel::Full, 'dav-');
+        $sLog = "REQUEST: ".$method;
+        if ($url != '') {
+            $sLog = $sLog." ".$url;
+        }
+        if ($body != null) {
+            $sLog = $sLog."\r\nBody:\r\n".$body;
+        }
+        \Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
+        \Aurora\System\Api::LogObject($headers, LogLevel::Full, 'dav-');
 
-		$response = array();
-		try
-		{
-			$response = parent::request($method, $url, $body, $headers);
-		}
-		catch (\Sabre\DAV\Exception $ex)
-		{
-			\Aurora\System\Api::LogObject($ex->getMessage(), LogLevel::Full, 'dav-');
-			throw $ex;
-		}
+        $response = array();
+        try {
+            $response = parent::request($method, $url, $body, $headers);
+        } catch (\Sabre\DAV\Exception $ex) {
+            \Aurora\System\Api::LogObject($ex->getMessage(), LogLevel::Full, 'dav-');
+            throw $ex;
+        }
 
-		$sLog = "RESPONSE: ".$method;
-		if (!empty($response['body']))
-		{
-			$sLog = $sLog."\r\nBody:\r\n".$response['body'];
-		}
-		\Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
-		if (!empty($response['headers']))
-		{
-			\Aurora\System\Api::LogObject($response['headers'], LogLevel::Full, 'dav-');
-		}
+        $sLog = "RESPONSE: ".$method;
+        if (!empty($response['body'])) {
+            $sLog = $sLog."\r\nBody:\r\n".$response['body'];
+        }
+        \Aurora\System\Api::Log($sLog, LogLevel::Full, 'dav-');
+        if (!empty($response['headers'])) {
+            \Aurora\System\Api::LogObject($response['headers'], LogLevel::Full, 'dav-');
+        }
 
-		return $response;
-	}
+        return $response;
+    }
 
-	public function parseMultiStatus($body)
-	{
-		$body = str_replace('<D:', '<d:', $body);
-		$body = str_replace('</D:', '</d:', $body);
-		$body = str_replace(':D=', ':d=', $body);
+    public function parseMultiStatus($body)
+    {
+        $body = str_replace('<D:', '<d:', $body);
+        $body = str_replace('</D:', '</d:', $body);
+        $body = str_replace(':D=', ':d=', $body);
 
-		return parent::parseMultiStatus($body);
-	}
+        return parent::parseMultiStatus($body);
+    }
 }

@@ -12,55 +12,55 @@ namespace Afterlogic\DAV\FS;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends \Sabre\DAV\Collection {
+class Root extends \Sabre\DAV\Collection
+{
+    use NodeTrait;
 
-	use NodeTrait;
+    public static $aStoragesCache = null;
 
-	public static $aStoragesCache = null;
+    protected $path;
 
-	protected $path;
+    public function getName()
+    {
+        return 'files';
+    }
 
-	public function getName()
-	{
-		return 'files';
-	}
+    protected function getStorages()
+    {
+        if (!isset(self::$aStoragesCache)) {
+            self::$aStoragesCache = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
+        }
 
-	protected function getStorages()
-	{
-		if (!isset(self::$aStoragesCache)) {
-			self::$aStoragesCache = \Aurora\Modules\Files\Module::Decorator()->GetSubModules();
-		}
+        return self::$aStoragesCache;
+    }
 
-		return self::$aStoragesCache;
-	}
+    public function getChildrenCount()
+    {
+        return count($this->getStorages());
+    }
 
-	public function getChildrenCount()
-	{
-		return count($this->getStorages());
-	}
+    public function getChildren()
+    {
+        $aChildren = [];
+        $aStorages = $this->getStorages();
 
-	public function getChildren()
-	{
-		$aChildren = [];
-		$aStorages = $this->getStorages();
+        foreach ($aStorages as $sStorage) {
+            $aClassPath = ['Afterlogic', 'DAV', 'FS'];
 
-		foreach ($aStorages as $sStorage) {
-			$aClassPath = ['Afterlogic', 'DAV', 'FS'];
+            $aStoragePath = \explode('.', $sStorage);
+            foreach ($aStoragePath as $sPathItem) {
+                $aClassPath[] = \ucfirst($sPathItem);
+            }
+            $aClassPath[] = 'Root';
 
-			$aStoragePath = \explode('.', $sStorage);
-			foreach ($aStoragePath as $sPathItem) {
-				$aClassPath[] = \ucfirst($sPathItem);
-			}
-			$aClassPath[] = 'Root';
+            $sClass = \implode(
+                '\\',
+                $aClassPath
+            );
 
-			$sClass = \implode(
-				'\\',
-				$aClassPath
-			);
+            $aChildren[] = new $sClass();
+        }
 
-			$aChildren[] = new $sClass();
-		}
-
-		return $aChildren;
-	}
+        return $aChildren;
+    }
 }

@@ -14,7 +14,7 @@ namespace Afterlogic\DAV\Logs;
  */
 class Plugin extends \Sabre\DAV\ServerPlugin
 {
-	/**
+    /**
      * Reference to main server object
      *
      * @var \Sabre\DAV\Server
@@ -60,9 +60,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterResponse(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
     {
-    	\Aurora\System\Api::Log($request->getMethod() . ' ' . $request->getPath(), \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+        \Aurora\System\Api::Log($request->getMethod() . ' ' . $request->getPath(), \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 
-		if ((bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false)) {
+        if ((bool) \Aurora\Modules\Dav\Module::getInstance()->getConfig('LogBody', false)) {
             \Aurora\System\Api::Log('OUT >>>>>>>>>>>>>>>>>>>>>>', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
             $rRequestBody = $request->getBodyAsStream();
             \rewind($rRequestBody);
@@ -75,13 +75,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin
             \rewind($rResponseBody);
             $sResponseBody = stream_get_contents($rResponseBody);
             \Aurora\System\Api::LogObject($sResponseBody, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
-		}
-		\Aurora\System\Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
+        }
+        \Aurora\System\Api::Log('', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
     }
 
     public function onException($oException)
     {
         \Aurora\System\Api::LogException($oException, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
     }
-
 }

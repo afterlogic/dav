@@ -14,22 +14,23 @@ use Aurora\Modules\Contacts\Enums\Access;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
-
+class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
+{
     use AddressbookTrait;
 
-    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, $principalUri) {
-		parent::__construct($carddavBackend, $addressBookInfo);
-		$this->principalUri = $principalUri;
-
+    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, $principalUri)
+    {
+        parent::__construct($carddavBackend, $addressBookInfo);
+        $this->principalUri = $principalUri;
     }
 
-    function getOwner() {
+    public function getOwner()
+    {
         return $this->addressBookInfo['principaluri'];
     }
 
-    function getACL() {
-
+    public function getACL()
+    {
         if ($this->addressBookInfo['access'] == Access::NoAccess) {
             $acl = [];
         } else {
@@ -51,14 +52,15 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
         }
 
         return $acl;
-
     }
 
-    public function getAccess() {
+    public function getAccess()
+    {
         return $this->addressBookInfo['access'];
     }
 
-    public function setAccess($access) {
+    public function setAccess($access)
+    {
         $this->addressBookInfo['access'] = $access;
     }
 }

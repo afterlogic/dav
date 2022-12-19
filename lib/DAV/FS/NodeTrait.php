@@ -21,113 +21,115 @@ use Aurora\System\Enums\FileStorageType;
  */
 trait NodeTrait
 {
-	/**
-	 *
-	 * @var [string]
-	 */
-	protected $rootPath = null;
+    /**
+     *
+     * @var [string]
+     */
+    protected $rootPath = null;
 
-	/**
-	 * @var string $storage
-	 */
-	protected $storage = null;
+    /**
+     * @var string $storage
+     */
+    protected $storage = null;
 
-	/**
-	 * @var string $UserPublicId
-	 */
-	protected $UserPublicId = null;
+    /**
+     * @var string $UserPublicId
+     */
+    protected $UserPublicId = null;
 
-	/**
-	 *
-	 * @var integer
-	 */
-	protected $access = Permission::Write;
+    /**
+     *
+     * @var integer
+     */
+    protected $access = Permission::Write;
 
-	public function getStorage()
-	{
-    	return $this->storage;
-	}
-
-	public function getRootPath()
-	{
-		if ($this->rootPath === null) {
-			$oNode = Server::getNodeForPath('files/'. $this->getStorage());
-
-			if ($oNode) {
-				$this->rootPath = $oNode->getPath();
-			}
-		}
-		return $this->rootPath;
+    public function getStorage()
+    {
+        return $this->storage;
     }
 
-	public function getRealStorageName($sStorage)
-	{
-		if ($sStorage === FileStorageType::Personal)
-		{
-			$sStorage = \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
-		}
-		else
-		{
-			$sStorage = '/' . $sStorage;
-		}
+    public function getRootPath()
+    {
+        if ($this->rootPath === null) {
+            $oNode = Server::getNodeForPath('files/'. $this->getStorage());
 
-		return $sStorage;
-	}
-
-	public function getRelativePath()
-	{
-		$sPath = $this->getPath();
-		if ($sPath) {
-			list($sPath) = \Sabre\Uri\split($sPath);
-		} else {
-			$sPath = '';
-		}
-
-		$sFilesRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . '/';
-		$sPath = str_replace($sFilesRootPath, '', $sPath);
-		$aPathItems = explode('/', $sPath, 3);
-		return isset($aPathItems[2]) ? '/' . $aPathItems[2] : '';
+            if ($oNode instanceof File || $oNode instanceof Directory) {
+                $this->rootPath = $oNode->getPath();
+            }
+        }
+        return $this->rootPath;
     }
 
-	public function isRoot()
-	{
-		return ($this->getRootPath() === $this->getPath());
-	}
+    public function getRealStorageName($sStorage)
+    {
+        if ($sStorage === FileStorageType::Personal) {
+            $sStorage = \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
+        } else {
+            $sStorage = '/' . $sStorage;
+        }
 
-	public function deleteShares()
-	{
-		$oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
-		if ($oSharedFilesModule && !$oSharedFilesModule->getConfig('Disabled'))
-		{
-			$pdo = new Backend\PDO();
-			$pdo->deleteSharedFile(
-				Constants::PRINCIPALS_PREFIX . $this->getUser(),
-				$this->getStorage(),
-				$this->getRelativePath() . '/' . $this->getName()
-			);
-		}
-	}
+        return $sStorage;
+    }
 
-	public function checkFileName($name)
-	{
-		if (strlen(trim($name)) === 0) throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+    public function getRelativePath()
+    {
+        $sPath = $this->getPath();
+        if ($sPath) {
+            list($sPath) = \Sabre\Uri\split($sPath);
+        } else {
+            $sPath = '';
+        }
+
+        $sFilesRootPath = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT . '/';
+        $sPath = str_replace($sFilesRootPath, '', $sPath);
+        $aPathItems = explode('/', $sPath, 3);
+        return isset($aPathItems[2]) ? '/' . $aPathItems[2] : '';
+    }
+
+    public function isRoot()
+    {
+        return ($this->getRootPath() === $this->getPath());
+    }
+
+    public function deleteShares()
+    {
+        $oSharedFilesModule = \Aurora\System\Api::GetModule('SharedFiles');
+        if ($oSharedFilesModule && !$oSharedFilesModule->getConfig('Disabled')) {
+            $pdo = new Backend\PDO();
+            $pdo->deleteSharedFile(
+                Constants::PRINCIPALS_PREFIX . $this->getUser(),
+                $this->getStorage(),
+                $this->getRelativePath() . '/' . $this->getName()
+            );
+        }
+    }
+
+    public function checkFileName($name)
+    {
+        if (strlen(trim($name)) === 0) {
+            throw new \Sabre\DAV\Exception\Forbidden('Permission denied to emty item');
+        }
 
         $path = $this->path . '/' . trim($name, '/');
 
-        if (!file_exists($path)) throw new \Sabre\DAV\Exception\NotFound('File could not be located');
-        if ($name == '.' || $name == '..') throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
+        if (!file_exists($path)) {
+            throw new \Sabre\DAV\Exception\NotFound('File could not be located');
+        }
+        if ($name == '.' || $name == '..') {
+            throw new \Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
+        }
 
-		return $path;
-	}
+        return $path;
+    }
 
     public function getDisplayName()
-	{
-		return $this->getName();
-	}
+    {
+        return $this->getName();
+    }
 
     public function getId()
-	{
-		return $this->getName();
+    {
+        return $this->getName();
     }
 
     public function getPath()
@@ -135,29 +137,28 @@ trait NodeTrait
         return $this->path;
     }
 
-	public function setPath($path)
-	{
-		$this->path = $path;
-	}
+    public function setPath($path)
+    {
+        $this->path = $path;
+    }
 
     public function getOwner()
-	{
-		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->getUser();
-	}
+    {
+        return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $this->getUser();
+    }
 
-	public function getUser()
-	{
-        if ($this->UserPublicId === null)
-        {
-			$this->setUser(\Afterlogic\DAV\Server::getUser());
-		}
-		return $this->UserPublicId;
-	}
+    public function getUser()
+    {
+        if ($this->UserPublicId === null) {
+            $this->setUser(\Afterlogic\DAV\Server::getUser());
+        }
+        return $this->UserPublicId;
+    }
 
-	public function setUser($sUserPublicId)
-	{
-		$this->UserPublicId = $sUserPublicId;
-	}
+    public function setUser($sUserPublicId)
+    {
+        $this->UserPublicId = $sUserPublicId;
+    }
 
     /**
      * Returns a group principal.
@@ -166,10 +167,10 @@ trait NodeTrait
      *
      * @return string|null
      */
-	public function getGroup()
-	{
-		return null;
-	}
+    public function getGroup()
+    {
+        return null;
+    }
 
     /**
      * Returns a list of ACE's for this node.
@@ -183,9 +184,9 @@ trait NodeTrait
      *
      * @return array
      */
-	public function getACL()
-	{
-		$acl = [
+    public function getACL()
+    {
+        $acl = [
             [
                 'privilege' => '{DAV:}read',
                 'principal' => Constants::PRINCIPALS_PREFIX . $this->getUser(),
@@ -210,8 +211,7 @@ trait NodeTrait
         }
 
         return $acl;
-
-	}
+    }
 
     /**
      * Updates the ACL.
@@ -220,10 +220,9 @@ trait NodeTrait
      *
      * @param array $acl
      */
-	public function setACL(array $acl)
-	{
-
-	}
+    public function setACL(array $acl)
+    {
+    }
 
     /**
      * Returns the list of supported privileges for this node.
@@ -237,22 +236,22 @@ trait NodeTrait
      *
      * @return array|null
      */
-	public function getSupportedPrivilegeSet()
-	{
-		return null;
-	}
+    public function getSupportedPrivilegeSet()
+    {
+        return null;
+    }
 
     public function getAccess()
     {
         return $this->access;
-	}
+    }
 
-	public function setAccess($access)
-	{
-		$this->access = $access;
-	}
+    public function setAccess($access)
+    {
+        $this->access = $access;
+    }
 
-	/**
+    /**
      * Renames the node
      *
      * @param string $name The new name
@@ -264,7 +263,7 @@ trait NodeTrait
         list(, $newName) = \Sabre\Uri\split($name);
         $newPath = $parentPath . '/' . $newName;
 
-		$this->setNameShared($name);
+        $this->setNameShared($name);
 
         // We're deleting the existing resourcedata, and recreating it
         // for the new path.
@@ -276,49 +275,48 @@ trait NodeTrait
         $this->path = $newPath;
         $this->putResourceData($resourceData);
 
-		$this->setNameHistory($name);
+        $this->setNameHistory($name);
     }
 
-	public function setNameShared($name)
-	{
+    public function setNameShared($name)
+    {
         list($parentPath, $oldName) = \Sabre\Uri\split($this->path);
         list(, $newName) = \Sabre\Uri\split($name);
 
-		$sRelativePath = $this->getRelativePath();
+        $sRelativePath = $this->getRelativePath();
 
-		$oldPathForShare = $sRelativePath . '/' .$oldName;
-		$newPathForShare = $sRelativePath . '/' .$newName;
+        $oldPathForShare = $sRelativePath . '/' .$oldName;
+        $newPathForShare = $sRelativePath . '/' .$newName;
 
-		$oNode = false;
-		try {
-			$oNode = Server::getNodeForPath('files/' . $this->getStorage() . $newPathForShare);
-		}
-		catch (\Exception $oEx) {}
+        $oNode = false;
+        try {
+            $oNode = Server::getNodeForPath('files/' . $this->getStorage() . $newPathForShare);
+        } catch (\Exception $oEx) {
+        }
 
-		if ($oNode) {
-			throw new \Sabre\DAV\Exception\Conflict();
-		}
+        if ($oNode) {
+            throw new \Sabre\DAV\Exception\Conflict();
+        }
 
         $oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles');
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false)) {
             $pdo = new Backend\PDO();
             $pdo->updateShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
-			$pdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oldPathForShare, $newPathForShare);
-        }		
-	}
+            $pdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oldPathForShare, $newPathForShare);
+        }
+    }
 
-	public function setNameHistory($name)
-	{
-		if ($this instanceof File) {
-			$oHistoryNode = $this->getHistoryDirectory();
-			if ($oHistoryNode instanceof Directory) {
-				$oHistoryNode->setName($name . '.hist');
-			}
-		}	
-	}
+    public function setNameHistory($name)
+    {
+        if ($this instanceof File) {
+            $oHistoryNode = $this->getHistoryDirectory();
+            if ($oHistoryNode instanceof Directory) {
+                $oHistoryNode->setName($name . '.hist');
+            }
+        }
+    }
 
-	public function getShares()
-	{
-
-	}
+    public function getShares()
+    {
+    }
 }

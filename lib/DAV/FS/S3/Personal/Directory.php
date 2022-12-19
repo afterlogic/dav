@@ -16,35 +16,36 @@ use Sabre\DAV\Exception\NotFound;
  */
 class Directory extends \Afterlogic\DAV\FS\S3\Directory
 {
-	use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
+    use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
 
-	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
+    protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 
-	public function getChild($name)
-	{	
-		$mResult = false;
-		
-		try {
-			$mResult = parent::getChild($name);
-		} catch (\Exception $oEx) {}
+    public function getChild($name)
+    {
+        $mResult = false;
 
-		$oSharedChild = $this->getSharedChild($name);
-		if ($oSharedChild) {
-			$mResult = $oSharedChild;
-		}
+        try {
+            $mResult = parent::getChild($name);
+        } catch (\Exception $oEx) {
+        }
 
-		if (!$mResult) {
-			throw new NotFound();
-		}
+        $oSharedChild = $this->getSharedChild($name);
+        if ($oSharedChild) {
+            $mResult = $oSharedChild;
+        }
 
-		return $mResult;
-	}
+        if (!$mResult) {
+            throw new NotFound();
+        }
 
-	public function getChildren($sPattern = null)
-	{
-		return array_merge(
-			parent::getChildren($sPattern),
-			$this->getSharedChildren()
-		);
-	}
+        return $mResult;
+    }
+
+    public function getChildren($sPattern = null)
+    {
+        return array_merge(
+            parent::getChildren($sPattern),
+            $this->getSharedChildren()
+        );
+    }
 }

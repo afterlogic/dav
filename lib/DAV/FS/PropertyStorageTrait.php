@@ -14,7 +14,6 @@ namespace Afterlogic\DAV\FS;
  */
 trait PropertyStorageTrait
 {
-
     public function getProperty($sName)
     {
         $aData = $this->getResourceData();
@@ -39,21 +38,15 @@ trait PropertyStorageTrait
     {
         $resourceData = $this->getResourceData();
 
-        foreach($properties as $propertyName=>$propertyValue)
-        {
+        foreach ($properties as $propertyName=>$propertyValue) {
             // If it was null, we need to delete the property
-            if (is_null($propertyValue))
-            {
-                if (isset($resourceData['properties'][$propertyName]))
-                {
+            if (is_null($propertyValue)) {
+                if (isset($resourceData['properties'][$propertyName])) {
                     unset($resourceData['properties'][$propertyName]);
                 }
-            }
-            else
-            {
+            } else {
                 $resourceData['properties'][$propertyName] = $propertyValue;
             }
-
         }
 
         $this->putResourceData($resourceData);
@@ -74,12 +67,15 @@ trait PropertyStorageTrait
         $resourceData = $this->getResourceData();
 
         // if the array was empty, we need to return everything
-        if (!$properties) return $resourceData['properties'];
+        if (!$properties) {
+            return $resourceData['properties'];
+        }
 
         $props = [];
-        foreach($properties as $property)
-        {
-            if (isset($resourceData['properties'][$property])) $props[$property] = $resourceData['properties'][$property];
+        foreach ($properties as $property) {
+            if (isset($resourceData['properties'][$property])) {
+                $props[$property] = $resourceData['properties'][$property];
+            }
         }
 
         return $props;
@@ -104,17 +100,18 @@ trait PropertyStorageTrait
     public function getResourceData()
     {
         $path = $this->getResourceInfoPath();
-        if (!file_exists($path)) return ['properties' => []];
+        if (!file_exists($path)) {
+            return ['properties' => []];
+        }
 
         // opening up the file, and creating a shared lock
-        $handle = fopen($path,'r');
+        $handle = fopen($path, 'r');
     //        flock($handle,LOCK_SH);
         $data = '';
 
         // Reading data until the eof
-        while(!feof($handle))
-        {
-            $data.=fread($handle,8192);
+        while (!feof($handle)) {
+            $data.=fread($handle, 8192);
         }
 
         // We're all good
@@ -122,13 +119,14 @@ trait PropertyStorageTrait
 
         // Unserializing and checking if the resource file contains data for this file
         $data = unserialize($data);
-        if (!isset($data[$this->getName()]))
-        {
+        if (!isset($data[$this->getName()])) {
             return ['properties' => []];
         }
 
         $data = $data[$this->getName()];
-        if (!isset($data['properties'])) $data['properties'] = [];
+        if (!isset($data['properties'])) {
+            $data['properties'] = [];
+        }
         return $data;
     }
 
@@ -143,28 +141,25 @@ trait PropertyStorageTrait
         $path = $this->getResourceInfoPath();
 
         $data = [];
-        if (file_exists($path))
-        {
-            $handle1 = @fopen($path,'r');
-            if (is_resource($handle1))
-            {
+        if (file_exists($path)) {
+            $handle1 = @fopen($path, 'r');
+            if (is_resource($handle1)) {
                 $data = '';
                 rewind($handle1);
                 // Reading data until the eof
-                while(!feof($handle1))
-                {
-                    $data.=fread($handle1,8192);
+                while (!feof($handle1)) {
+                    $data.=fread($handle1, 8192);
                 }
                 $data = unserialize($data);
                 fclose($handle1);
             }
         }
 
-        $handle2 = fopen($path,'w');
+        $handle2 = fopen($path, 'w');
         $data[$this->getName()] = $newData;
 
         rewind($handle2);
-        fwrite($handle2,serialize($data));
+        fwrite($handle2, serialize($data));
         fclose($handle2);
     }
 
@@ -175,27 +170,30 @@ trait PropertyStorageTrait
     {
         // When we're deleting this node, we also need to delete any resource information
         $path = $this->getResourceInfoPath();
-        if (!file_exists($path)) return true;
+        if (!file_exists($path)) {
+            return true;
+        }
 
         // opening up the file, and creating a shared lock
-        $handle = fopen($path,'a+');
-        flock($handle,LOCK_EX);
+        $handle = fopen($path, 'a+');
+        flock($handle, LOCK_EX);
         $data = '';
 
         rewind($handle);
 
         // Reading data until the eof
-        while(!feof($handle))
-        {
-            $data.=fread($handle,8192);
+        while (!feof($handle)) {
+            $data.=fread($handle, 8192);
         }
 
         // Unserializing and checking if the resource file contains data for this file
         $data = unserialize($data);
-        if (isset($data[$this->getName()])) unset($data[$this->getName()]);
-        ftruncate($handle,0);
+        if (isset($data[$this->getName()])) {
+            unset($data[$this->getName()]);
+        }
+        ftruncate($handle, 0);
         rewind($handle);
-        fwrite($handle,serialize($data));
+        fwrite($handle, serialize($data));
         fclose($handle);
 
         return true;

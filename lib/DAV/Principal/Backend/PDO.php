@@ -20,7 +20,9 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
     /**
      * Sets up the backend.
      */
-    public function __construct() { }
+    public function __construct()
+    {
+    }
 
     /**
      * Returns a list of principals based on a prefix.
@@ -38,17 +40,15 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $prefixPath
      * @return array
      */
-    function getPrincipalsByPrefix($prefixPath) {
-
+    public function getPrincipalsByPrefix($prefixPath)
+    {
         $principals = [];
 
         $iIdTenant = \Afterlogic\DAV\Server::getTenantId();
-        if ($iIdTenant)
-        {
+        if ($iIdTenant) {
             $aUsers = User::where('IdTenant', $iIdTenant)->orderBy('PublicId')->get();
 
-            foreach ($aUsers as $oUser)
-            {
+            foreach ($aUsers as $oUser) {
                 $principals[] = array(
                     'id' => $oUser->UUID,
                     'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId,
@@ -69,16 +69,15 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $path
      * @return array
      */
-    function getPrincipalByPath($path) {
-
+    public function getPrincipalByPath($path)
+    {
         list(, $sUsername) = \Sabre\Uri\split($path);
-		return array(
-			'id' => $sUsername,
-			'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$sUsername,
+        return array(
+            'id' => $sUsername,
+            'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$sUsername,
 //			'{http://sabredav.org/ns}email-address' => $sUsername,
-			'{DAV:}displayname' => $sUsername,
-		);
-
+            '{DAV:}displayname' => $sUsername,
+        );
     }
 
     /**
@@ -96,10 +95,9 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $path
      * @param DAV\PropPatch $propPatch
      */
-    function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch) {
-
-		return true;
-
+    public function updatePrincipal($path, \Sabre\DAV\PropPatch $propPatch)
+    {
+        return true;
     }
 
     /**
@@ -131,23 +129,20 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $test
      * @return array
      */
-    function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof') {
-
+    public function searchPrincipals($prefixPath, array $searchProperties, $test = 'allof')
+    {
         $aPrincipals = [];
 
-		if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
-
-			$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
+        if (isset($searchProperties['{http://sabredav.org/ns}email-address'])) {
+            $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
                 $searchProperties['{http://sabredav.org/ns}email-address']
             );
-            if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-            {
-	            $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
-			}
-		}
+            if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+                $aPrincipals[] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId;
+            }
+        }
 
         return $aPrincipals;
-
     }
 
     /**
@@ -156,10 +151,9 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $principal
      * @return array
      */
-    function getGroupMemberSet($principal) {
-
-		return [];
-
+    public function getGroupMemberSet($principal)
+    {
+        return [];
     }
 
     /**
@@ -168,10 +162,9 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param string $principal
      * @return array
      */
-    function getGroupMembership($principal) {
-
+    public function getGroupMembership($principal)
+    {
         return [];
-
     }
 
     /**
@@ -183,8 +176,8 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param array $members
      * @return void
      */
-    function setGroupMemberSet($principal, array $members) {
-
+    public function setGroupMemberSet($principal, array $members)
+    {
     }
 
     /**
@@ -198,25 +191,27 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
      * @param MkCol $mkCol
      * @return void
      */
-    function createPrincipal($path, MkCol $mkCol) {
-
+    public function createPrincipal($path, MkCol $mkCol)
+    {
     }
 
-    function findByUri($uri, $principalPrefix) {
+    public function findByUri($uri, $principalPrefix)
+    {
         $value = null;
         $scheme = null;
         list($scheme, $value) = explode(":", $uri, 2);
-        if (empty($value)) return null;
+        if (empty($value)) {
+            return null;
+        }
 
         $uri = null;
-        switch ($scheme){
+        switch ($scheme) {
             case "mailto":
 
                 $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
                     $value
                 );
-                if ($oUser instanceof \Aurora\Modules\Core\Models\User)
-                {
+                if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
                     $uri = $principalPrefix . '/' . $value;
                 }
                 break;
@@ -226,5 +221,4 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         }
         return $uri;
     }
-
 }

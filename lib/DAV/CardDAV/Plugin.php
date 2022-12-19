@@ -15,18 +15,17 @@ use Sabre\HTTP\ResponseInterface;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Plugin extends \Sabre\CardDAV\Plugin {
-
-	/**
+class Plugin extends \Sabre\CardDAV\Plugin
+{
+    /**
      * Returns the addressbook home for a given principal
      *
      * @param string $principal
      * @return string
      */
-    protected function getAddressbookHomeForPrincipal($principal) {
-
+    protected function getAddressbookHomeForPrincipal($principal)
+    {
         return self::ADDRESSBOOK_ROOT;
-
     }
 
     /**
@@ -38,7 +37,8 @@ class Plugin extends \Sabre\CardDAV\Plugin {
      * @param ResponseInterface $response
      * @return void
      */
-    function httpAfterGet(RequestInterface $request, ResponseInterface $response) {
+    public function httpAfterGet(RequestInterface $request, ResponseInterface $response)
+    {
         try {
             parent::httpAfterGet($request, $response);
         } catch (\Exception $oEx) {

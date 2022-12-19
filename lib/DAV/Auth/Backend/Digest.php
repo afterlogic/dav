@@ -19,40 +19,35 @@ use Sabre\HTTP\ResponseInterface;
  */
 class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
 {
+    public function getDigestHash($sRealm, $sUserName)
+    {
+        if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid() && $sUserName !== \Afterlogic\DAV\Constants::DAV_PUBLIC_PRINCIPAL && $sUserName !== \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL) {
+            return \Aurora\Modules\Core\Module::Decorator()->GetDigestHash($sUserName, $sRealm, \Aurora\Modules\Mail\Models\MailAccount::class);
+        }
 
-	public function getDigestHash($sRealm, $sUserName)
-	{
-		if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid() && $sUserName !== \Afterlogic\DAV\Constants::DAV_PUBLIC_PRINCIPAL && $sUserName !== \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL)
-		{
-			return \Aurora\Modules\Core\Module::Decorator()->GetDigestHash($sUserName, $sRealm, \Aurora\Modules\Mail\Models\MailAccount::class);
-		}
+        return null;
+    }
 
-		return null;
-	}
+    public function check(RequestInterface $request, ResponseInterface $response)
+    {
+        $aResult = parent::check($request, $response);
 
-	function check(RequestInterface $request, ResponseInterface $response)
-	{
-		$aResult = parent::check($request, $response);
+        if ($aResult[0] === true) {
+            $sLogin = \str_replace($this->principalPrefix, '', $aResult[1]);
 
-		if ($aResult[0] === true)
-		{
-			$sLogin = \str_replace($this->principalPrefix, '', $aResult[1]);
+            if ($sLogin) {
+                $oAccount = \Aurora\Modules\Core\Module::Decorator()->GetAccountUsedToAuthorize($sLogin);
+                if ($oAccount) {
+                    $sAuthToken = \Aurora\System\Api::UserSession()->Set(
+                        \Aurora\System\UserSession::getTokenData($oAccount, true),
+                        0
+                    );
 
-			if ($sLogin)
-			{
-				$oAccount = \Aurora\Modules\Core\Module::Decorator()->GetAccountUsedToAuthorize($sLogin);
-				if ($oAccount)
-				{
-					$sAuthToken = \Aurora\System\Api::UserSession()->Set(
-						\Aurora\System\UserSession::getTokenData($oAccount, true),
-						0
-					);
+                    \Aurora\Api::authorise($sAuthToken);
+                }
+            }
+        }
 
-					\Aurora\Api::authorise($sAuthToken);
-				}
-			}
-		}
-
-		return $aResult;
-	}
+        return $aResult;
+    }
 }

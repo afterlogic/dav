@@ -14,31 +14,32 @@ use Afterlogic\DAV\Constants;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class PDO extends \Sabre\CardDAV\Backend\PDO {
+class PDO extends \Sabre\CardDAV\Backend\PDO
+{
+    protected \PDO $pdo;
 
-	protected function getTenantPrincipal($sUserPublicId)
-	{
-		$sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
-		$oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
-		if ($oUser)
-		{
-			$sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
-		}
+    protected function getTenantPrincipal($sUserPublicId)
+    {
+        $sTenantPrincipal = 'default_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+        $oUser = \Aurora\System\Api::GetModuleDecorator('Core')->GetUserByPublicId($sUserPublicId);
+        if ($oUser) {
+            $sTenantPrincipal = $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+        }
 
-		return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
-	}
+        return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
+    }
 
 
-	/**
+    /**
      * Sets up the object
      */
-    public function __construct() {
-
-		parent::__construct(\Aurora\System\Api::GetPDO());
-		$sDbPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
-		$this->cardsTableName = $sDbPrefix.Constants::T_CARDS;
-		$this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
-		$this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
+    public function __construct()
+    {
+        parent::__construct(\Aurora\System\Api::GetPDO());
+        $sDbPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
+        $this->cardsTableName = $sDbPrefix.Constants::T_CARDS;
+        $this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
+        $this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
     }
 
     /**
@@ -48,18 +49,17 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      * @param string $addressbookUri
      * @return array
      */
-    public function getAddressBookForUser($principalUri, $addressbookUri) {
-
-		$mAddressBook = false;
+    public function getAddressBookForUser($principalUri, $addressbookUri)
+    {
+        $mAddressBook = false;
 
         $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, synctoken FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
         $stmt->execute(array($principalUri, $addressbookUri));
 
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-		if ($row)
-		{
-			$mAddressBook = [
+        if ($row) {
+            $mAddressBook = [
                 'id'                                                          => $row['id'],
                 'uri'                                                         => $row['uri'],
                 'principaluri'                                                => $row['principaluri'],
@@ -67,10 +67,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
                 '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
                 '{http://calendarserver.org/ns/}getctag'                      => $row['synctoken'],
                 '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
-			];
-		}
+            ];
+        }
 
-		return $mAddressBook;
+        return $mAddressBook;
     }
 
     /**
@@ -78,34 +78,31 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      *
      * @return array
      */
-    public function getCardsSharedToAll($addressbookId) {
-
+    public function getCardsSharedToAll($addressbookId)
+    {
         $stmt = $this->pdo->prepare('SELECT id, carddata, uri, lastmodified FROM ' . $this->cardsTableName . ' WHERE addressbookid = ?');
         $stmt->execute(array($addressbookId));
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-
     }
 
     public function getSharedWithAllAddressBook($sPrincipalUri)
-	{
-		$sTenantPrincipal = $this->getTenantPrincipal(basename($sPrincipalUri));
+    {
+        $sTenantPrincipal = $this->getTenantPrincipal(basename($sPrincipalUri));
 
-		$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
+        $aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
 
-		if (!is_array($aAddressBook))
-		{
-			$sProperties = [
-				'{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME
-			];
+        if (!is_array($aAddressBook)) {
+            $sProperties = [
+                '{DAV:}displayname' => \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME
+            ];
 
-			$this->createAddressBook($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME, $sProperties);
-			$aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
-		}
+            $this->createAddressBook($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME, $sProperties);
+            $aAddressBook = $this->getAddressBookForUser($sTenantPrincipal, \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME);
+        }
 
-		return $aAddressBook;
-	}
+        return $aAddressBook;
+    }
 
     /**
      * Returns a list of cards.
@@ -118,8 +115,8 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
      * @param array $uris
      * @return array
      */
-    function getMultipleSharedWithAllCards(array $uris) {
-
+    public function getMultipleSharedWithAllCards(array $uris)
+    {
         $query = 'SELECT id, uri, lastmodified, etag, size, carddata FROM ' . $this->cardsTableName . ' WHERE uri IN (';
         // Inserting a whole bunch of question marks
         $query .= implode(',', array_fill(0, count($uris), '?'));
@@ -134,11 +131,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
             $result[] = $row;
         }
         return $result;
-
     }
 
     public function getSharedAddressBooks($principalUri)
-	{
+    {
         $sDbPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
         $stmt = $this->pdo->prepare('SELECT ab.id, sab.addressbookuri as uri, ab.displayname, ab.principaluri, ab.description, ab.synctoken, sab.access, sab.group_id
         FROM ' . $sDbPrefix . 'adav_addressbooks as ab, ' . $sDbPrefix . 'adav_shared_addressbooks as sab
@@ -163,5 +159,4 @@ class PDO extends \Sabre\CardDAV\Backend\PDO {
 
         return $addressBooks;
     }
-
 }

@@ -19,9 +19,11 @@ use Sabre\VObject\ITip;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
-
-    function __construct() {}
+class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
+{
+    public function __construct()
+    {
+    }
 
     /**
      * Event handler for the 'schedule' event.
@@ -29,8 +31,8 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
      * @param ITip\Message $iTipMessage
      * @return void
      */
-    function schedule(ITip\Message $iTipMessage) {
-
+    public function schedule(ITip\Message $iTipMessage)
+    {
         // Not sending any emails if the system considers the update
         // insignificant.
         if (!$iTipMessage->significantChange) {
@@ -42,44 +44,31 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
 
         $summary = $iTipMessage->message->VEVENT->SUMMARY;
 
-        if (parse_url($iTipMessage->sender, PHP_URL_SCHEME) === 'mailto')
-        {
+        if (parse_url($iTipMessage->sender, PHP_URL_SCHEME) === 'mailto') {
             $senderEmail = substr($iTipMessage->sender, 7);
-        }
-        else
-        {
+        } else {
             $iPos = strpos($iTipMessage->sender, 'principals/');
-            if ($iPos !== false)
-            {
+            if ($iPos !== false) {
                 $senderEmail = \trim(substr($iTipMessage->sender, $iPos + 11), '/');
-            }
-            else
-            {
+            } else {
                 return;
             }
         }
 
-        if (parse_url($iTipMessage->recipient, PHP_URL_SCHEME) === 'mailto')
-        {
+        if (parse_url($iTipMessage->recipient, PHP_URL_SCHEME) === 'mailto') {
             $recipient = substr($iTipMessage->recipient, 7);
-        }
-        else
-        {
+        } else {
             $iPos = strpos($iTipMessage->recipient, 'principals/');
-            if ($iPos !== false)
-            {
+            if ($iPos !== false) {
                 $recipient = \trim(substr($iTipMessage->recipient, $iPos + 11), '/');
-            }
-            else
-            {
+            } else {
                 return;
             }
         }
 
         if ($iTipMessage->senderName) {
             $sender = $iTipMessage->senderName . ' <' . $senderEmail . '>';
-        }
-        else {
+        } else {
             $sender = $senderEmail;
         }
         if ($iTipMessage->recipientName) {
@@ -88,13 +77,13 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin {
 
         $subject = 'SabreDAV iTIP message';
         switch (strtoupper($iTipMessage->method)) {
-            case 'REPLY' :
+            case 'REPLY':
                 $subject = 'Re: ' . $summary;
                 break;
-            case 'REQUEST' :
+            case 'REQUEST':
                 $subject = $summary;
                 break;
-            case 'CANCEL' :
+            case 'CANCEL':
                 $subject = 'Cancelled: ' . $summary;
                 break;
         }

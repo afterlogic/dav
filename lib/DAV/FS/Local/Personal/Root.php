@@ -12,73 +12,67 @@ namespace Afterlogic\DAV\FS\Local\Personal;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends Directory 
+class Root extends Directory
 {
-	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
+    protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 
-	public function __construct($sUserPublicId = null) 
-	{
-		$path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT;
-		
-		if (!\file_exists($path))
-		{
-			\mkdir($path);
-		}
+    public function __construct($sUserPublicId = null)
+    {
+        $path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT;
 
-		$path = $path . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
+        if (!\file_exists($path)) {
+            \mkdir($path);
+        }
 
-		if (!\file_exists($path))
-		{
-			\mkdir($path);
-		}
+        $path = $path . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
 
-		if (empty($sUserPublicId))
-		{
-			$sUserPublicId = $this->getUser();
-		}
-		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($sUserPublicId);
-		
-		if ($oUser) 
-		{
-			$path = $path . '/' . $oUser->UUID;
-			if (!\file_exists($path)) 
-			{
-				\mkdir($path, 0777, true);
-			}
-		}
-		parent::__construct($path);
-	}
+        if (!\file_exists($path)) {
+            \mkdir($path);
+        }
 
-	public function getName() 
-	{
+        if (empty($sUserPublicId)) {
+            $sUserPublicId = $this->getUser();
+        }
+        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($sUserPublicId);
+
+        if ($oUser) {
+            $path = $path . '/' . $oUser->UUID;
+            if (!\file_exists($path)) {
+                \mkdir($path, 0777, true);
+            }
+        }
+        parent::__construct($path);
+    }
+
+    public function getName()
+    {
         return $this->storage;
-    }	
-	
-	public function setName($name) 
-	{
+    }
+
+    public function setName($name)
+    {
         throw new \Sabre\DAV\Exception\Forbidden();
     }
 
-	public function delete() 
-	{
+    public function delete()
+    {
         throw new \Sabre\DAV\Exception\Forbidden();
     }
-	
-	public function getQuotaInfo() 
-	{
-		$oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($this->UserPublicId);
-		if ($oUser)
-		{
-			$aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->Id, $this->getName());
-			return [
-				(int) $aQuota['Used'],
-				(int) $aQuota['Limit']
-			];
-		}
+
+    public function getQuotaInfo()
+    {
+        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($this->UserPublicId);
+        if ($oUser) {
+            $aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->Id, $this->getName());
+            return [
+                (int) $aQuota['Used'],
+                (int) $aQuota['Limit']
+            ];
+        }
     }
 
-	public function getRelativePath()
-	{
-		return "";
-	}
+    public function getRelativePath()
+    {
+        return "";
+    }
 }

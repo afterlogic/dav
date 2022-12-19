@@ -20,37 +20,37 @@ class File extends \Afterlogic\DAV\FS\File
     use NodeTrait;
     use PropertyStorageTrait;
 
-	protected $client;
-	protected $bucket;
-	protected $object;
+    protected $client;
+    protected $bucket;
+    protected $object;
     protected $storage;
 
-	public function __construct($object, $bucket, $client, $storage = null)
-	{
-		$this->path = ltrim($object['Key'], '/');
+    public function __construct($object, $bucket, $client, $storage = null)
+    {
+        $this->path = ltrim($object['Key'], '/');
 
-		$this->bucket = $bucket;
-		$this->client = $client;
-		$this->object = $object;
-		$this->storage = $storage;
-	}
+        $this->bucket = $bucket;
+        $this->client = $client;
+        $this->object = $object;
+        $this->storage = $storage;
+    }
 
-	public function delete()
-	{
+    public function delete()
+    {
         $this->client->deleteObject([
             'Bucket' => $this->bucket,
             'Key' => $this->path
         ]);
-		$this->deleteResourceData();
+        $this->deleteResourceData();
         $this->deleteShares();
         $this->deleteHistoryDirectory();
-	}
+    }
 
     public function put($data)
-	{
+    {
         $rData = $data;
         if (!is_resource($data)) {
-            $rData = fopen('php://memory','r+');
+            $rData = fopen('php://memory', 'r+');
             fwrite($rData, $data);
             rewind($rData);
         }
@@ -138,39 +138,37 @@ class File extends \Afterlogic\DAV\FS\File
         }
     }
 
-	public function getWithContentDisposition()
-	{
+    public function getWithContentDisposition()
+    {
         $sUrl = $this->getUrl(true);
         if (!empty($sUrl)) {
             \Aurora\System\Api::Location($sUrl);
             exit;
         }
-	}
+    }
 
     /**
      * Returns the last modification time, as a unix timestamp
      *
      * @return int
      */
-    function getLastModified() {
-
+    public function getLastModified()
+    {
         if (isset($this->object)) {
             return $this->object['LastModified']->getTimestamp();
         }
-
-	}
+    }
 
     /**
      * Returns the last modification time, as a unix timestamp
      *
      * @return int
      */
-    function getSize() 
+    public function getSize()
     {
         if (isset($this->object)) {
             return $this->object['Size'];
         }
-
     }
 
     public function getETag()

@@ -17,26 +17,24 @@ use Afterlogic\DAV\Server;
 trait HistoryDirectoryTrait
 {
     public function getHistoryDirectory()
-	{
+    {
         $oNode = null;
         if ($this instanceof File) {
             list(, $owner) = \Sabre\Uri\split($this->getOwner());
             try {
                 $oNode = Server::getNodeForPath('files/'. $this->getStorage() . $this->getRelativePath() . '/' . $this->getName() . '.hist', $owner);
+            } catch (\Exception $oEx) {
             }
-            catch (\Exception $oEx) {}
         }
-		return $oNode;
-	}
+        return $oNode;
+    }
 
-	public function deleteHistoryDirectory()
-	{
-		$oNode = $this->getHistoryDirectory();
+    public function deleteHistoryDirectory()
+    {
+        $oNode = $this->getHistoryDirectory();
 
-		if ($oNode instanceof Directory)
-		{
-			$oNode->delete();
-		}
-
-	}
+        if ($oNode instanceof Directory) {
+            $oNode->delete();
+        }
+    }
 }

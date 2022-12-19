@@ -2,16 +2,16 @@
 
 namespace Afterlogic\DAV\CalDAV\Schedule;
 
-class Plugin extends \Sabre\CalDAV\Schedule\Plugin {
-
+class Plugin extends \Sabre\CalDAV\Schedule\Plugin
+{
     /**
      * Returns a list of addresses that are associated with a principal.
      *
      * @param string $principal
      * @return array
      */
-    protected function getAddressesForPrincipal($principal) {
-
+    protected function getAddressesForPrincipal($principal)
+    {
         $CUAS = '{' . self::NS_CALDAV . '}calendar-user-address-set';
 
         $properties = $this->server->getProperties(
@@ -27,11 +27,9 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin {
         $addresses = $properties[$CUAS]->getHrefs();
 
         $iPos = strpos($principal, 'principals/');
-        if ($iPos !== false)
-        {
+        if ($iPos !== false) {
             $addresses[] = 'mailto:' . \trim(substr($principal, $iPos + 11), '/');
         }
         return $addresses;
-
     }
 }

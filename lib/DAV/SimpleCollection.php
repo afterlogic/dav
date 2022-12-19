@@ -12,11 +12,10 @@ namespace Afterlogic\DAV;
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class SimpleCollection extends \Sabre\DAV\SimpleCollection {
-
-     function deleteChild($childName) {
-
+class SimpleCollection extends \Sabre\DAV\SimpleCollection
+{
+    public function deleteChild($childName)
+    {
         unset($this->children[$childName]);
-
     }
 }

@@ -12,28 +12,26 @@ namespace Afterlogic\DAV\CardDAV\Shared;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-trait AddressbookTrait {
+trait AddressbookTrait
+{
+    protected $principalUri;
 
-   protected $principalUri;
-
-	/**
+    /**
      * Constructor
      *
      * @param \Sabre\CardDAV\Backend\BackendInterface $carddavBackend
      * @param array $addressBookInfo
      * @param array $cardData
      */
-    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend,array $addressBookInfo,array $cardData,$principalUri) {
-
+    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, array $cardData, $principalUri)
+    {
         parent::__construct($carddavBackend, $addressBookInfo, $cardData);
-		$this->principalUri = $principalUri;
-
+        $this->principalUri = $principalUri;
     }
 
-    function getOwner() {
-
+    public function getOwner()
+    {
         return $this->principalUri;
-
     }
 
    /**
@@ -42,12 +40,13 @@ trait AddressbookTrait {
      * @param string $name
      * @return Card
      */
-    function getChild($name) {
-
+    public function getChild($name)
+    {
         $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
-        if (!$obj) throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        if (!$obj) {
+            throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        }
         return new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
-
     }
 
     /**
@@ -55,15 +54,14 @@ trait AddressbookTrait {
      *
      * @return array
      */
-    function getChildren() {
-
+    public function getChildren()
+    {
         $objs = $this->carddavBackend->getCards($this->addressBookInfo['id']);
         $children = [];
         foreach ($objs as $obj) {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
         }
         return $children;
-
     }
 
     /**
@@ -75,8 +73,8 @@ trait AddressbookTrait {
      * @param string[] $paths
      * @return array
      */
-    function getMultipleChildren(array $paths) {
-
+    public function getMultipleChildren(array $paths)
+    {
         $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
 
         $children = [];
@@ -84,6 +82,5 @@ trait AddressbookTrait {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
         }
         return $children;
-
-	}
- }
+    }
+}

@@ -12,23 +12,22 @@ namespace Afterlogic\DAV\CardDAV\SharedWithAll;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
+class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
+{
+    use \Afterlogic\DAV\CardDAV\Shared\AddressbookTrait;
 
-	protected $principalUri;
+    protected $principalUri;
 
-  use \Afterlogic\DAV\CardDAV\Shared\AddressbookTrait;
-
-	/**
+    /**
      * Constructor
      *
      * @param \Sabre\CardDAV\Backend\BackendInterface $carddavBackend
      * @param array $addressBookInfo
      */
-    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, $principalUri) {
-
-      parent::__construct($carddavBackend, $addressBookInfo);
-      $this->principalUri = $principalUri;
-
+    public function __construct(\Sabre\CardDAV\Backend\BackendInterface $carddavBackend, array $addressBookInfo, $principalUri)
+    {
+        parent::__construct($carddavBackend, $addressBookInfo);
+        $this->principalUri = $principalUri;
     }
 
        /**
@@ -37,12 +36,13 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      * @param string $name
      * @return Card
      */
-    function getChild($name) {
-
-      $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
-      if (!$obj) throw new \Sabre\DAV\Exception\NotFound('Card not found');
-      return new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
-
+    public function getChild($name)
+    {
+        $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
+        if (!$obj) {
+            throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        }
+        return new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
     }
 
     /**
@@ -50,15 +50,14 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      *
      * @return array
      */
-    function getChildren() {
-
+    public function getChildren()
+    {
         $objs = $this->carddavBackend->getCards($this->addressBookInfo['id']);
         $children = [];
         foreach ($objs as $obj) {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
         }
         return $children;
-
     }
 
     /**
@@ -70,8 +69,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      * @param string[] $paths
      * @return array
      */
-    function getMultipleChildren(array $paths) {
-
+    public function getMultipleChildren(array $paths)
+    {
         $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
 
         $children = [];
@@ -79,7 +78,5 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj, $this->principalUri);
         }
         return $children;
-
-  }
-    
+    }
 }

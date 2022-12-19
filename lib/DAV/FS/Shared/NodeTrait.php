@@ -16,8 +16,8 @@ use Afterlogic\DAV\Constants;
  */
 trait NodeTrait
 {
-	public $inRoot;
-	
+    public $inRoot;
+
     protected $name;
 
     protected $node;
@@ -35,23 +35,23 @@ trait NodeTrait
     protected $initiator = '';
 
     protected $dbProperties = [];
-    
+
     public function getId()
     {
         return $this->getName();
     }
 
     public function getDisplayName()
-	{
+    {
         return $this->getName();
-	}
+    }
 
     public function setOwnerPublicId($sOwnerPublicId)
     {
         $this->ownerPublicId = $sOwnerPublicId;
     }
 
-    public  function getOwner()
+    public function getOwner()
     {
         return $this->getOwnerPublicId();
     }
@@ -124,12 +124,12 @@ trait NodeTrait
             if ($oNode) {
                 throw new \Sabre\DAV\Exception\Conflict();
             }
-    
+
             $pdo->updateSharedFileName(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->name, $name, $this->getSharePath(), $this->getGroupId());
         }
     }
 
-    function delete()
+    public function delete()
     {
         if ($this->isInherited) {
             if ($this->node) {

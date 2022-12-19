@@ -4,7 +4,6 @@
 echo "SabreDAV migrate script for version 2.0\n";
 
 if ($argc<2) {
-
     echo <<<HELLO
 
 This script help you migrate from a pre-2.0 database to 2.0 and later
@@ -36,7 +35,6 @@ php {$argv[0]} sqlite:data/sabredav.db
 HELLO;
 
     exit();
-
 }
 
 // There's a bunch of places where the autoloader could be, so we'll try all of
@@ -46,7 +44,7 @@ $paths = [
     __DIR__ . '/../../../autoload.php',
 ];
 
-foreach($paths as $path) {
+foreach ($paths as $path) {
     if (file_exists($path)) {
         include $path;
         break;
@@ -55,8 +53,8 @@ foreach($paths as $path) {
 
 $dsn = $argv[1];
 $prefix = isset($argv[2]) ? $argv[2] : '';
-$user = isset($argv[3])?$argv[3]:null;
-$pass = isset($argv[4])?$argv[4]:null;
+$user = isset($argv[3]) ? $argv[3] : null;
+$pass = isset($argv[4]) ? $argv[4] : null;
 
 echo "Connecting to database: " . $dsn . "\n";
 
@@ -67,20 +65,18 @@ $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
 switch($driver) {
-
-    case 'mysql' :
+    case 'mysql':
         echo "Detected MySQL.\n";
         break;
-    case 'sqlite' :
+    case 'sqlite':
         echo "Detected SQLite.\n";
         break;
-    default :
+    default:
         echo "Error: unsupported driver: " . $driver . "\n";
         die(-1);
 }
 
-foreach(['calendar', 'addressbook'] as $itemType) {
-
+foreach (['calendar', 'addressbook'] as $itemType) {
     $tableName = $prefix . $itemType . 's';
     $tableNameOld = $tableName . '_old';
     $changesTable = $prefix . $itemType . 'changes';
@@ -91,18 +87,16 @@ foreach(['calendar', 'addressbook'] as $itemType) {
     $row = $pdo->query("SELECT * FROM $tableName LIMIT 1")->fetch();
 
     if (!$row) {
-
         echo "No records were found in the '$tableName' table.\n";
         echo "\n";
         echo "We're going to rename the old table to $tableNameOld (just in case).\n";
         echo "and re-create the new table.\n";
 
         switch($driver) {
-
-            case 'mysql' :
+            case 'mysql':
                 $pdo->exec("RENAME TABLE $tableName TO $tableNameOld");
                 switch($itemType) {
-                    case 'calendar' :
+                    case 'calendar':
                         $pdo->exec("
             CREATE TABLE {$prefix}calendars (
                 id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -120,7 +114,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
                         ");
                         break;
-                    case 'addressbook' :
+                    case 'addressbook':
                         $pdo->exec("
             CREATE TABLE {$prefix}addressbooks (
                 id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -134,13 +128,13 @@ foreach(['calendar', 'addressbook'] as $itemType) {
                         ");
                         break;
                 }
-			break;
-            case 'sqlite' :
+                break;
+            case 'sqlite':
 
                 $pdo->exec("ALTER TABLE $tableName RENAME TO $tableNameOld");
 
                 switch($itemType) {
-                    case 'calendar' :
+                    case 'calendar':
                         $pdo->exec("
             CREATE TABLE {$prefix}calendars (
                 id integer primary key asc,
@@ -157,7 +151,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
             );
                         ");
                         break;
-                    case 'addressbook' :
+                    case 'addressbook':
                         $pdo->exec("
             CREATE TABLE {$prefix}addressbooks (
                 id integer primary key asc,
@@ -171,40 +165,33 @@ foreach(['calendar', 'addressbook'] as $itemType) {
 
                         break;
                 }
-		break;
+                break;
         }
         echo "Creation of 2.0 $tableName table is complete\n";
-
     } else {
-
         // Checking if there's a synctoken field already.
         if (array_key_exists('synctoken', $row)) {
             echo "The 'synctoken' field already exists in the $tableName table.\n";
             echo "It's likely you already upgraded, so we're simply leaving\n";
             echo "the $tableName table alone\n";
         } else {
-
             echo "1.8 table schema detected\n";
             switch($driver) {
-
-                case 'mysql' :
+                case 'mysql':
                     $pdo->exec("ALTER TABLE $tableName ADD synctoken INT(11) UNSIGNED NOT NULL DEFAULT '1'");
                     $pdo->exec("ALTER TABLE $tableName DROP ctag");
                     $pdo->exec("UPDATE $tableName SET synctoken = '1'");
                     break;
-                case 'sqlite' :
+                case 'sqlite':
                     $pdo->exec("ALTER TABLE $tableName ADD synctoken integer");
                     $pdo->exec("UPDATE $tableName SET synctoken = '1'");
                     echo "Note: there's no easy way to remove fields in sqlite.\n";
                     echo "The ctag field is no longer used, but it's kept in place\n";
                     break;
-
             }
 
             echo "Upgraded '$tableName' to 2.0 schema.\n";
-
         }
-
     }
 
     try {
@@ -212,13 +199,11 @@ foreach(['calendar', 'addressbook'] as $itemType) {
 
         echo "'$changesTable' already exists. Assuming that this part of the\n";
         echo "upgrade was already completed.\n";
-
     } catch (Exception $e) {
         echo "Creating '$changesTable' table.\n";
 
         switch($driver) {
-
-            case 'mysql' :
+            case 'mysql':
                 $pdo->exec("
     CREATE TABLE $changesTable (
         id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -231,7 +216,7 @@ foreach(['calendar', 'addressbook'] as $itemType) {
 
                 ");
                 break;
-            case 'sqlite' :
+            case 'sqlite':
                 $pdo->exec("
 
     CREATE TABLE $changesTable (
@@ -245,11 +230,8 @@ foreach(['calendar', 'addressbook'] as $itemType) {
                 ");
                 $pdo->exec("CREATE INDEX {$itemType}id_synctoken ON $changesTable ({$itemType}id, synctoken);");
                 break;
-
         }
-
     }
-
 }
 
 try {
@@ -257,13 +239,11 @@ try {
 
     echo "'calendarsubscriptions' already exists. Assuming that this part of the\n";
     echo "upgrade was already completed.\n";
-
 } catch (Exception $e) {
     echo "Creating calendarsubscriptions table.\n";
 
     switch($driver) {
-
-        case 'mysql' :
+        case 'mysql':
             $pdo->exec("
 CREATE TABLE {$prefix}calendarsubscriptions (
     id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -282,7 +262,7 @@ CREATE TABLE {$prefix}calendarsubscriptions (
 );
             ");
             break;
-        case 'sqlite' :
+        case 'sqlite':
             $pdo->exec("
 
 CREATE TABLE {$prefix}calendarsubscriptions (
@@ -303,9 +283,7 @@ CREATE TABLE {$prefix}calendarsubscriptions (
 
             $pdo->exec("CREATE INDEX principaluri_uri ON {$prefix}calendarsubscriptions (principaluri, uri);");
             break;
-
     }
-
 }
 
 try {
@@ -313,13 +291,11 @@ try {
 
     echo "'propertystorage' already exists. Assuming that this part of the\n";
     echo "upgrade was already completed.\n";
-
 } catch (Exception $e) {
     echo "Creating propertystorage table.\n";
 
     switch($driver) {
-
-        case 'mysql' :
+        case 'mysql':
             $pdo->exec("
 CREATE TABLE {$prefix}propertystorage (
     id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -332,7 +308,7 @@ CREATE TABLE {$prefix}propertystorage (
 CREATE UNIQUE INDEX path_property ON {$prefix}propertystorage (path(600), name(100));
             ");
             break;
-        case 'sqlite' :
+        case 'sqlite':
             $pdo->exec("
 CREATE TABLE {$prefix}propertystorage (
     id integer primary key asc,
@@ -346,15 +322,12 @@ CREATE UNIQUE INDEX path_property ON {$prefix}propertystorage (path, name);
             ");
 
             break;
-
     }
-
 }
 
 echo "Upgrading cards table to 2.0 schema\n";
 
 try {
-
     $create = false;
     $row = $pdo->query("SELECT * FROM {$prefix}cards LIMIT 1")->fetch();
     if (!$row) {
@@ -364,26 +337,22 @@ try {
         $create = true;
 
         switch($driver) {
-            case 'mysql' :
+            case 'mysql':
                 $pdo->exec("RENAME TABLE {$prefix}cards TO {$prefix}cards_old");
                 break;
-            case 'sqlite' :
+            case 'sqlite':
                 $pdo->exec("ALTER TABLE {$prefix}cards RENAME TO {$prefix}cards_old");
                 break;
-
         }
     }
-
 } catch (Exception $e) {
-
     echo "Exception while checking cards table. Assuming that the table does not yet exist.\n";
     $create = true;
-
 }
 
 if ($create) {
     switch($driver) {
-        case 'mysql' :
+        case 'mysql':
             $pdo->exec("
 CREATE TABLE {$prefix}cards (
     id INT(11) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -398,7 +367,7 @@ CREATE TABLE {$prefix}cards (
             ");
             break;
 
-        case 'sqlite' :
+        case 'sqlite':
 
             $pdo->exec("
 CREATE TABLE {$prefix}cards (
@@ -412,11 +381,10 @@ CREATE TABLE {$prefix}cards (
 );
             ");
             break;
-
     }
 } else {
     switch($driver) {
-        case 'mysql' :
+        case 'mysql':
             $pdo->exec("
                 ALTER TABLE {$prefix}cards
                 ADD etag VARBINARY(32),
@@ -424,27 +392,24 @@ CREATE TABLE {$prefix}cards (
             ");
             break;
 
-        case 'sqlite' :
+        case 'sqlite':
 
             $pdo->exec("
                 ALTER TABLE {$prefix}cards ADD etag text;
                 ALTER TABLE {$prefix}cards ADD size integer;
             ");
             break;
-
     }
     echo "Reading all old vcards and populating etag and size fields.\n";
     $result = $pdo->query('SELECT id, carddata FROM ' . $prefix . 'cards');
     $stmt = $pdo->prepare('UPDATE ' . $prefix . 'cards SET etag = ?, size = ? WHERE id = ?');
-    while($row = $result->fetch(\PDO::FETCH_ASSOC)) {
+    while ($row = $result->fetch(\PDO::FETCH_ASSOC)) {
         $stmt->execute([
             md5($row['carddata']),
             strlen($row['carddata']),
             $row['id']
         ]);
     }
-
-
 }
 
 echo "Upgrade to 2.0 schema completed.\n";

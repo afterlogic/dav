@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CalDAV\Shared;
 
+use Sabre\CalDAV\Backend\SharingSupport;
+
 /**
  * This object represents a CalDAV calendar that is shared by a different user.
  *
@@ -14,62 +16,59 @@ namespace Afterlogic\DAV\CalDAV\Shared;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Calendar extends \Sabre\CalDAV\SharedCalendar {
-
+class Calendar extends \Sabre\CalDAV\SharedCalendar
+{
     use \Afterlogic\DAV\CalDAV\CalendarTrait;
 
-    protected function updateReminders($principaluri, $calendarid, $currentInvites, array $sharees) {
+    protected function updateReminders($principaluri, $calendarid, $currentInvites, array $sharees)
+    {
+        if ($this->caldavBackend instanceof \Afterlogic\DAV\CalDAV\Backend\PDO) {
+            $calendarInstances = $this->caldavBackend->getCalendarInstances($calendarid[0]);
+            $userCalendars = [];
+            foreach ($calendarInstances as $calendar) {
+                $userCalendars[basename($calendar['principaluri'])] = $calendar['uri'];
+            }
+            $reminders = \Afterlogic\DAV\Backend::Reminders()->getRemindersForCalendar(basename($principaluri), $this->getName());
+            if (is_array($reminders) && count($reminders) > 0) {
+                foreach ($sharees as $sharee) {
+                    if ($sharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS) {
+                        if ($sharee->principal !== $principaluri) {
+                            foreach ($reminders as $reminder) {
+                                \Afterlogic\DAV\Backend::Reminders()->deleteReminder(
+                                    $reminder['eventid'],
+                                    basename($sharee->principaluri)
+                                );
+                            }
+                        }
+                        continue;
+                    }
 
-        $calendarInstances = $this->caldavBackend->getCalendarInstances($calendarid[0]);
-        $userCalendars = [];
-        foreach ($calendarInstances as $calendar) {
-            $userCalendars[basename($calendar['principaluri'])] = $calendar['uri'];
-        }
-        $reminders = \Afterlogic\DAV\Backend::Reminders()->getRemindersForCalendar(basename($principaluri), $this->getName());
-        if (is_array($reminders) && count($reminders) > 0) {
-
-            foreach ($sharees as $sharee) {
-
-                if ($sharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS) {
-                    if ($sharee->principal !== $principaluri) {
-                        foreach ($reminders as $reminder) {
-                            \Afterlogic\DAV\Backend::Reminders()->deleteReminder(
-                                $reminder['eventid'], 
-                                basename($sharee->principaluri)
-                            );
+                    foreach ($currentInvites as $oldSharee) {
+                        if ($oldSharee->href === $sharee->href) {
+                            continue 2;
                         }
                     }
-                    continue;
-                }
 
-                foreach ($currentInvites as $oldSharee) {
-
-                    if ($oldSharee->href === $sharee->href) {
-                        continue 2;
-                    }
-
-                }
-
-                foreach ($reminders as $reminder) {
-
-                    $userPrincipal = basename($sharee->principal);
-                    if (isset($userCalendars[$userPrincipal]))
-                    {
-                        \Afterlogic\DAV\Backend::Reminders()->addReminder(
-                            $userPrincipal, 
-                            $userCalendars[$userPrincipal], 
-                            $reminder['eventid'], 
-                            $reminder['time'],
-                            $reminder['starttime'],
-                            $reminder['allday']
-                        );
+                    foreach ($reminders as $reminder) {
+                        $userPrincipal = basename($sharee->principal);
+                        if (isset($userCalendars[$userPrincipal])) {
+                            \Afterlogic\DAV\Backend::Reminders()->addReminder(
+                                $userPrincipal,
+                                $userCalendars[$userPrincipal],
+                                $reminder['eventid'],
+                                $reminder['time'],
+                                $reminder['starttime'],
+                                $reminder['allday']
+                            );
+                        }
                     }
                 }
             }
         }
     }
-    
-    public function isOwned() {
+
+    public function isOwned()
+    {
         return $this->getShareAccess() === \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER;
     }
 
@@ -81,15 +80,15 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar {
      * @param \Sabre\DAV\Xml\Element\Sharee[] $sharees
      * @return void
      */
-    function updateInvites(array $sharees) {
-        
+    public function updateInvites(array $sharees)
+    {
         $currentInvites = [];
         $props = $this->getProperties(['id', 'principaluri']);
-        $currentInvites = $this->caldavBackend->getInvites($props['id']);
+        if ($this->caldavBackend instanceof SharingSupport) {
+            $currentInvites = $this->caldavBackend->getInvites($props['id']);
+            parent::updateInvites($sharees);
+        }
 
-        parent::updateInvites($sharees);
-        
         $this->updateReminders($props['principaluri'], $props['id'], $currentInvites, $sharees);
-
     }
 }

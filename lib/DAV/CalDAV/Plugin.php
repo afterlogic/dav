@@ -12,8 +12,8 @@ namespace Afterlogic\DAV\CalDAV;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Plugin extends \Sabre\CalDAV\Plugin {
-
+class Plugin extends \Sabre\CalDAV\Plugin
+{
     /**
      * Returns the path to a principal's calendar home.
      *
@@ -24,10 +24,9 @@ class Plugin extends \Sabre\CalDAV\Plugin {
      * @param string $principalUrl
      * @return string
      */
-    function getCalendarHomeForPrincipal($principalUrl) {
-
+    public function getCalendarHomeForPrincipal($principalUrl)
+    {
         return self::CALENDAR_ROOT;
-
     }
 
     protected function fixOrganizer(&$data, &$modified)
@@ -64,10 +63,11 @@ class Plugin extends \Sabre\CalDAV\Plugin {
      *                       changed &$data.
      * @return void
      */
-    function beforeWriteContent($path, \Sabre\DAV\IFile $node, &$data, &$modified) {
-
-        if (!$node instanceof \Sabre\CalDAV\ICalendarObject)
+    public function beforeWriteContent($path, \Sabre\DAV\IFile $node, &$data, &$modified)
+    {
+        if (!$node instanceof \Sabre\CalDAV\ICalendarObject) {
             return;
+        }
 
         // We're onyl interested in ICalendarObject nodes that are inside of a
         // real calendar. This is to avoid triggering validation and scheduling
@@ -75,11 +75,12 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         list($parent) =  \Sabre\Uri\split($path);
         $parentNode = $this->server->tree->getNodeForPath($parent);
 
-        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
+        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar) {
             return;
+        }
 
         $this->fixOrganizer($data, $modified);
-        try{
+        try {
             $this->validateICalendar(
                 $data,
                 $path,
@@ -88,7 +89,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $this->server->httpResponse,
                 false
             );
-        } catch (\Exception $oEx) {}
+        } catch (\Exception $oEx) {
+        }
     }
 
     /**
@@ -104,13 +106,14 @@ class Plugin extends \Sabre\CalDAV\Plugin {
      *                       changed &$data.
      * @return void
      */
-    function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parentNode, &$modified) {
-
-        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar)
+    public function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parentNode, &$modified)
+    {
+        if (!$parentNode instanceof \Sabre\CalDAV\ICalendar) {
             return;
+        }
 
         $this->fixOrganizer($data, $modified);
-        try{
+        try {
             $this->validateICalendar(
                 $data,
                 $path,
@@ -119,7 +122,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 $this->server->httpResponse,
                 true
             );
-        } catch (\Exception $oEx) {}
+        } catch (\Exception $oEx) {
+        }
     }
 
    /**
@@ -139,8 +143,7 @@ class Plugin extends \Sabre\CalDAV\Plugin {
         // The MKCALENDAR is only available on unmapped uri's, whose
         // parents extend IExtendedCollection
         list($parent, $name) = \Sabre\Uri\split($uri);
-        if (isset($parent))
-        {
+        if (isset($parent)) {
             $node = $this->server->tree->getNodeForPath($parent);
 
             if ($node instanceof \Sabre\DAV\IExtendedCollection) {

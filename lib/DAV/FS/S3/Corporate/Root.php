@@ -12,12 +12,12 @@ namespace Afterlogic\DAV\FS\S3\Corporate;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Root extends \Afterlogic\DAV\FS\S3\Personal\Root 
+class Root extends \Afterlogic\DAV\FS\S3\Personal\Root
 {
-	protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
+    protected $storage = \Aurora\System\Enums\FileStorageType::Corporate;
 
-	public function __construct($sUser = null)
-	{
-		parent::__construct($this->storage);
-	}
+    public function __construct($sUser = null)
+    {
+        parent::__construct($this->storage);
+    }
 }

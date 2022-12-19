@@ -14,19 +14,21 @@ use Sabre\DAV\Exception\Forbidden;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
-   /**
-     * Returns a card
-     *
-     * @param string $name
-     * @return Card
-     */
-    function getChild($name) {
-
+class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
+{
+    /**
+      * Returns a card
+      *
+      * @param string $name
+      * @return Card
+      */
+    public function getChild($name)
+    {
         $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
-        if (!$obj) throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        if (!$obj) {
+            throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        }
         return new Card($this->carddavBackend, $this->addressBookInfo, $obj);
-
     }
 
     /**
@@ -34,8 +36,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      *
      * @return array
      */
-    function getChildren() {
-
+    public function getChildren()
+    {
         $objs = $this->carddavBackend->getCards($this->addressBookInfo['id']);
         $children = [];
         foreach ($objs as $obj) {
@@ -43,7 +45,6 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj);
         }
         return $children;
-
     }
 
     /**
@@ -55,8 +56,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
      * @param string[] $paths
      * @return array
      */
-    function getMultipleChildren(array $paths) {
-
+    public function getMultipleChildren(array $paths)
+    {
         $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
 
         $children = [];
@@ -65,6 +66,5 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook {
             $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj);
         }
         return $children;
-
     }
 }

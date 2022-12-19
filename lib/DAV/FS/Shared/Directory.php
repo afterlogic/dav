@@ -32,47 +32,35 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     public function getChild($path)
     {
         if ($this->node) {
-
             $oChild = $this->node->getChild($path);
             if ($oChild) {
-
                 $aExtendedProps = $oChild->getProperty('ExtendedProps');
                 if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-    
                     if ($oChild instanceof \Afterlogic\DAV\FS\File) {
-
                         $oChild = new File($oChild->getName(), $oChild);
-                    }
-                    else if ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
-
+                    } elseif ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
                         $oChild = new Directory($oChild->getName(), $oChild);
                     }
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName());
                     if ($aSharedFile) {
-
                         $oChild->setInitiator($aSharedFile['initiator']);
                         $oChild->setAccess($aSharedFile['access']);
                         $oChild->setDbProperties(\json_decode($aSharedFile['properties'], true));
-                    }
-                    else {
-
+                    } else {
                         $oChild->setInherited(true);
                         $oChild->setAccess($this->getAccess());
-                        $oChild->setOwnerPublicId($this->node->getUser());   
+                        $oChild->setOwnerPublicId($this->node->getUser());
                     }
                 } else {
-
                     return false;
                 }
 
                 return $oChild;
             } else {
-
                 return false;
             }
         } else {
-
             return false;
         }
     }
@@ -91,14 +79,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
                         $oResult = new File($oChild->getName(), $oChild);
                     }
-                } else if ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
+                } elseif ($oChild instanceof \Afterlogic\DAV\FS\Directory) {
                     $oResult = new Directory($oChild->getName(), $oChild);
                 }
                 if ($oResult) {
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName());
                     if ($aSharedFile) {
-                        $oResult->setAccess($aSharedFile['access']);   
+                        $oResult->setAccess($aSharedFile['access']);
                         $oResult->setInitiator($aSharedFile['initiator']);
                         $oResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
                     } else {
@@ -121,29 +109,28 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return $this->node && $this->node->childExists($name);
     }
 
-	public function createDirectory($name)
-	{
+    public function createDirectory($name)
+    {
         if ($this->node) {
             if ($this->node->getAccess() === Access::NoAccess || $this->node->getAccess() === Access::Read) {
-				throw new ApiException(ErrorCodes::NotPermitted);
-			}
+                throw new ApiException(ErrorCodes::NotPermitted);
+            }
             $this->node->createDirectory($name);
         }
     }
 
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
-	{
+    public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
+    {
         if ($this->node) {
-
             if ($this->node->getAccess() === Access::NoAccess || $this->node->getAccess() === Access::Read) {
-				throw new ApiException(ErrorCodes::NotPermitted);
-			}
+                throw new ApiException(ErrorCodes::NotPermitted);
+            }
             if ($this->node->childExists($name)) {
-				$oFile = $this->node->getChild();
-				if ($oFile->getAccess() === Access::NoAccess || $oFile->getAccess() === Access::Read) {
-					throw new ApiException(ErrorCodes::NotPermitted);
-				}
-			}
+                $oFile = $this->node->getChild();
+                if ($oFile->getAccess() === Access::NoAccess || $oFile->getAccess() === Access::Read) {
+                    throw new ApiException(ErrorCodes::NotPermitted);
+                }
+            }
 
             if (!(is_array($extendedProps) && isset($extendedProps['InitializationVector']))) {
                 return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);

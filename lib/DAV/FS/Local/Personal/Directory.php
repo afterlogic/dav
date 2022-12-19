@@ -17,77 +17,79 @@ use Sabre\DAV\Exception\NotFound;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Directory extends \Afterlogic\DAV\FS\Local\Directory 
+class Directory extends \Afterlogic\DAV\FS\Local\Directory
 {
-	use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
+    use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
 
-	public function __construct($path) 
-	{
-		parent::__construct(\Aurora\System\Enums\FileStorageType::Personal, $path);
-	}
-    
-	public function getChild($name) 
+    public function __construct($path)
     {
-		$mResult = false;
-		try {
-			$mResult = $this->getLocalChild($name);
-		} catch (\Exception $oEx) {}
-
-		
-		if (!$mResult) {
-			$mResult = $this->getSharedChild($name);
-		}
-
-		if (!$mResult) {
-			throw new NotFound();
-		}
-
-		return $mResult;
+        parent::__construct(\Aurora\System\Enums\FileStorageType::Personal, $path);
     }
 
-	public function getLocalChild($name)
-	{
-		$result = null;
+    public function getChild($name)
+    {
+        $mResult = false;
+        try {
+            $mResult = $this->getLocalChild($name);
+        } catch (\Exception $oEx) {
+        }
 
-		$path = $this->checkFileName($name);
 
-		if (is_dir($path)) {
-			$ext = strtolower(substr($name, -5));
-			if ($ext === '.hist') {
-				$result = new HistoryDirectory($this->getStorage(), $path);
-			} else {
-				$result = new self($path);
-			}
-		} else {
-			$result = new File($path);
-		}
+        if (!$mResult) {
+            $mResult = $this->getSharedChild($name);
+        }
 
-		return $result;
+        if (!$mResult) {
+            throw new NotFound();
+        }
+
+        return $mResult;
     }
-	
-	public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = []) 
-	{
-		$result = parent::createFile($name, $data, $rangeType, $offset, $extendedProps);
 
-		$this->updateUsedSpace();
-		
-		return $result;
-	}
-	
-	function getQuotaInfo() {
-		$oRoot = Server::getNodeForPath('files/personal');
-		if ($oRoot) {
-			return $oRoot->getQuotaInfo();
-		} else {
-			return [0, 0];
-		}
-	}
+    public function getLocalChild($name)
+    {
+        $result = null;
 
-	public function getChildren($sPattern = null)
-	{
-		return array_merge(
-			parent::getChildren($sPattern),
-			$this->getSharedChildren()
-		);
-	}
+        $path = $this->checkFileName($name);
+
+        if (is_dir($path)) {
+            $ext = strtolower(substr($name, -5));
+            if ($ext === '.hist') {
+                $result = new HistoryDirectory($this->getStorage(), $path);
+            } else {
+                $result = new self($path);
+            }
+        } else {
+            $result = new File($path);
+        }
+
+        return $result;
+    }
+
+    public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
+    {
+        $result = parent::createFile($name, $data, $rangeType, $offset, $extendedProps);
+
+        $this->updateUsedSpace();
+
+        return $result;
+    }
+
+    public function getQuotaInfo()
+    {
+        $oRoot = Server::getNodeForPath('files/personal');
+        if ($oRoot instanceof Root) {
+            return $oRoot->getQuotaInfo();
+        } else {
+            return [0, 0];
+        }
+    }
+
+    public function getChildren($sPattern = null)
+    {
+        return array_merge(
+            parent::getChildren($sPattern),
+            $this->getSharedChildren()
+        );
+    }
 }

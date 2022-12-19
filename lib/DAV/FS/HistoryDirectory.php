@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Afterlogic\DAV\FS;
 
 /**
@@ -13,7 +12,7 @@ class HistoryDirectory extends Directory
     public function getFileVersion()
     {
         $ver = 0;
-        
+
         foreach ($this->getChildren() as $oChild) {
             if ($oChild instanceof Directory) {
                 $ver++;
@@ -23,15 +22,15 @@ class HistoryDirectory extends Directory
         return $ver;
     }
 
-	public function getVersionDir($version, $createdIsNotExists = false)
-	{
+    public function getVersionDir($version, $createdIsNotExists = false)
+    {
         if ($this->childExists($version)) {
             return $this->getChild($version);
-        } else if ($createdIsNotExists) {
+        } elseif ($createdIsNotExists) {
             $this->createDirectory($version);
             return $this->getChild($version);
         } else {
             return false;
         }
-	}
+    }
 }

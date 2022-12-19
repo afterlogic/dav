@@ -32,10 +32,9 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      *
      * @return int
      */
-    function getLastModified()
+    public function getLastModified()
     {
         if ($this->node) {
-
             return $this->node->getLastModified();
         }
 
@@ -47,20 +46,18 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
      *
      * @return int
      */
-    function getSize()
+    public function getSize()
     {
         if ($this->node) {
-
             return $this->node->getSize();
         }
 
         return 0;
     }
 
-    function get($bRedirectToUrl = true)
+    public function get($bRedirectToUrl = true)
     {
         if ($this->node) {
-
             return $this->node->get($bRedirectToUrl);
         }
 
@@ -71,10 +68,8 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     {
         $aExtendedProps = $this->node->getProperty('ExtendedProps');
         if ($this->node && !(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-
             return $this->node->put($data);
         } else {
-
             return false;
         }
     }
@@ -83,25 +78,22 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     {
         $oNode = null;
         if ($this->node) {
-
             list(, $owner) = \Sabre\Uri\split($this->getOwner());
             try {
                 $oNode = Server::getNodeForPath('files/'. $this->node->getStorage() . $this->node->getRelativePath() . '/' . $this->node->getName() . '.hist', $owner);
+            } catch (\Exception $oEx) {
             }
-            catch (\Exception $oEx) {}
         }
 
-		return $oNode;
+        return $oNode;
     }
 
-    function patch($data, $rangeType, $offset = null) 
+    public function patch($data, $rangeType, $offset = null)
     {
         $aExtendedProps = $this->node->getProperty('ExtendedProps');
         if ($this->node && !(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
-
             return $this->node->patch($data, $rangeType, $offset);
         } else {
-
             return false;
         }
     }
@@ -119,7 +111,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
     public function getETag()
     {
         $result = null;
-        
+
         if ($this->node) {
             $result = $this->node->getETag();
         }

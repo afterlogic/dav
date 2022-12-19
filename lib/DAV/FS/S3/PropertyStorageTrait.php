@@ -22,12 +22,14 @@ trait PropertyStorageTrait
             $data = [];
             $oObject = false;
             try {
-                $oObject = $this->client->getObject([
+                $oObject = $this->client->getObject(
+                    [
                         'Bucket' => $this->bucket,
                         'Key' => $path
                     ]
                 );
-            } catch (\Exception $oEx){}
+            } catch (\Exception $oEx) {
+            }
             if ($oObject) {
                 $mFileData = (string) $oObject['Body'];
                 $data = unserialize($mFileData);
@@ -50,7 +52,9 @@ trait PropertyStorageTrait
         }
 
         $data = $data[$this->getName()];
-        if (!isset($data['properties'])) $data['properties'] = [];
+        if (!isset($data['properties'])) {
+            $data['properties'] = [];
+        }
 
         if (!isset($data['properties']['ExtendedProps'])) {
             $aMetadata = $this->getMetadata();
@@ -73,7 +77,7 @@ trait PropertyStorageTrait
         $data = $this->getResourceRawData($path);
         $data[$this->getName()] = $newData;
 
-        $rData = fopen('php://memory','r+');
+        $rData = fopen('php://memory', 'r+');
         fwrite($rData, \serialize($data));
         rewind($rData);
 
@@ -88,8 +92,7 @@ trait PropertyStorageTrait
             $uploader->upload();
             $this->cache[$path] = $data;
             return true;
-        }
-        catch (\Aws\Exception\MultipartUploadException $e) {
+        } catch (\Aws\Exception\MultipartUploadException $e) {
             return false;
         }
     }
@@ -107,7 +110,7 @@ trait PropertyStorageTrait
             unset($data[$this->getName()]);
         }
 
-        $rData = fopen('php://memory','r+');
+        $rData = fopen('php://memory', 'r+');
         fwrite($rData, \serialize($data));
         rewind($rData);
 
@@ -151,7 +154,7 @@ trait PropertyStorageTrait
             $data[$name] = $newData;
         }
 
-        $rData = fopen('php://memory','r+');
+        $rData = fopen('php://memory', 'r+');
         fwrite($rData, \serialize($data));
         rewind($rData);
 

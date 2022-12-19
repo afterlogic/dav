@@ -14,37 +14,29 @@ namespace Afterlogic\DAV\Auth;
  */
 class Backend
 {
-	/**
-	 *
-	 */
-	public static function Login($sUserName, $sPassword)
-	{
-		$mResult = false;
+    /**
+     *
+     */
+    public static function Login($sUserName, $sPassword)
+    {
+        $mResult = false;
 
-		$oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
-		if ($oDavModule)
-		{
-			try
-			{
-				$mResult = $oDavModule->Login($sUserName, $sPassword);
+        $oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
+        if ($oDavModule) {
+            try {
+                $mResult = $oDavModule->Login($sUserName, $sPassword);
 
-				if (isset($mResult['AuthToken']))
-				{
-					$mResult = \Aurora\System\Api::getAuthenticatedUserPublicId($mResult['AuthToken']);
-				}
-				else
-				{
-					$mResult = false;
-				}
-			}
-			catch (\Exception $ex)
-			{
-				\Aurora\System\Api::LogException($ex);
-				$mResult = false;
-			}
-		}
+                if (isset($mResult['AuthToken'])) {
+                    $mResult = \Aurora\System\Api::getAuthenticatedUserPublicId($mResult['AuthToken']);
+                } else {
+                    $mResult = false;
+                }
+            } catch (\Exception $ex) {
+                \Aurora\System\Api::LogException($ex);
+                $mResult = false;
+            }
+        }
 
-		return $mResult;
-	}
-
+        return $mResult;
+    }
 }

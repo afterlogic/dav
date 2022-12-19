@@ -20,143 +20,143 @@ use Aurora\System\Api;
  */
 class Root extends Directory
 {
-	protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
+    protected $storage = \Aurora\System\Enums\FileStorageType::Personal;
 
-	protected $client = null;
+    protected $client = null;
 
-	public static $childCache;
+    public static $childCache;
 
-	public static $childrenCache = [];
+    public static $childrenCache = [];
 
-	public function __construct($sPrefix = null)
-	{
-		$oModule = S3Filestorage\Module::getInstance();
+    public function __construct($sPrefix = null)
+    {
+        $oModule = S3Filestorage\Module::getInstance();
 
-		$sBucketPrefix = $oModule->getConfig('BucketPrefix');
+        $sBucketPrefix = $oModule->getConfig('BucketPrefix');
 
-		$sBucket = \strtolower($sBucketPrefix . \str_replace([' ', '.'], '-', Server::getTenantName()));
+        $sBucket = \strtolower($sBucketPrefix . \str_replace([' ', '.'], '-', Server::getTenantName()));
 
-		$this->client = $this->getS3Client();
+        $this->client = $this->getS3Client();
 
-		static $bDoesBucketExist = null;
-		if ($bDoesBucketExist === null) {
-			$bDoesBucketExist = $this->client->doesBucketExist($sBucket);
-		}
+        static $bDoesBucketExist = null;
+        if ($bDoesBucketExist === null) {
+            $bDoesBucketExist = $this->client->doesBucketExist($sBucket);
+        }
 
-		if(!$bDoesBucketExist) {
-			$this->createBucket($this->client, $sBucket);
-		}
+        if (!$bDoesBucketExist) {
+            $this->createBucket($this->client, $sBucket);
+        }
 
-		if (empty($sPrefix)) {
-			$sPrefix =  $this->getUser();
-		}
+        if (empty($sPrefix)) {
+            $sPrefix =  $this->getUser();
+        }
 
-		parent::__construct('/' . $sPrefix, $sBucket, $this->client, $this->storage);
-	}
+        parent::__construct('/' . $sPrefix, $sBucket, $this->client, $this->storage);
+    }
 
-	protected function getS3Client()
-	{
-		static $client = false;
-		if (!$client) {
-			$oModule = S3Filestorage\Module::getInstance();
+    protected function getS3Client()
+    {
+        static $client = false;
+        if (!$client) {
+            $oModule = S3Filestorage\Module::getInstance();
 
-			$sRegion = $oModule->getConfig('Region');
-			$sAccessKey = $oModule->getConfig('AccessKey');
-			$sSecretKey = $oModule->getConfig('SecretKey');
+            $sRegion = $oModule->getConfig('Region');
+            $sAccessKey = $oModule->getConfig('AccessKey');
+            $sSecretKey = $oModule->getConfig('SecretKey');
 
-			$aOptions = [
-				'region' => $sRegion,
-				'version' => 'latest',
-				'credentials' => [
-					'key'    => $sAccessKey,
-					'secret' => $sSecretKey,
-				],
-			];
-			$endpoint = $oModule->getConfig('Host');
-			if (!empty($endpoint)) {
-				$aOptions['endpoint'] = 'https://' . $endpoint;
-			}
-			$client = new S3Client($aOptions);
-		}
+            $aOptions = [
+                'region' => $sRegion,
+                'version' => 'latest',
+                'credentials' => [
+                    'key'    => $sAccessKey,
+                    'secret' => $sSecretKey,
+                ],
+            ];
+            $endpoint = $oModule->getConfig('Host');
+            if (!empty($endpoint)) {
+                $aOptions['endpoint'] = 'https://' . $endpoint;
+            }
+            $client = new S3Client($aOptions);
+        }
 
-		return $client;
-	}
+        return $client;
+    }
 
-	protected function createBucket($client, $sBucket)
-	{
-		$res = $client->createBucket([
-			'Bucket' => $sBucket
-		]);
-		$client->putBucketCors([
-			'Bucket' => $sBucket,
-			'CORSConfiguration' => [
-				'CORSRules' => [
-					[
-						'AllowedHeaders' => [
-							'*',
-						],
-						'AllowedMethods' => [
-							'GET',
-							'PUT',
-							'POST',
-							'DELETE',
-							'HEAD'
-						],
-						'AllowedOrigins' => [
-							(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']
-						],
-						'MaxAgeSeconds' => 0,
-					],
-				],
-			],
+    protected function createBucket($client, $sBucket)
+    {
+        $res = $client->createBucket([
+            'Bucket' => $sBucket
+        ]);
+        $client->putBucketCors([
+            'Bucket' => $sBucket,
+            'CORSConfiguration' => [
+                'CORSRules' => [
+                    [
+                        'AllowedHeaders' => [
+                            '*',
+                        ],
+                        'AllowedMethods' => [
+                            'GET',
+                            'PUT',
+                            'POST',
+                            'DELETE',
+                            'HEAD'
+                        ],
+                        'AllowedOrigins' => [
+                            (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']
+                        ],
+                        'MaxAgeSeconds' => 0,
+                    ],
+                ],
+            ],
 //			'ContentMD5' => '',
-		]);
-	}
+        ]);
+    }
 
-	public function getName() 
-	{
+    public function getName()
+    {
         return $this->storage;
-	}
+    }
 
-	public function setName($name)
-	{
+    public function setName($name)
+    {
         throw new \Sabre\DAV\Exception\Forbidden();
     }
 
-	public function delete()
-	{
+    public function delete()
+    {
         throw new \Sabre\DAV\Exception\Forbidden();
     }
 
-	protected function getUsedSize($sUserPublicId)
-	{
-		$iSize = 0;
+    protected function getUsedSize($sUserPublicId)
+    {
+        $iSize = 0;
 
-		if (!empty($sUserPublicId)) {
-			$searchResult = $this->client->getPaginator('ListObjectsV2', [
-				'Bucket' => $this->bucket,
-				'Prefix' => $sUserPublicId . '/'
-			])->search('Contents[?Size.to_number(@) != `0`].Size.to_number(@)');
-			$iSize = array_sum(
-				iterator_to_array($searchResult)
-			);
-		}
+        if (!empty($sUserPublicId)) {
+            $searchResult = $this->client->getPaginator('ListObjectsV2', [
+                'Bucket' => $this->bucket,
+                'Prefix' => $sUserPublicId . '/'
+            ])->search('Contents[?Size.to_number(@) != `0`].Size.to_number(@)');
+            $iSize = array_sum(
+                iterator_to_array($searchResult)
+            );
+        }
 
-		return $iSize;
-	}
+        return $iSize;
+    }
 
-	public function getQuotaInfo()
-	{
-		$sUserSpaceLimitInMb = -1;
+    public function getQuotaInfo()
+    {
+        $sUserSpaceLimitInMb = -1;
 
-		$oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
-		if ($oUser) {
-			$sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
-		}
+        $oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
+        if ($oUser) {
+            $sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
+        }
 
- 		return [
-			(int) $this->getUsedSize($this->UserPublicId),
-			(int) $sUserSpaceLimitInMb
-		];
+        return [
+            (int) $this->getUsedSize($this->UserPublicId),
+            (int) $sUserSpaceLimitInMb
+        ];
     }
 }
