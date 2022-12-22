@@ -77,7 +77,6 @@ class Server extends \Sabre\DAV\Server
         $aclPlugin = new \Sabre\DAVACL\Plugin();
         $aclPlugin->hideNodesFromListings = false;
         $aclPlugin->allowUnauthenticatedAccess = false;
-        $aclPlugin->defaultUsernamePath = \rtrim(Constants::PRINCIPALS_PREFIX, '/');
 
         $mAdminPrincipal = \Aurora\System\Api::GetModuleManager()->getModuleConfigValue('Dav', 'AdminPrincipal', false);
         $aclPlugin->adminPrincipals = ($mAdminPrincipal !== false) ?
