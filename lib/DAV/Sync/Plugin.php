@@ -21,23 +21,29 @@ use Sabre\HTTP\RequestInterface;
  */
 class Plugin extends \Sabre\DAV\Sync\Plugin
 {
-   protected function getPropertiesForMultiplePaths($fullPaths, $properties, &$result)
-   {
-        try {
-            foreach ($this->server->getPropertiesForMultiplePaths($fullPaths, $properties) as $fullPath => $props) {
-                // The 'Property_Response' class is responsible for generating a
-                // single {DAV:}response xml element.
-                $result[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props);
-                unset($fullPaths[$fullPath]);
+    protected function getPropertiesForMultiplePaths($fullPaths, $properties)
+    {
+        $result = [];
+        foreach ($fullPaths as $path) {
+            $node = $this->server->getNodeForPath($path);
+            if ($node) {
+                $propFind = new \Sabre\DAV\PropFind($path, $properties);
+                $r = $this->server->getPropertiesByNode($propFind, $node);
+                if ($r) {
+                    $propFind->
+                    $result[$path] = $propFind->getResultForMultiStatus();
+                    $result[$path]['href'] = $path;
+
+                    $resourceType = $this->server->getResourceTypeForNode($node);
+                    if (in_array('{DAV:}collection', $resourceType) || in_array('{DAV:}principal', $resourceType)) {
+                        $result[$path]['href'] .= '/';
+                    }
+                }
             }
         }
-        catch (\Sabre\DAV\Exception\NotFound $ex) {
-            $fullPath = array_shift($fullPaths);
-            if (count($fullPaths) > 0) {
-                $this->getPropertiesForMultiplePaths($fullPaths, $properties, $result);
-            }
-        }
-   }
+
+        return $result;
+    }
     
     /**
      * Sends the response to a sync-collection request.
@@ -56,7 +62,12 @@ class Plugin extends \Sabre\DAV\Sync\Plugin
         }
 
         $responses = [];
-        $this->getPropertiesForMultiplePaths($fullPaths, $properties, $responses);
+
+        foreach ($this->getPropertiesForMultiplePaths($fullPaths, $properties) as $fullPath => $props) {
+            // The 'Property_Response' class is responsible for generating a
+            // single {DAV:}response xml element.
+            $responses[] = new \Sabre\DAV\Xml\Element\Response($fullPath, $props);
+        }
 
         // Deleted items also show up as 'responses'. They have no properties,
         // and a single {DAV:}status element set as 'HTTP/1.1 404 Not Found'.

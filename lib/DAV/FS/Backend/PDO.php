@@ -736,7 +736,7 @@ SQL
             $query = 'SELECT uri, operation, synctoken FROM '.$this->filesChangesTableName.' WHERE synctoken >= ?  AND principaluri = ? AND storage = ? ORDER BY synctoken';
             if ($limit > 0) {
                 // Fetch one more raw to detect result truncation
-                $query .= ' LIMIT '.((int) $limit + 1);
+                $query .= ' LIMIT '.((int) $limit);
             }
 
             // Fetching all changes
