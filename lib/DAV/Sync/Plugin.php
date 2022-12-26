@@ -30,7 +30,6 @@ class Plugin extends \Sabre\DAV\Sync\Plugin
                 $propFind = new \Sabre\DAV\PropFind($path, $properties);
                 $r = $this->server->getPropertiesByNode($propFind, $node);
                 if ($r) {
-                    $propFind->
                     $result[$path] = $propFind->getResultForMultiStatus();
                     $result[$path]['href'] = $path;
 
