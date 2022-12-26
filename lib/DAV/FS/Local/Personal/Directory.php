@@ -39,7 +39,7 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 		}
 
 		if (!$mResult) {
-			Api::Log('File ' . $this->getPath() . '/' . $name . ' not found');
+			Api::Log('File ' . $this->getPath() . '/' . $name . ' not found', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
 			throw new NotFound();
 		}
 
