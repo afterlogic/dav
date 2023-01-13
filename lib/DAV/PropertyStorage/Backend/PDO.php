@@ -14,7 +14,6 @@ namespace Afterlogic\DAV\PropertyStorage\Backend;
  */
 class PDO extends \Sabre\DAV\PropertyStorage\Backend\PDO
 {
-
     protected $dBPrefix;
 
     /**
