@@ -66,7 +66,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
                 Api::Log('populateItem: item not found');
             }
 
-            if ($oItem instanceof File || $oItem instanceof Directory) {
+            if ($oItem instanceof \Afterlogic\Dav\FS\File || $oItem instanceof \Afterlogic\Dav\FS\Directory) {
                 $oItem->setAccess((int) $aSharedFile['access']);
                 $oItem->setUser(basename($aSharedFile['owner']));
 
@@ -190,5 +190,10 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
         } else {
             throw new \Sabre\DAV\Exception\Forbidden();
         }
+    }
+
+    public function getRelativeNodePath()
+    {
+        return '';
     }
 }
