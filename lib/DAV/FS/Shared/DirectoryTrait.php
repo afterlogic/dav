@@ -69,6 +69,10 @@ trait DirectoryTrait
 
         $iAccess = $oChild->getAccess();
 
+        if ($oChild->getGroupId() === 0 && $iAccess === Access::NoAccess) {
+            return;
+        }
+
         $sNewInitiator = $aSharedFile['initiator'];
         $iNewAccess = $aSharedFile['access'];
         if ((int) $aSharedFile['group_id'] === 0) { //personal sharing
@@ -130,9 +134,7 @@ trait DirectoryTrait
 
                     $oChild = Root::populateItem($aSharedFile);
                     if ($oChild && $oChild->getNode() instanceof \Sabre\DAV\FS\Node) {
-                        if ($oChild->getAccess() !== Access::NoAccess) {
-                            $aChildren[] = $oChild;
-                        }
+                        $aChildren[] = $oChild;
                     }
                 }
             }

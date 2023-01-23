@@ -114,10 +114,15 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
         // Read   = 2;
         // Reshare = 3;
 
+        $iAccess = $oChild->getAccess();
+        
+        if ($oChild->getGroupId() === 0 && $iAccess === Access::NoAccess) {
+            return;
+        }
+
         if ((int) $aSharedFile['group_id'] === 0) {
             $oChild->setAccess($aSharedFile['access']);
         } else {
-            $iAccess = $oChild->getAccess();
             if ($aSharedFile['access'] !== Access::Read) {
                 if ($iAccess < $aSharedFile['access']) {
                     $oChild->setAccess($aSharedFile['access']);
