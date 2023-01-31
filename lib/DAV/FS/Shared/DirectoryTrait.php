@@ -110,9 +110,11 @@ trait DirectoryTrait
                     $sPath = '/' . $this->getName();
                 }
             }
+
             $aSharedFiles = $oPdo->getSharedFilesForUser(
                 Constants::PRINCIPALS_PREFIX . $this->getUser(),
-                $sPath
+                $sPath,
+                ($this instanceof Root)
             );
 
             foreach ($aSharedFiles as $aSharedFile) {
