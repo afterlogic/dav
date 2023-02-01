@@ -36,7 +36,7 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar
                             foreach ($reminders as $reminder) {
                                 \Afterlogic\DAV\Backend::Reminders()->deleteReminder(
                                     $reminder['eventid'],
-                                    basename($sharee->principaluri)
+                                    basename($sharee->principal)
                                 );
                             }
                         }
