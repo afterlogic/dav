@@ -141,4 +141,18 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             return false;
         }
     }
+
+    /**
+     * Returns the last modification time, as a unix timestamp
+     *
+     * @return int
+     */
+    public function getLastModified()
+    {
+        if ($this->node) {
+            return $this->node->getLastModified();
+        }
+
+        return 0;
+    }
 }
