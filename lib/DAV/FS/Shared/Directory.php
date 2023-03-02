@@ -126,7 +126,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 throw new ApiException(ErrorCodes::NotPermitted);
             }
             if ($this->node->childExists($name)) {
-                $oFile = $this->node->getChild();
+                $oFile = $this->node->getChild($name);
                 if ($oFile->getAccess() === Access::NoAccess || $oFile->getAccess() === Access::Read) {
                     throw new ApiException(ErrorCodes::NotPermitted);
                 }
