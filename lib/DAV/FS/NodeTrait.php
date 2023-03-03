@@ -272,10 +272,10 @@ trait NodeTrait
 
         rename($this->path, $newPath);
 
+        $this->setNameHistory($name);
+        
         $this->path = $newPath;
         $this->putResourceData($resourceData);
-
-        $this->setNameHistory($name);
     }
 
     public function setNameShared($name)
