@@ -7,6 +7,10 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
+use Sabre\DAV\Xml\Property\LocalHref;
+use Sabre\DAVACL;
+use Sabre\Uri;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -156,4 +160,122 @@ class Plugin extends \Sabre\CalDAV\Plugin {
 
         return [];
     }
+
+    /**
+     * PropFind.
+     *
+     * This method handler is invoked before any after properties for a
+     * resource are fetched. This allows us to add in any CalDAV specific
+     * properties.
+     */
+    public function propFind(\Sabre\DAV\PropFind $propFind, \Sabre\DAV\INode $node)
+    {
+        $ns = '{'.self::NS_CALDAV.'}';
+
+        if ($node instanceof \Sabre\CalDAV\ICalendarObjectContainer) {
+            $propFind->handle($ns.'max-resource-size', $this->maxResourceSize);
+            $propFind->handle($ns.'supported-calendar-data', function () {
+                return new \Sabre\CalDAV\Xml\Property\SupportedCalendarData();
+            });
+            $propFind->handle($ns.'supported-collation-set', function () {
+                return new \Sabre\CalDAV\Xml\Property\SupportedCollationSet();
+            });
+        }
+
+        if ($node instanceof DAVACL\IPrincipal) {
+            $principalUrl = $node->getPrincipalUrl();
+
+            $propFind->handle('{'.self::NS_CALDAV.'}calendar-home-set', function () use ($principalUrl) {
+                $calendarHomePath = $this->getCalendarHomeForPrincipal($principalUrl);
+                if (is_null($calendarHomePath)) {
+                    return null;
+                }
+
+                return new LocalHref($calendarHomePath.'/');
+            });
+            // The calendar-user-address-set property is basically mapped to
+            // the {DAV:}alternate-URI-set property.
+            $propFind->handle('{'.self::NS_CALDAV.'}calendar-user-address-set', function () use ($node) {
+                $addresses = $node->getAlternateUriSet();
+                $addresses[] = $this->server->getBaseUri().$node->getPrincipalUrl().'/';
+
+                return new LocalHref($addresses);
+            });
+            // For some reason somebody thought it was a good idea to add
+            // another one of these properties. We're supporting it too.
+            $propFind->handle('{'.self::NS_CALENDARSERVER.'}email-address-set', function () use ($node) {
+                $addresses = $node->getAlternateUriSet();
+                $emails = [];
+                foreach ($addresses as $address) {
+                    if ('mailto:' === substr($address, 0, 7)) {
+                        $emails[] = substr($address, 7);
+                    }
+                }
+
+                return new \Sabre\CalDAV\Xml\Property\EmailAddressSet($emails);
+            });
+
+            // These two properties are shortcuts for ical to easily find
+            // other principals this principal has access to.
+            $propRead = '{'.self::NS_CALENDARSERVER.'}calendar-proxy-read-for';
+            $propWrite = '{'.self::NS_CALENDARSERVER.'}calendar-proxy-write-for';
+
+            if (404 === $propFind->getStatus($propRead) || 404 === $propFind->getStatus($propWrite)) {
+                $aclPlugin = $this->server->getPlugin('acl');
+                $membership = $aclPlugin->getPrincipalMembership($propFind->getPath());
+                $readList = [];
+                $writeList = [];
+
+                foreach ($membership as $group) {
+                    $groupNode = $this->server->tree->getNodeForPath($group);
+
+                    $listItem = Uri\split($group)[0].'/';
+
+                    // If the node is either ap proxy-read or proxy-write
+                    // group, we grab the parent principal and add it to the
+                    // list.
+                    if ($groupNode instanceof \Sabre\CalDAV\Principal\IProxyRead) {
+                        $readList[] = $listItem;
+                    }
+                    if ($groupNode instanceof \Sabre\CalDAV\Principal\IProxyWrite) {
+                        $writeList[] = $listItem;
+                    }
+                }
+
+                $propFind->set($propRead, new LocalHref($readList));
+                $propFind->set($propWrite, new LocalHref($writeList));
+            }
+        } // instanceof IPrincipal
+
+        if ($node instanceof \Sabre\CalDAV\ICalendarObject) {
+            // The calendar-data property is not supposed to be a 'real'
+            // property, but in large chunks of the spec it does act as such.
+            // Therefore we simply expose it as a property.
+            $propFind->handle('{'.self::NS_CALDAV.'}calendar-data', function () use ($node) {
+                $val = $node->get();
+                if (is_resource($val)) {
+                    $val = stream_get_contents($val);
+                }
+
+                $vobj = \Sabre\VObject\Reader::read($val);
+
+                $calendarInfo = (fn() => $this->calendarInfo)->call($node);
+                if ($calendarInfo['share-access'] !== \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER) {
+                    foreach ($vobj->VEVENT as $key => $event) {
+                        if ((string) $event->CLASS === 'PRIVATE') {
+                            $vobj->VEVENT[$key]->SUBJECT = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_SUBJECT');
+                            $vobj->VEVENT[$key]->DESCRIPTION = '';
+                            $vobj->VEVENT[$key]->LOCATION = '';
+                        }
+                    }
+                }
+
+                $val = $vobj->serialize();
+
+                // Taking out \r to not screw up the xml output
+                return str_replace("\r", '', $val);
+            });
+        }
+    }
+    
 }
