@@ -297,8 +297,8 @@ class Plugin extends \Sabre\CalDAV\Plugin {
             $vobj = VObject\Reader::read($data);
             foreach ($vobj->VEVENT as $key => $event) {
                 if ((string) $event->CLASS === 'PRIVATE') {
-                    $vobj->VEVENT[$key]->SUBJECT = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_SUBJECT');
-                    $vobj->VEVENT[$key]->SUMMARY = '';
+                    $vobj->VEVENT[$key]->SUBJECT = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_EVENT_FAKE_TITLE');
+                    $vobj->VEVENT[$key]->SUMMARY = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_EVENT_FAKE_TITLE');
                     $vobj->VEVENT[$key]->DESCRIPTION = '';
                     $vobj->VEVENT[$key]->LOCATION = '';
                 }
