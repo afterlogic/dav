@@ -10,6 +10,10 @@ namespace Afterlogic\DAV\CalDAV;
 use Sabre\DAV\Xml\Property\LocalHref;
 use Sabre\DAVACL;
 use Sabre\Uri;
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+use Sabre\HTTP;
+use Sabre\VObject;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -256,26 +260,55 @@ class Plugin extends \Sabre\CalDAV\Plugin {
                 if (is_resource($val)) {
                     $val = stream_get_contents($val);
                 }
-
-                $vobj = \Sabre\VObject\Reader::read($val);
-
-                $calendarInfo = (fn() => $this->calendarInfo)->call($node);
-                if ($calendarInfo['share-access'] !== \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER) {
-                    foreach ($vobj->VEVENT as $key => $event) {
-                        if ((string) $event->CLASS === 'PRIVATE') {
-                            $vobj->VEVENT[$key]->SUBJECT = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_SUBJECT');
-                            $vobj->VEVENT[$key]->DESCRIPTION = '';
-                            $vobj->VEVENT[$key]->LOCATION = '';
-                        }
-                    }
-                }
-
-                $val = $vobj->serialize();
+                $val = $this->removePrivateInfoFromEvent($node, $val);
 
                 // Taking out \r to not screw up the xml output
                 return str_replace("\r", '', $val);
             });
         }
+    }
+
+        /**
+     * This event is triggered after GET requests.
+     *
+     * This is used to transform data into jCal, if this was requested.
+     */
+    public function httpAfterGet(RequestInterface $request, ResponseInterface $response)
+    {
+        parent::httpAfterGet($request, $response);
+
+        $contentType = $response->getHeader('Content-Type');
+        if (null !== $contentType && false !== strpos($contentType, 'text/calendar')) {
+            
+            $path = $request->getPath();
+            $node = $this->server->tree->getNodeForPath($path);
+            
+            $body = $this->removePrivateInfoFromEvent($node, $response->getBody());
+            $response->setBody($body);
+            $response->setHeader('Content-Length', strlen($body));
+        }
+    }
+
+    protected function removePrivateInfoFromEvent($node, $data)
+    {
+        $result = $data;
+        $calendarInfo = (fn() => $this->calendarInfo)->call($node);
+        if ($calendarInfo['share-access'] !== \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER) {
+            $vobj = VObject\Reader::read($data);
+            foreach ($vobj->VEVENT as $key => $event) {
+                if ((string) $event->CLASS === 'PRIVATE') {
+                    $vobj->VEVENT[$key]->SUBJECT = \Aurora\Api::GetModule('Calendar')->i18N('PRIVATE_SUBJECT');
+                    $vobj->VEVENT[$key]->SUMMARY = '';
+                    $vobj->VEVENT[$key]->DESCRIPTION = '';
+                    $vobj->VEVENT[$key]->LOCATION = '';
+                }
+            }
+            $result = $vobj->serialize();
+            // Destroy circular references so PHP will garbage collect the object.
+            $vobj->destroy();
+        }
+
+        return $result;
     }
     
 }
