@@ -34,6 +34,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         if ($this->node) {
             $oChild = $this->node->getChild($path);
             if ($oChild) {
+                $oChild->setUser($this->node->getUser());
                 $aExtendedProps = $oChild->getProperty('ExtendedProps');
                 if (!(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
                     if ($oChild instanceof \Afterlogic\DAV\FS\File) {
@@ -43,12 +44,14 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     }
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oChild->getNode()->getRelativePath() . '/' . $oChild->getNode()->getName());
+                    
+                    $oChild->setInherited(true);
                     if ($aSharedFile) {
+                        $oChild->setOwnerPublicId($this->node->getUser());
                         $oChild->setInitiator($aSharedFile['initiator']);
                         $oChild->setAccess($aSharedFile['access']);
                         $oChild->setDbProperties(\json_decode($aSharedFile['properties'], true));
                     } else {
-                        $oChild->setInherited(true);
                         $oChild->setAccess($this->getAccess());
                         $oChild->setOwnerPublicId($this->node->getUser());
                     }
@@ -85,6 +88,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 if ($oResult) {
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
                     $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName());
+                    
+                    $oResult->setInherited(true);
                     if ($aSharedFile) {
                         $oResult->setAccess($aSharedFile['access']);
                         $oResult->setInitiator($aSharedFile['initiator']);
@@ -92,7 +97,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     } else {
                         $oResult->setOwnerPublicId($this->node->getUser());
                         $oResult->setAccess($this->node->getAccess());
-                        $oResult->setInherited(true);
                     }
                     if ($oResult->getAccess() !== Access::NoAccess) {
                         $aResult[] = $oResult;
