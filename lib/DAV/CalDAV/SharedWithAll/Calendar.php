@@ -58,8 +58,6 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar
                     'principal' => $sPrincipalUri . '/calendar-proxy-write',
                     'protected' => true,
                 ];
-                // no break intentional!
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE:
                 $acl[] = [
                     'privilege' => '{DAV:}write',
                     'principal' => $sPrincipalUri,
@@ -68,20 +66,26 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar
                 $acl[] = [
                     'privilege' => '{DAV:}write',
                     'principal' => $sPrincipalUri . '/calendar-proxy-write',
+                    'protected' => true,
+                ];
+                $acl[] = [
+                    'privilege' => '{DAV:}write-properties',
+                    'principal' => $sPrincipalUri,
+                    'protected' => true,
+                ];
+                $acl[] = [
+                    'privilege' => '{DAV:}write-properties',
+                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
+                    'protected' => true,
+                ];
+            case \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE:
+                $acl[] = [
+                    'privilege' => '{DAV:}bind',
+                    'principal' => $sPrincipalUri,
                     'protected' => true,
                 ];
                 // no break intentional!
             case \Sabre\DAV\Sharing\Plugin::ACCESS_READ:
-                $acl[] = [
-                    'privilege' => '{DAV:}write-properties',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write-properties',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
                 $acl[] = [
                     'privilege' => '{DAV:}read',
                     'principal' => $sPrincipalUri,

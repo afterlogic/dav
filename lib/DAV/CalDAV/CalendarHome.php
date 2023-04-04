@@ -168,8 +168,9 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome
                 $parentCalendar = $this->caldavBackend->getParentCalendar($calendar['id'][0]);
 
                 if ($parentCalendar) {
-                    $calendar['id'] = $parentCalendar['id'];
-                    $calendar['uri'] = $parentCalendar['uri'];
+                    $shareAccess = $calendar['share-access'];
+                    $calendar = $parentCalendar;
+                    $calendar['share-access'] = $shareAccess;
                     $calendar['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser();
                 }
 
