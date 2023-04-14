@@ -12,6 +12,15 @@ namespace Afterlogic\DAV;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
+
+/**
+ * @method static Principal\Backend\PDO Principal()
+ * @method static CalDAV\Backend\PDO Caldav()
+ * @method static CardDAV\Backend\PDO Carddav()
+ * @method static Locks\Backend\PDO Locks()
+ * @method static Reminders\Backend\PDO Reminders()
+ * @method static FS\Backend\PDO FS()
+ */
 class Backend
 {
     public static $aBackends = array();

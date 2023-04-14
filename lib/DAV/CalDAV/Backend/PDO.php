@@ -228,7 +228,7 @@ SQL
      * subscribable calendar.
      *
      * @param bool $value
-     * @return void
+     * @return bool
      */
     public function setPublishStatus($calendarUri, $value, $oUser = null)
     {
@@ -248,7 +248,7 @@ SQL
      * Publishing a calendar should automatically create a read-only, public,
      * subscribable calendar.
      *
-     * @return void
+     * @return bool
      */
     public function getPublishStatus($calendarUri)
     {
