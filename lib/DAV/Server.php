@@ -184,13 +184,13 @@ class Server extends \Sabre\DAV\Server
                 );
             }
 
-            // $this->addPlugin(
-            // 	new CalDAV\Schedule\Plugin()
-            // );
+            $this->addPlugin(
+            	new CalDAV\Schedule\Plugin()
+            );
 
-            // $this->addPlugin(
-            // 	new CalDAV\Schedule\IMipPlugin()
-            // );
+            $this->addPlugin(
+            	new CalDAV\Schedule\IMipPlugin()
+            );
 
             /* Calendar subscriptions Plugin */
             $this->addPlugin(
@@ -405,6 +405,9 @@ class Server extends \Sabre\DAV\Server
         self::setUser($userPublicId);
         try {
             $oNode = self::getInstance()->tree->getNodeForPath($path);
+            if (method_exists($oNode, 'init')) {
+                $oNode->init();
+            }
         } catch (\Exception $oEx) {
         }
         self::setUser($currentUser);

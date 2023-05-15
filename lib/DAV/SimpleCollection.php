@@ -16,6 +16,6 @@ class SimpleCollection extends \Sabre\DAV\SimpleCollection
 {
     public function deleteChild($childName)
     {
-        unset($this->children[$childName]);
+        unset($this->children[Server::getUser()][$childName]);
     }
 }

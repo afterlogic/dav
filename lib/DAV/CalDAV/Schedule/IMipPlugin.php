@@ -4,6 +4,9 @@ namespace Afterlogic\DAV\CalDAV\Schedule;
 
 use Sabre\DAV;
 use Sabre\VObject\ITip;
+use Aurora\Modules\CalendarMeetingsPlugin\Classes\Helper;
+use Aurora\Modules\Core\Module;
+use Aurora\System\Api;
 
 /**
  * iMIP handler.
@@ -21,8 +24,29 @@ use Sabre\VObject\ITip;
  */
 class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
 {
+    /** @var DAV\Server $server */
+    protected $server;
+
     public function __construct()
     {
+        
+    }
+
+    /*
+     * This initializes the plugin.
+     *
+     * This function is called by Sabre\DAV\Server, after
+     * addPlugin is called.
+     *
+     * This method should set up the required event subscriptions.
+     *
+     * @param DAV\Server $server
+     * @return void
+     */
+    public function initialize(DAV\Server $server)
+    {
+        parent::initialize($server);
+        $this->server = $server;
     }
 
     /**
@@ -75,10 +99,25 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
             $recipient = $iTipMessage->recipientName . ' <' . $recipient . '>';
         }
 
-        $subject = 'SabreDAV iTIP message';
+        $subject = 'iTIP message';
         switch (strtoupper($iTipMessage->method)) {
             case 'REPLY':
+                $sPartstat = $iTipMessage->message->VEVENT->ATTENDEE['PARTSTAT']->getValue();
+                $oModule = Api::GetModule('CalendarMeetingsPlugin');
                 $subject = 'Re: ' . $summary;
+                if ($oModule) {
+                    switch ($sPartstat) {
+                        case 'ACCEPTED':
+                            $subject = $oModule->i18N('SUBJECT_PREFFIX_ACCEPTED') . ': '. $summary;
+                            break;
+                        case 'DECLINED':
+                            $subject = $oModule->i18N('SUBJECT_PREFFIX_DECLINED') . ': '. $summary;
+                            break;
+                        case 'TENTATIVE':
+                            $subject = $oModule->i18N('SUBJECT_PREFFIX_TENTATIVE') . ': '. $summary;
+                            break;
+                    }
+                }
                 break;
             case 'REQUEST':
                 $subject = $summary;
@@ -97,9 +136,54 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
             $headers[] = 'X-Sabre-Version: ' . DAV\Version::VERSION;
         }
 
-        \Aurora\Modules\CalendarMeetingsPlugin\Classes\Helper::sendAppointmentMessage($senderEmail, $recipient, (string) $subject, $iTipMessage->message->serialize(), $iTipMessage->method);
-        $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+        $htmlBody = '';
 
+        if (strtoupper($iTipMessage->method) === 'REQUEST') {
+            
+            $oUser = Module::getInstance()->GetUserByPublicId($senderEmail);
+
+            /** @var \Sabre\VObject\Property\ICalendar\DateTime $oDTSTART */
+            $oDTSTART = $iTipMessage->message->VEVENT->DTSTART;
+            $sStartDateFormat = $oDTSTART->hasTime() ? 'D, F d, o, H:i' : 'D, F d, o';
+            $sStartDate = \Aurora\Modules\Calendar\Classes\Helper::getStrDate($oDTSTART, $oUser->DefaultTimeZone, $sStartDateFormat);
+
+            $calindarId = '';
+
+            $url = \Afterlogic\Dav\Server::getInstance()->httpRequest->getUrl();
+            if (!empty($url)) {
+                list($calenndarPath, $eventId) = \Sabre\Uri\split($url);
+                $calindarId = basename($calenndarPath);
+            }
+
+            $htmlBody = Helper::createHtmlFromEvent(
+                $calindarId, 
+                $iTipMessage->uid,
+                $senderEmail, 
+                $recipient, 
+                $sStartDate, 
+                $iTipMessage->message->VEVENT->LOCATION, 
+                $iTipMessage->message->VEVENT->DESCRIPTION
+            );
+
+            foreach ($iTipMessage->message->VEVENT->ATTENDEE as &$attendee) {
+                $sAttendee = (string) $attendee;
+                $iPos = strpos($sAttendee, 'principals/');
+                if ($iPos !== false) {
+                    $attendee->setValue(trim(substr($sAttendee, $iPos + 11),'/'));
+                }
+            }
+
+            Helper::sendAppointmentMessage(
+                $senderEmail, 
+                $recipient, 
+                $subject, 
+                $iTipMessage->message, 
+                $iTipMessage->method,
+                $htmlBody
+            );
+            $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+    
+        }
         return false;
     }
 }
