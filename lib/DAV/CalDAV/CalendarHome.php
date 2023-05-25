@@ -26,9 +26,9 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome
 
     public function init()
     {
-//        if (empty($this->principalInfo)) {
+        if (empty($this->principalInfo)) {
             $this->principalInfo = \Afterlogic\DAV\Server::getCurrentPrincipalInfo();
-//        }
+        }
     }
 
     public function getACL()
