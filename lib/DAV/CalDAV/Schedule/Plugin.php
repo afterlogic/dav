@@ -121,6 +121,10 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         // }
 
         // $broker = new \Sabre\VObject\ITip\Broker();
+        // $broker->significantChangeProperties = array_merge(
+        //     $broker->significantChangeProperties, 
+        //     $this->customSignificantChangeProperties
+        // );        
         // $newObject = $broker->processMessage($iTipMessage, $currentObject);
 
         // $inbox->createFile($newFileName, $iTipMessage->message->serialize());
@@ -182,7 +186,12 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
            return;
        }
 
-       if (!$this->scheduleReply($this->server->httpRequest)) {
+       $reflector = new \ReflectionObject($this);
+       $method = $reflector->getMethod('scheduleReply');
+       $method->setAccessible(true);
+       $scheduleReplyResult = $method->invoke($this, $this->server->httpRequest);
+
+       if (!$scheduleReplyResult) {
            return;
        }
 
