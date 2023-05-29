@@ -3,9 +3,18 @@
 namespace Afterlogic\DAV\CalDAV\Schedule;
 
 use Sabre\VObject\ITip\Message;
+use Sabre\VObject\Component\VCalendar;
+use Sabre\VObject\ITip;
+use Sabre\CalDAV\ICalendarObject;
 
 class Plugin extends \Sabre\CalDAV\Schedule\Plugin
 {
+    protected $customSignificantChangeProperties = [
+        'SUMMARY', 
+        'DESCRIPTION', 
+        'LOCATION'
+    ];
+
     /**
      * Event handler for the 'schedule' event.
      *
@@ -149,6 +158,104 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         //     $objectNode->put($newObject->serialize());
         // }
         // $iTipMessage->scheduleStatus = '1.2;Message delivered locally';
+    }  
+    
+    /**
+    * This method is triggered before a file gets deleted.
+    *
+    * We use this event to make sure that when this happens, attendees get
+    * cancellations, and organizers get 'DECLINED' statuses.
+    *
+    * @param string $path
+    */
+   public function beforeUnbind($path)
+   {
+       // FIXME: We shouldn't trigger this functionality when we're issuing a
+       // MOVE. This is a hack.
+       if ('MOVE' === $this->server->httpRequest->getMethod()) {
+           return;
+       }
+
+       $node = $this->server->tree->getNodeForPath($path);
+
+       if (!$node instanceof ICalendarObject || $node instanceof \Sabre\CalDAV\Schedule\ISchedulingObject) {
+           return;
+       }
+
+       if (!$this->scheduleReply($this->server->httpRequest)) {
+           return;
+       }
+
+       $addresses = $this->getAddressesForPrincipal(
+           $node->getOwner()
+       );
+
+       $broker = new ITip\Broker();
+       $broker->significantChangeProperties = array_merge(
+           $broker->significantChangeProperties, 
+           $this->customSignificantChangeProperties
+       );
+       $messages = $broker->parseEvent(null, $addresses, $node->get());
+
+       foreach ($messages as $message) {
+           $this->deliver($message);
+       }
+   }
+
+    /**
+     * This method looks at an old iCalendar object, a new iCalendar object and
+     * starts sending scheduling messages based on the changes.
+     *
+     * A list of addresses needs to be specified, so the system knows who made
+     * the update, because the behavior may be different based on if it's an
+     * attendee or an organizer.
+     *
+     * This method may update $newObject to add any status changes.
+     *
+     * @param VCalendar|string $oldObject
+     * @param array            $ignore    any addresses to not send messages to
+     * @param bool             $modified  a marker to indicate that the original object
+     *                                    modified by this process
+     */
+    protected function processICalendarChange($oldObject, VCalendar $newObject, array $addresses, array $ignore = [], &$modified = false)
+    {
+        $broker = new ITip\Broker();
+        $broker->significantChangeProperties = array_merge(
+            $broker->significantChangeProperties, 
+            $this->customSignificantChangeProperties
+        );
+        $messages = $broker->parseEvent($newObject, $addresses, $oldObject);
+
+        if ($messages) {
+            $modified = true;
+        }
+
+        foreach ($messages as $message) {
+            if (in_array($message->recipient, $ignore)) {
+                continue;
+            }
+
+            $this->deliver($message);
+
+            if (isset($newObject->VEVENT->ORGANIZER) && ($newObject->VEVENT->ORGANIZER->getNormalizedValue() === $message->recipient)) {
+                if ($message->scheduleStatus) {
+                    $newObject->VEVENT->ORGANIZER['SCHEDULE-STATUS'] = $message->getScheduleStatus();
+                }
+                unset($newObject->VEVENT->ORGANIZER['SCHEDULE-FORCE-SEND']);
+            } else {
+                if (isset($newObject->VEVENT->ATTENDEE)) {
+                    foreach ($newObject->VEVENT->ATTENDEE as $attendee) {
+                        if ($attendee->getNormalizedValue() === $message->recipient) {
+                            if ($message->scheduleStatus) {
+                                $attendee['SCHEDULE-STATUS'] = $message->getScheduleStatus();
+                            }
+                            unset($attendee['SCHEDULE-FORCE-SEND']);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
