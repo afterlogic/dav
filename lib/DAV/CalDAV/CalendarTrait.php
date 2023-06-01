@@ -30,6 +30,12 @@ trait CalendarTrait
 
     public function isDefault()
     {
-        return (\substr($this->getName(), 0, \strlen(\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID)) === \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID);
+        $bIsDefault = false;
+        $oUser = \Aurora\Api::getAuthenticatedUser();
+        if ($oUser && $oUser->{'Calendar::DefaultCalendar'} && $this->getName() === $oUser->{'Calendar::DefaultCalendar'}) {
+            $bIsDefault = true;
+        }
+        
+        return $bIsDefault;
     }
 }
