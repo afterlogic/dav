@@ -48,7 +48,7 @@ class Backend
                 case 'carddav':
                     $oBackend = new CardDAV\Backend\PDO();
                     break;
-                case 'lock':
+                case 'locks':
                     $oBackend = new Locks\Backend\PDO();
                     break;
                 case 'reminders':

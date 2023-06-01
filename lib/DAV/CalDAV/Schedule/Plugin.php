@@ -12,7 +12,8 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
     protected $customSignificantChangeProperties = [
         'SUMMARY', 
         'DESCRIPTION', 
-        'LOCATION'
+        'LOCATION',
+        'ATTENDEE'
     ];
 
     /**

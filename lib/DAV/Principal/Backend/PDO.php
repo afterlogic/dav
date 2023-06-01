@@ -75,7 +75,8 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         return array(
             'id' => $sUsername,
             'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$sUsername,
-//			'{http://sabredav.org/ns}email-address' => $sUsername,
+			'{http://sabredav.org/ns}email-address' => $sUsername,
+            '{DAV:}{DAV:}alternate-URI-set' => [$sUsername],
             '{DAV:}displayname' => $sUsername,
         );
     }

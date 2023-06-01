@@ -107,7 +107,7 @@ class Server extends \Sabre\DAV\Server
         );
 
         /* Locks Plugin */
-//                $this->addPlugin(new \Sabre\DAV\Locks\Plugin());
+               $this->addPlugin(new \Sabre\DAV\Locks\Plugin(Backend::Locks()));
 
         if ($oSettings->GetValue('EnableLogging', false)) {
             /* Logs Plugin */
