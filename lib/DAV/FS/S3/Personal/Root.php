@@ -71,6 +71,7 @@ class Root extends Directory
                     'key'    => $sAccessKey,
                     'secret' => $sSecretKey,
                 ],
+                'use_path_style_endpoint' => true 
             ];
             $endpoint = $oModule->getConfig('Host');
             if (!empty($endpoint)) {
@@ -151,7 +152,7 @@ class Root extends Directory
 
         $oUser = \Aurora\Modules\Core\Module::getInstance()->getUserByPublicId($this->getUser());
         if ($oUser) {
-            $sUserSpaceLimitInMb = $oUser->{'Files::UserSpaceLimitMb'} * 1024 * 1024;
+            $sUserSpaceLimitInMb = $oUser->getExtendedProp('Files::UserSpaceLimitMb') * 1024 * 1024;
         }
 
         return [

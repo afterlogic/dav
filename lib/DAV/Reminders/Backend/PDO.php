@@ -252,7 +252,7 @@ class PDO
                             $oNowDTClientTZ = isset($oNowDTClientTZ) ? $oNowDTClientTZ : new \DateTime("now", $oClientTZ);
                             $iOffset = $oNowDTClientTZ->getOffset(); //difference between UTC and time zone in allDay Event
                             //send reminder at WorkDayStarts time
-                            $iWorkDayStartsOffset = $oUser->{'Calendar::WorkdayStarts'} * 3600;
+                            $iWorkDayStartsOffset = $oUser->getExtendedProp('Calendar::WorkdayStarts') * 3600;
                         }
                         //NextRepeat
                         if (isset($oBaseEvent->RRULE)) {
