@@ -543,10 +543,10 @@ SQL
         return  $stmt->execute([$name, $principalUri, $uid, $share_path, $group_id]);
     }
 
-    public function updateSharedFileSharePath($principalUri, $uid, $sharePath, $newSharePath, $group_id = 0)
+    public function updateSharedFileSharePath($principalUri, $uid, $newUid, $sharePath, $newSharePath, $group_id = 0)
     {
-        $stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
-        return  $stmt->execute([$newSharePath, $principalUri, $uid, $sharePath, $group_id]);
+        $stmt = $this->pdo->prepare('UPDATE ' . $this->sharedFilesTableName . ' SET `share_path` = ?, `uid` = ? WHERE principaluri = ? AND uid = ? AND share_path = ? AND group_id = ?');
+        return  $stmt->execute([$newSharePath, $newUid, $principalUri, $uid, $sharePath, $group_id]);
     }
 
     public function updateSharedFileSharePathWithLike($principalUri, $sharePath, $newSharePath, $group_id = 0)

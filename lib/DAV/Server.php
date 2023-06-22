@@ -415,6 +415,25 @@ class Server extends \Sabre\DAV\Server
         return $oNode;
     }
 
+    public static function deleteNode($path, $userPublicId = null)
+    {
+        $result = false;
+        $path = str_replace('//', '/', $path);
+        if (!isset($userPublicId)) {
+            $userPublicId = self::getUser();
+        }
+        $currentUser = self::getUser();
+        self::setUser($userPublicId);
+        try {
+            self::getInstance()->tree->delete($path);
+            $result = true;
+        } catch (\Exception $oEx) {
+        }
+        self::setUser($currentUser);
+
+        return $result;
+    }
+
     public static function checkPrivileges($path, $priv)
     {
         $oServer = \Afterlogic\DAV\Server::getInstance();

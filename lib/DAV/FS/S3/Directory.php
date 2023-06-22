@@ -104,7 +104,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
         $Path =  rtrim(ltrim($this->path, '/'), '/') . '/';
 
-        if (!isset(Root::$childrenCache[$Path]) || isset($sPattern)) {
+//        if (!isset(Root::$childrenCache[$Path]) || isset($sPattern)) {
+        if (true) {
             $iSlashesCount = substr_count($Path, '/');
 
             $results = $this->client->getPaginator('ListObjectsV2', [
@@ -130,14 +131,15 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 }
             }
 
-            if ($sPattern) {
-                return $children;
-            } else {
-                Root::$childrenCache[$Path] = $children;
-            }
+            // if ($sPattern) {
+            //     return $children;
+            // } else {
+            //     Root::$childrenCache[$Path] = $children;
+            // }
         }
 
-        return Root::$childrenCache[$Path];
+        // return Root::$childrenCache[$Path];
+        return $children;
     }
 
     /**
@@ -152,16 +154,16 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     public function getChild($name)
     {
         $Path = rtrim($this->path, '/').'/'.$name;
-        if (isset(Root::$childCache[$Path])) {
-            return Root::$childCache[$Path];
-        } else {
+        // if (isset(Root::$childCache[$Path])) {
+        //     return Root::$childCache[$Path];
+        // } else {
             foreach ($this->getChildren() as $oChild) {
                 if ($oChild->getName() === $name) {
                     Root::$childCache[\rtrim($Path)] = $oChild;
                     return $oChild;
                 }
             }
-        }
+        // }
 
         // if not a file nor a directory, throw an exception
         throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
