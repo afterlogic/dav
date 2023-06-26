@@ -71,7 +71,7 @@ class Root extends Directory
                     'key'    => $sAccessKey,
                     'secret' => $sSecretKey,
                 ],
-                'use_path_style_endpoint' => true 
+                'use_path_style_endpoint' => $oModule->getConfig('UsePathStyleEndpoint')
             ];
             $endpoint = $oModule->getConfig('Host');
             if (!empty($endpoint)) {

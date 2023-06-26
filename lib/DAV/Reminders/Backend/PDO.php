@@ -162,19 +162,25 @@ class PDO
             $params[] = $user;
         }
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE eventid = ?'.$userWhere);
-        $stmt->execute($params);
+        return $stmt->execute($params);
+    }
+
+    public function deleteOutdatedReminders($time)
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE time < ?');
+        return $stmt->execute([$time]);
     }
 
     public function deleteReminderByCalendar($calendarUri)
     {
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE calendaruri = ?');
-        $stmt->execute(array($calendarUri));
+        return $stmt->execute(array($calendarUri));
     }
 
     public function deleteRemindersByUser($user)
     {
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->table.' WHERE user = ?');
-        $stmt->execute(array($user));
+        return $stmt->execute(array($user));
     }
 
     public static function getEventId($uri)
