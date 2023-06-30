@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\Contacts;
 
+use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
 
@@ -46,6 +47,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         $this->oServer->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
         $this->oServer->on('beforeCreateFile', array($this, 'beforeCreateFile'), 30);
         $this->oServer->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
+        $this->oServer->on('afterMethod:MKCOL', [$this, 'httpMkcolAfter']);
     }
 
     /**
@@ -247,6 +249,21 @@ class Plugin extends \Sabre\DAV\ServerPlugin
                     }
                 }
             }
+        }
+    }
+
+    public function httpMkcolAfter(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
+    {
+        $path = $request->getPath();
+        $davAddressBook = $this->oServer->getNodeForPath($path);
+        if ($davAddressBook instanceof \Afterlogic\DAV\CardDAV\AddressBook) {
+            $childProps = $davAddressBook->getProperties(['{DAV:}displayname']);
+
+            $dbAddressBook = new AddressBook();
+            $dbAddressBook->UserId = $this->getCurrentUserId();
+            $dbAddressBook->Name = $childProps['{DAV:}displayname'];
+            $dbAddressBook->UUID = $davAddressBook->getName();
+            $dbAddressBook->save();
         }
     }
 }
