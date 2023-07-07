@@ -87,9 +87,15 @@ class Directory extends \Afterlogic\DAV\FS\Local\Directory
 
     public function getChildren($sPattern = null)
     {
-        return array_merge(
-            parent::getChildren($sPattern),
-            $this->getSharedChildren()
-        );
+        $children = parent::getChildren($sPattern);
+        $bShowSharedFilesInPersonalStorage = Api::GetModuleManager()->getModuleConfigValue('PersonalFiles', 'ShowSharedFilesInPersonalStorage');
+        if ($bShowSharedFilesInPersonalStorage) {
+            $children = array_merge(
+                $children,
+                $this->getSharedChildren()
+            );
+        }
+
+        return $children;
     }
 }

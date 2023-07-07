@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS\S3\Personal;
 
+use Aurora\System\Api;
 use Sabre\DAV\Exception\NotFound;
 
 /**
@@ -43,9 +44,15 @@ class Directory extends \Afterlogic\DAV\FS\S3\Directory
 
     public function getChildren($sPattern = null)
     {
-        return array_merge(
-            parent::getChildren($sPattern),
-            $this->getSharedChildren()
-        );
+        $children = parent::getChildren($sPattern);
+        $bShowSharedFilesInPersonalStorage = Api::GetModuleManager()->getModuleConfigValue('PersonalFiles', 'ShowSharedFilesInPersonalStorage');
+        if ($bShowSharedFilesInPersonalStorage) {
+            $children = array_merge(
+                $children,
+                $this->getSharedChildren()
+            );
+        }
+
+        return $children;
     }
 }
