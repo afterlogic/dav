@@ -69,7 +69,8 @@ class PDO
 
     public function getReminders($start = null, $end = null)
     {
-        $values = array();
+        $result = [];
+        $values = [];
 
         $timeFilter = '';
         if ($start != null && $end != null) {
@@ -83,21 +84,11 @@ class PDO
         $stmt = $this->pdo->prepare('SELECT id, user, calendaruri, eventid, time, starttime, allday'
                 . ' FROM '.$this->table.' WHERE 1 = 1' . $timeFilter);
 
-        $stmt->execute($values);
-
-        $cache = array();
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $cache[] = array(
-                'id' => $row['id'],
-                'user' => $row['user'],
-                'calendaruri' => $row['calendaruri'],
-                'eventid' => $row['eventid'],
-                'time' => $row['time'],
-                'starttime' => $row['starttime'],
-                'allday' => $row['allday']
-                );
+        if ($stmt->execute($values)) {
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
-        return $cache;
+
+        return $result;
     }
 
     public function getRemindersForCalendar($user, $calendaruri)
