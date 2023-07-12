@@ -37,78 +37,12 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar
      */
     public function getACL()
     {
-        $acl = [];
-
-        $sPrincipalUri = $this->calendarInfo['principaluri'];
         $sUser = \Afterlogic\DAV\Server::getUser();
         if ($sUser) {
-            $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
+            $this->calendarInfo['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
         }
 
-        switch ($this->getShareAccess()) {
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_NOTSHARED:
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER:
-                $acl[] = [
-                    'privilege' => '{DAV:}share',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}share',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write-properties',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write-properties',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE:
-                $acl[] = [
-                    'privilege' => '{DAV:}bind',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                // no break intentional!
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_READ:
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-read',
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{' . \Sabre\CalDAV\Plugin::NS_CALDAV . '}read-free-busy',
-                    'principal' => '{DAV:}authenticated',
-                    'protected' => true,
-                ];
-                break;
-        }
-        return $acl;
+        return parent::getACL();
     }
 
 
@@ -121,50 +55,12 @@ class Calendar extends \Afterlogic\DAV\CalDAV\Shared\Calendar
      */
     public function getChildACL()
     {
-        $acl = [];
-
-        $sPrincipalUri = $this->calendarInfo['principaluri'];
-
         $sUser = \Afterlogic\DAV\Server::getUser();
         if ($sUser) {
-            $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
+            $this->calendarInfo['principaluri'] = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sUser;
         }
 
-        switch ($this->getShareAccess()) {
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_NOTSHARED:
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER:
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_READWRITE:
-                $acl[] = [
-                    'privilege' => '{DAV:}write',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}write',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-                // no break intentional
-            case \Sabre\DAV\Sharing\Plugin::ACCESS_READ:
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri,
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-write',
-                    'protected' => true,
-                ];
-                $acl[] = [
-                    'privilege' => '{DAV:}read',
-                    'principal' => $sPrincipalUri . '/calendar-proxy-read',
-                    'protected' => true,
-                ];
-                break;
-        }
-
-        return $acl;
+        return parent::getChildACL();
     }
 
     public function delete()
