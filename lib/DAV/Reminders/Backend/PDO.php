@@ -226,7 +226,7 @@ class PDO
             }
 
             $data = str_replace('VTODO', 'VEVENT', $data);
-            $vCal = \Sabre\VObject\Reader::read($data);
+            $vCal = \Sabre\VObject\Reader::read($data, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
             $aBaseEvents = [];
             if ($vCal instanceof VCalendar) {
                 $aBaseEvents = $vCal->getBaseComponents('VEVENT');

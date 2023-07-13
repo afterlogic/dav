@@ -492,4 +492,92 @@ SQL;
 
         return $result;
     }
+
+    /**
+     * Parses some information from calendar objects, used for optimized
+     * calendar-queries.
+     *
+     * Returns an array with the following keys:
+     *   * etag - An md5 checksum of the object without the quotes.
+     *   * size - Size of the object in bytes
+     *   * componentType - VEVENT, VTODO or VJOURNAL
+     *   * firstOccurence
+     *   * lastOccurence
+     *   * uid - value of the UID property
+     *
+     * @param string $calendarData
+     *
+     * @return array
+     */
+    protected function getDenormalizedData($calendarData)
+    {
+        $vObject = \Sabre\VObject\Reader::read($calendarData, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
+        $componentType = null;
+        $component = null;
+        $firstOccurence = null;
+        $lastOccurence = null;
+        $uid = null;
+        foreach ($vObject->getComponents() as $component) {
+            if ('VTIMEZONE' !== $component->name) {
+                $componentType = $component->name;
+                $uid = (string) $component->UID;
+                break;
+            }
+        }
+        if (!$componentType) {
+            throw new \Sabre\DAV\Exception\BadRequest('Calendar objects must have a VJOURNAL, VEVENT or VTODO component');
+        }
+        if ('VEVENT' === $componentType) {
+            $firstOccurence = $component->DTSTART->getDateTime()->getTimeStamp();
+            // Finding the last occurence is a bit harder
+            if (!isset($component->RRULE)) {
+                if (isset($component->DTEND)) {
+                    $lastOccurence = $component->DTEND->getDateTime()->getTimeStamp();
+                } elseif (isset($component->DURATION)) {
+                    $endDate = clone $component->DTSTART->getDateTime();
+                    $endDate = $endDate->add(\Sabre\VObject\DateTimeParser::parse($component->DURATION->getValue()));
+                    $lastOccurence = $endDate->getTimeStamp();
+                } elseif (!$component->DTSTART->hasTime()) {
+                    $endDate = clone $component->DTSTART->getDateTime();
+                    $endDate = $endDate->modify('+1 day');
+                    $lastOccurence = $endDate->getTimeStamp();
+                } else {
+                    $lastOccurence = $firstOccurence;
+                }
+            } else {
+                $it = new \Sabre\VObject\Recur\EventIterator($vObject, (string) $component->UID);
+                $maxDate = new \DateTime(self::MAX_DATE);
+                if ($it->isInfinite()) {
+                    $lastOccurence = $maxDate->getTimeStamp();
+                } else {
+                    $end = $it->getDtEnd();
+                    while ($it->valid() && $end < $maxDate) {
+                        $end = $it->getDtEnd();
+                        $it->next();
+                    }
+                    $lastOccurence = $end->getTimeStamp();
+                }
+            }
+
+            // Ensure Occurence values are positive
+            if ($firstOccurence < 0) {
+                $firstOccurence = 0;
+            }
+            if ($lastOccurence < 0) {
+                $lastOccurence = 0;
+            }
+        }
+
+        // Destroy circular references to PHP will GC the object.
+        $vObject->destroy();
+
+        return [
+            'etag' => md5($calendarData),
+            'size' => strlen($calendarData),
+            'componentType' => $componentType,
+            'firstOccurence' => $firstOccurence,
+            'lastOccurence' => $lastOccurence,
+            'uid' => $uid,
+        ];
+    }
 }

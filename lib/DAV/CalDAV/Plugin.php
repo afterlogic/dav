@@ -36,7 +36,7 @@ class Plugin extends \Sabre\CalDAV\Plugin
             $data = stream_get_contents($data);
         }
 
-        $vobj = \Sabre\VObject\Reader::read($data);
+        $vobj = \Sabre\VObject\Reader::read($data, \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES);
         if (isset($vobj->VEVENT->ORGANIZER)) {
             $sOrganizer = $vobj->VEVENT->ORGANIZER->getNormalizedValue();
             $iPos = strpos($sOrganizer, 'principals/');
