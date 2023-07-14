@@ -63,7 +63,7 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome
             if ($this->carddavBackend instanceof \Afterlogic\DAV\CardDAV\Backend\PDO) {
                 $abook = $this->carddavBackend->getAddressBookForUser($this->principalUri, $name);
             }
-            if (!$abook) {
+            if (!$abook && isset($this->principalUri)) {
                 $this->carddavBackend->createAddressBook(
                     $this->principalUri,
                     $name,
@@ -91,7 +91,7 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome
         }
 
         $aAddressbooks = $this->carddavBackend->getAddressbooksForUser($this->principalUri);
-        if (count($aAddressbooks) === 0) {
+        if (count($aAddressbooks) === 0 && isset($this->principalUri)) {
             $this->carddavBackend->createAddressBook(
                 $this->principalUri,
                 Constants::ADDRESSBOOK_DEFAULT_NAME,
