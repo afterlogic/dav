@@ -201,4 +201,9 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
     {
         return '';
     }
+
+    public function getLastModified()
+    {
+        return 0;
+    }
 }
