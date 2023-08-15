@@ -157,6 +157,8 @@ class File extends \Afterlogic\DAV\FS\File
         if (isset($this->object)) {
             return $this->object['LastModified']->getTimestamp();
         }
+
+        return 0;
     }
 
     /**

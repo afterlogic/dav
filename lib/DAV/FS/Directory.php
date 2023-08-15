@@ -276,7 +276,10 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
      */
     public function getLastModified()
     {
-        return filemtime($this->path);
+        if (!empty($this->path)) {
+            return filemtime($this->path);;
+        }
+        return 0;
     }
 
     /**
