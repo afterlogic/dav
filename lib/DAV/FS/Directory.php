@@ -155,13 +155,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
     {
         $this->deleteResourceData();
 
-        // Deleting all children
-        foreach (parent::getChildren() as $child) {
-            $child->delete();
-        }
-
-        // Removing the directory itself
-        rmdir($this->path);
+        $files = new \Illuminate\Filesystem\Filesystem();
+        $files->deleteDirectory($this->path);
 
         $this->deleteShares();
 
