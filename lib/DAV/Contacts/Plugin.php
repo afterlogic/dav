@@ -7,8 +7,12 @@
 
 namespace Afterlogic\DAV\Contacts;
 
+use Aurora\Modules\Contacts\Models\AddressBook;
 use Aurora\Modules\Contacts\Models\Contact;
 use Aurora\Modules\Contacts\Models\Group;
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+use Sabre\DAV\PropPatch;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -46,6 +50,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         $this->oServer->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
         $this->oServer->on('beforeCreateFile', array($this, 'beforeCreateFile'), 30);
         $this->oServer->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
+
+        $this->oServer->on('afterCreateCollection', array($this, 'afterCreateCollection'), 30);
+
+        $this->oServer->on('propPatch', array($this, 'propPatch'), 30);
     }
 
     /**
@@ -88,7 +96,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
     public static function isAddressbooks($uri)
     {
         $aPathInfo = \pathinfo($uri);
-        return \strtolower(\dirname($aPathInfo['dirname'])) === \Sabre\CardDAV\Plugin::ADDRESSBOOK_ROOT;
+        return \strtolower($aPathInfo['dirname']) === \Sabre\CardDAV\Plugin::ADDRESSBOOK_ROOT;
     }
 
     public static function isContact($uri)
@@ -126,6 +134,28 @@ class Plugin extends \Sabre\DAV\ServerPlugin
             ->first();
     }
 
+    public function afterMethod(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
+    {
+        $req = $request;
+        $res = $response;
+    }
+
+    public function afterCreateCollection($path)
+    {
+        $aPostData = $this->oServer->httpRequest->getPostData();
+		if (isset($aPostData['resourceType']) && 
+			$aPostData['resourceType'] === "{DAV:}collection,{urn:ietf:params:xml:ns:carddav}addressbook" && 
+			$aPostData['sabreAction'] === 'mkcol')
+		{
+			$oContactsModule = \Aurora\Modules\Contacts\Module::getInstance();
+			$oContactsModule->CreateAddressBook($aPostData['{DAV:}displayname'], $this->getCurrentUserId(), $aPostData['name']);
+		} elseif (self::isAddressbooks($path)) {
+            $aPathInfo = \pathinfo($path);
+			$oContactsModule = \Aurora\Modules\Contacts\Module::getInstance();
+            $oContactsModule->CreateAddressBook($aPathInfo['basename'], $this->getCurrentUserId(), $aPathInfo['basename']);
+        }
+    }
+
     /**
      * @param string $sPath
      * @throws \Sabre\DAV\Exception\NotAuthenticated
@@ -143,32 +173,43 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function afterUnbind($sPath)
     {
-        if ($this->oContactsDecorator && self::isContact($sPath)) {
-            $iUserId = $this->getCurrentUserId();
-            if ($iUserId > 0) {
-                \Aurora\System\Api::setUserId($iUserId);
+        if ($this->oContactsDecorator) {
+            if (self::isContact($sPath)) {
+                $iUserId = $this->getCurrentUserId();
+                if ($iUserId > 0) {
+                    \Aurora\System\Api::setUserId($iUserId);
 
-                $sStorage = $this->getStorage($sPath);
-                if ($sStorage === 'collected') {
-                    $sStorage = 'personal';
-                }
-
-                $sUID = $this->getUID($sPath);
-                $oContact = $this->getContactFromDB($iUserId, $sStorage, $sUID);
-                if ($oContact) {
-                    $this->oContactsDecorator->DeleteContacts(
-                        $iUserId,
-                        $sStorage,
-                        [$oContact->UUID]
-                    );
-                } else {
-                    $oGroup = $this->getGroupFromDB($iUserId, $sUID);
-                    if ($oGroup) {
-                        $this->oContactsDecorator->DeleteGroup(
-                            $iUserId,
-                            $oGroup->UUID
-                        );
+                    $sStorage = $this->getStorage($sPath);
+                    if ($sStorage === 'collected') {
+                        $sStorage = 'personal';
                     }
+
+                    $sUID = $this->getUID($sPath);
+                    $oContact = $this->getContactFromDB($iUserId, $sStorage, $sUID);
+                    if ($oContact) {
+                        $this->oContactsDecorator->DeleteContacts(
+                            $iUserId,
+                            $sStorage,
+                            [$oContact->UUID]
+                        );
+                    } else {
+                        $oGroup = $this->getGroupFromDB($iUserId, $sUID);
+                        if ($oGroup) {
+                            $this->oContactsDecorator->DeleteGroup(
+                                $iUserId,
+                                $oGroup->UUID
+                            );
+                        }
+                    }
+                }
+            } elseif (self::isAddressbooks($sPath)) {
+                $aPathInfo = \pathinfo($sPath);
+
+                $dbAddressBook = AddressBook::where('UserId', $this->getCurrentUserId())
+                    ->where('UUID', $aPathInfo['basename'])->first();
+
+                if ($dbAddressBook) {
+                    $this->oContactsDecorator->DeleteAddressBook($dbAddressBook->Id, $this->getCurrentUserId());
                 }
             }
         }
@@ -247,6 +288,22 @@ class Plugin extends \Sabre\DAV\ServerPlugin
                     }
                 }
             }
+        }
+    }
+
+    public function propPatch($path, PropPatch $propPatch)
+    {
+        if(self::isAddressbooks($path)) {
+            $propPatch->handle('{DAV:}displayname', function($value) use ($path) {  
+                $pathInfo = \pathinfo($path);
+
+                $dbAddressBook = AddressBook::where('UserId', $this->getCurrentUserId())
+                    ->where('UUID', $pathInfo['basename'])->first();
+                if($dbAddressBook) {
+                    $dbAddressBook->Name = $value;
+                    $dbAddressBook->save();
+                }
+            });
         }
     }
 }
