@@ -52,6 +52,7 @@ class PDO
 
 	public function getReminder($eventId, $user = null)
 	{
+		$eventId = (substr(strtolower($eventId), -4) !== '.ics') ? $eventId . '.ics' : $eventId;
 		$userWhere = '';
 		$params = array($eventId);
 		if (isset($user))
@@ -104,6 +105,7 @@ class PDO
 
 	public function addReminder($user, $calendarUri, $eventId, $time = null, $starttime = null, $allday = false)
 	{
+		$eventId = (substr(strtolower($eventId), -4) !== '.ics') ? $eventId . '.ics' : $eventId;
 		$values = $fieldNames = array();
         $fieldNames[] = 'user';
 		$values[':user'] = $user;
@@ -137,6 +139,7 @@ class PDO
 
 	public function deleteReminder($eventId, $user = null)
 	{
+		$eventId = (substr(strtolower($eventId), -4) !== '.ics') ? $eventId . '.ics' : $eventId;
 		$userWhere = '';
 		$params = array($eventId);
 		if (isset($user))
@@ -156,7 +159,7 @@ class PDO
 
 	public static function getEventId($uri)
 	{
-		return basename($uri, '.ics');
+		return basename($uri);
 	}
 
 	public static function getEventUri($uri)
@@ -183,10 +186,11 @@ class PDO
 	public function updateReminder($uri, $data, $user)
 	{
 		$oApiCalendarDecorator =  \Aurora\System\Api::GetModuleDecorator('calendar');
+		$uri = (substr(strtolower($uri), -4) !== '.ics') ? $uri . '.ics' : $uri;
 		if (self::isCalendar($uri) && self::isEvent($uri))
 		{
 			$calendarUri = trim($this->getCalendarUri($uri), '/');
-			$eventId = $this->getEventId($uri);
+			$eventId = $this->getEventUri($uri);
 			$this->deleteReminder($eventId, $user);
 			$data = str_replace('VTODO', 'VEVENT', $data);
 			$vCal = \Sabre\VObject\Reader::read($data);
