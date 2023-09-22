@@ -50,7 +50,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                         $oChild->setOwnerPublicId($this->node->getUser());
                         $oChild->setInitiator($aSharedFile['initiator']);
                         $oChild->setAccess($aSharedFile['access']);
-                        $oChild->setDbProperties(\json_decode($aSharedFile['properties'], true));
+                        if (isset($aSharedFile['properties'])) {
+                            $oChild->setDbProperties(\json_decode($aSharedFile['properties'], true));
+                        }
                     } else {
                         $oChild->setAccess($this->getAccess());
                         $oChild->setOwnerPublicId($this->node->getUser());
@@ -93,7 +95,9 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     if ($aSharedFile) {
                         $oResult->setAccess($aSharedFile['access']);
                         $oResult->setInitiator($aSharedFile['initiator']);
-                        $oResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+                        if (isset($aSharedFile['properties'])) {
+                            $oResult->setDbProperties(\json_decode($aSharedFile['properties'], true));
+                        }
                     } else {
                         $oResult->setOwnerPublicId($this->node->getUser());
                         $oResult->setAccess($this->node->getAccess());
