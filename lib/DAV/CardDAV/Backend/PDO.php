@@ -8,6 +8,9 @@
 namespace Afterlogic\DAV\CardDAV\Backend;
 
 use Afterlogic\DAV\Constants;
+use Aurora\Modules\Contacts\Models\ContactCard;
+use Sabre\VObject\Component\VCard;
+use Sabre\VObject\Reader;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -16,7 +19,18 @@ use Afterlogic\DAV\Constants;
  */
 class PDO extends \Sabre\CardDAV\Backend\PDO
 {
-//    protected \PDO $pdo;
+    /**
+     * PDO connection.
+     *
+     * @var \PDO
+     */
+    protected $pdo;
+
+    protected $contactsCardsTableName;
+
+    protected $sharedAddressBooksTableName;
+
+    private string $cardsPropertiesTableName = '';
 
     protected function getTenantPrincipal($sUserPublicId)
     {
@@ -40,6 +54,8 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         $this->cardsTableName = $sDbPrefix.Constants::T_CARDS;
         $this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
         $this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
+        $this->contactsCardsTableName = $sDbPrefix.'contacts_cards';
+        $this->sharedAddressBooksTableName = $sDbPrefix.'shared_addressbooks';
     }
 
     /**
@@ -158,5 +174,161 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         }
 
         return $addressBooks;
+    }
+
+    public function createCard($addressBookId, $cardUri, $cardData)
+    {
+        $result = parent::createCard($addressBookId, $cardUri, $cardData);
+        $this->updateProperties($addressBookId, $cardUri, $cardData);
+
+        return $result;
+    }
+
+    public function updateCard($addressBookId, $cardUri, $cardData)
+    {
+        $result = parent::updateCard($addressBookId, $cardUri, $cardData);
+        $this->updateProperties($addressBookId, $cardUri, $cardData);
+
+        return $result;
+    }
+
+    public function deleteCard($addressBookId, $cardUri)
+    {
+        $cardId = $this->getCardId($addressBookId, $cardUri);
+        ContactCard::where('AddressBookId', $addressBookId)->where('CardId', $cardId)->delete();
+        $this->purgeProperties($addressBookId, $cardUri);
+        return parent::deleteCard($addressBookId, $cardUri);
+    }
+
+    /**
+     * Get ID from a given contact
+     */
+    protected function getCardId(int $addressBookId, string $uri): int
+    {
+        $stmt = $this->pdo->prepare('SELECT id FROM ' . $this->cardsTableName . ' WHERE uri = ? AND addressbookid = ?');
+        $stmt->execute([$uri, $addressBookId]);
+        $cardIds = $stmt->fetch();
+
+        if (!isset($cardIds['id'])) {
+            throw new \InvalidArgumentException('Card does not exists: ' . $uri);
+        }
+
+        return (int) $cardIds['id'];
+    }
+
+    /**
+     * update properties table
+     *
+     * @param int $addressBookId
+     * @param string $cardUri
+     * @param string $vCardSerialized
+     */
+    protected function updateProperties($addressBookId, $cardUri, $vCardData)
+    {
+        $vCard = $this->readCard($vCardData);
+        $cardId = $this->getCardId($addressBookId, $cardUri);
+        $contactCard = ContactCard::firstOrNew(['CardId' => $cardId]);
+
+        $contactCard->AddressBookId = $addressBookId;
+        foreach ($vCard->children() as $property) {
+            switch ($property->name) {
+                case 'FN':
+                    $contactCard->FullName = $property->getValue();
+                    break;
+                case 'N':
+                    $nameParts = $property->getParts();
+                    $contactCard->FirstName = $nameParts[0];
+                    $contactCard->LastName = $nameParts[1];
+                    break;
+                case 'EMAIL':
+                    $type = $property['TYPE'];
+                    if ($type) {
+                        if ($type->has('WORK') || $type->has('INTERNET')) {
+                            $contactCard->BusinessEmail = (string) $property;
+                            if ($type->has('PREF')) {
+                                $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business;
+                                $contactCard->ViewEmail = $contactCard->BusinessEmail;
+                            }
+                        } elseif ($type->has('HOME')) {
+                            $contactCard->BusinessEmail = (string) $property;
+                            if ($type->has('PREF')) {
+                                $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
+                                $contactCard->ViewEmail = $contactCard->BusinessEmail;
+                            }
+                        } elseif ($type->has('OTHER')) {
+                            $contactCard->OtherEmail = (string) $property;
+                            if ($type->has('PREF')) {
+                                $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+                                $contactCard->ViewEmail = $contactCard->OtherEmail;
+                            }
+                        } elseif ($property->group && isset($vCard->{$property->group.'.X-ABLABEL'}) &&
+                            strtolower((string) $vCard->{$property->group.'.X-ABLABEL'}) === '_$!<other>!$_') {
+                            $contactCard->OtherEmail = (string) $property;
+                            if ($type->has('PREF')) {
+                                $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+                                $contactCard->ViewEmail = $contactCard->OtherEmail;
+                            }
+                        }
+                    } else {
+                        $contactCard->OtherEmail = (string) $property;
+                        $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+                        $contactCard->ViewEmail = $contactCard->OtherEmail;
+                    }
+                    if (empty($contactCard->PrimaryEmail)) {
+                        if (!empty($contactCard->BusinessEmail)) {
+                            $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Business;
+                            $contactCard->ViewEmail = $contactCard->BusinessEmail;
+                        } elseif (!empty($contactCard->PersonalEmail)) {
+                            $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
+                            $contactCard->ViewEmail = $contactCard->PersonalEmail;
+                        } elseif (!empty($contactCard->OtherEmail)) {
+                            $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
+                            $contactCard->ViewEmail = $contactCard->OtherEmail;
+                        }
+                    }
+                    break;
+            }
+        }
+        $contactCard->save();
+    }
+
+    /**
+     * read vCard data into a vCard object
+     *
+     * @param string $cardData
+     * @return VCard
+     */
+    protected function readCard($cardData)
+    {
+        return Reader::read($cardData);
+    }
+
+    /**
+     * delete all properties from a given card
+     *
+     * @param int $addressBookId
+     * @param int $cardId
+     */
+    protected function purgeProperties($addressBookId, $cardUri)
+    {
+        $cardId = $this->getCardId($addressBookId, $cardUri);
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->contactsCardsTableName . ' WHERE addressbookid = ? AND cardid = ?');
+        $stmt->execute([$addressBookId, $cardId]);
+    }
+
+    /**
+     * Deletes an entire addressbook and all its contents.
+     *
+     * @param int $addressBookId
+     */
+    public function deleteAddressBook($addressBookId)
+    {
+        parent::deleteAddressBook($addressBookId);
+
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->contactsCardsTableName.' WHERE AddressBookId = ?');
+        $stmt->execute([$addressBookId]);
+
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedAddressBooksTableName.' WHERE addressbook_id = ?');
+        $stmt->execute([$addressBookId]);
     }
 }
