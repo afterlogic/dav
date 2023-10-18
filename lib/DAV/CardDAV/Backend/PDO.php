@@ -55,7 +55,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         $this->addressBooksTableName = $sDbPrefix.Constants::T_ADDRESSBOOKS;
         $this->addressBookChangesTableName = $sDbPrefix.Constants::T_ADDRESSBOOKCHANGES;
         $this->contactsCardsTableName = $sDbPrefix.'contacts_cards';
-        $this->sharedAddressBooksTableName = $sDbPrefix.'shared_addressbooks';
+        $this->sharedAddressBooksTableName = $sDbPrefix.'adav_shared_addressbooks';
     }
 
     /**
@@ -285,6 +285,12 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
                             $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Other;
                             $contactCard->ViewEmail = $contactCard->OtherEmail;
                         }
+                    }
+                    break;
+                case 'KIND':
+                case 'X-ADDRESSBOOKSERVER-KIND':
+                    if (strtoupper($property->getValue()) === 'GROUP') {
+                        $contactCard->IsGroup = true;
                     }
                     break;
             }
