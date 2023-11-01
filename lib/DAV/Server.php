@@ -128,7 +128,7 @@ class Server extends \Sabre\DAV\Server
             if ($this->isModuleEnabled('TeamContacts')) {
                 $this->rootNode->addChild(new CardDAV\GAB\AddressBook(
                     'gab',
-                    Constants::GLOBAL_CONTACTS
+                    Constants::ADDRESSBOOK_TEAM_DISPLAY_NAME
                 ));
                 $carddavPlugin->directories = ['gab'];
             }

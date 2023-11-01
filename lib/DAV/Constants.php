@@ -41,14 +41,17 @@ class Constants
     public const TASKS_DEFAULT_NAME = 'My tasks';
     public const TASKS_DEFAULT_COLOR = '#f68987';
 
-    public const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';
     public const ADDRESSBOOK_DEFAULT_NAME_OLD = 'Default';
-    public const ADDRESSBOOK_DEFAULT_DISPLAY_NAME = 'Address Book';
     public const ADDRESSBOOK_DEFAULT_DISPLAY_NAME_OLD = 'General';
+
+    public const ADDRESSBOOK_DEFAULT_NAME = 'AddressBook';
+    public const ADDRESSBOOK_DEFAULT_DISPLAY_NAME = 'Address Book';
     public const ADDRESSBOOK_COLLECTED_NAME = 'Collected';
     public const ADDRESSBOOK_COLLECTED_DISPLAY_NAME = 'Collected Addresses';
     public const ADDRESSBOOK_SHARED_WITH_ALL_NAME = 'SharedWithAll';
     public const ADDRESSBOOK_SHARED_WITH_ALL_DISPLAY_NAME = 'Shared With All';
+    public const ADDRESSBOOK_TEAM_NAME = 'gab';
+    public const ADDRESSBOOK_TEAM_DISPLAY_NAME = 'Team';
 
     public const DAV_PUBLIC_PRINCIPAL = 'caldav_public_user@localhost';
     public const DAV_TENANT_PRINCIPAL = 'dav_tenant_user@localhost';
