@@ -223,7 +223,7 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
      * @param string $cardUri
      * @param string $vCardSerialized
      */
-    protected function updateProperties($addressBookId, $cardUri, $vCardData)
+    public function updateProperties($addressBookId, $cardUri, $vCardData)
     {
         $vCard = $this->readCard($vCardData);
         $cardId = $this->getCardId($addressBookId, $cardUri);
