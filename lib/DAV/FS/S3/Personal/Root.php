@@ -8,7 +8,7 @@
 namespace Afterlogic\DAV\FS\S3\Personal;
 
 use Aws\S3\S3Client;
-use Aws\S3\Exception\S3Exception;
+use Aws\Credentials\Credentials;
 use Afterlogic\DAV\Server;
 use Aurora\Modules\S3Filestorage;
 use Aurora\System\Api;
@@ -39,10 +39,13 @@ class Root extends Directory
         $this->client = $this->getS3Client();
 
         static $bDoesBucketExist = null;
-        if ($bDoesBucketExist === null) {
-            $bDoesBucketExist = $this->client->doesBucketExist($sBucket);
+        $buckets = $this->client->listBuckets();
+        foreach ($buckets['Buckets'] as $bucket) {
+            if ($bucket['Name'] === $sBucket) {
+                $bDoesBucketExist = true;
+                break;
+            }
         }
-
         if (!$bDoesBucketExist) {
             $this->createBucket($this->client, $sBucket);
         }
@@ -64,13 +67,12 @@ class Root extends Directory
             $sAccessKey = $oModule->getConfig('AccessKey');
             $sSecretKey = $oModule->getConfig('SecretKey');
 
+            $credentials = new Credentials($sAccessKey, $sSecretKey);
+
             $aOptions = [
                 'region' => $sRegion,
                 'version' => 'latest',
-                'credentials' => [
-                    'key'    => $sAccessKey,
-                    'secret' => $sSecretKey,
-                ],
+                'credentials' => $credentials,
                 'use_path_style_endpoint' => $oModule->getConfig('UsePathStyleEndpoint')
             ];
             $endpoint = $oModule->getConfig('Host');
@@ -88,30 +90,34 @@ class Root extends Directory
         $res = $client->createBucket([
             'Bucket' => $sBucket
         ]);
-        $client->putBucketCors([
-            'Bucket' => $sBucket,
-            'CORSConfiguration' => [
-                'CORSRules' => [
-                    [
-                        'AllowedHeaders' => [
-                            '*',
+        try {
+            $client->putBucketCors([
+                'Bucket' => $sBucket,
+                'CORSConfiguration' => [
+                    'CORSRules' => [
+                        [
+                            'AllowedHeaders' => [
+                                '*',
+                            ],
+                            'AllowedMethods' => [
+                                'GET',
+                                'PUT',
+                                'POST',
+                                'DELETE',
+                                'HEAD'
+                            ],
+                            'AllowedOrigins' => [
+                                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']
+                            ],
+                            'MaxAgeSeconds' => 0,
                         ],
-                        'AllowedMethods' => [
-                            'GET',
-                            'PUT',
-                            'POST',
-                            'DELETE',
-                            'HEAD'
-                        ],
-                        'AllowedOrigins' => [
-                            (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST']
-                        ],
-                        'MaxAgeSeconds' => 0,
                     ],
                 ],
-            ],
-//			'ContentMD5' => '',
-        ]);
+    //			'ContentMD5' => '',
+            ]);
+        } catch (\Exception $ex) {
+            Api::LogException($ex);
+        }
     }
 
     public function getName()
