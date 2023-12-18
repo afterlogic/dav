@@ -7,12 +7,6 @@
 
 namespace Afterlogic\DAV\Contacts;
 
-use Aurora\Modules\Contacts\Models\AddressBook;
-use Aurora\Modules\Contacts\Models\Contact;
-use Aurora\Modules\Contacts\Models\Group;
-use Sabre\HTTP\RequestInterface;
-use Sabre\HTTP\ResponseInterface;
-use Sabre\DAV\PropPatch;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -28,9 +22,6 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     private $oServer;
 
-    private $oContactsDecorator;
-    private $oDavContactsDecorator;
-
     /**
      * __construct
      *
@@ -38,22 +29,13 @@ class Plugin extends \Sabre\DAV\ServerPlugin
      */
     public function __construct()
     {
-        $this->oContactsDecorator = \Aurora\Modules\Contacts\Module::Decorator();
-        $this->oDavContactsDecorator = \Aurora\Modules\DavContacts\Module::Decorator();
     }
 
     public function initialize(\Sabre\DAV\Server $oServer)
     {
         $this->oServer = $oServer;
         $this->oServer->on('beforeUnbind', array($this, 'beforeUnbind'), 30);
-        $this->oServer->on('afterUnbind', array($this, 'afterUnbind'), 30);
-        $this->oServer->on('afterWriteContent', array($this, 'afterWriteContent'), 30);
         $this->oServer->on('beforeCreateFile', array($this, 'beforeCreateFile'), 30);
-        $this->oServer->on('afterCreateFile', array($this, 'afterCreateFile'), 30);
-
-        $this->oServer->on('afterCreateCollection', array($this, 'afterCreateCollection'), 30);
-
-        $this->oServer->on('propPatch', array($this, 'propPatch'), 30);
     }
 
     /**
@@ -69,91 +51,10 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         return 'contacts';
     }
 
-    protected function getStorage($uri)
-    {
-        $sResult = 'personal';
-
-        $aPathInfo = \pathinfo($uri);
-        $sStorage = \basename($aPathInfo['dirname']);
-
-        if ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_DEFAULT_NAME) {
-            $sResult = 'personal';
-        } elseif ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_SHARED_WITH_ALL_NAME) {
-            $sResult = 'shared';
-        } elseif ($sStorage === \Afterlogic\DAV\Constants::ADDRESSBOOK_COLLECTED_NAME) {
-            $sResult = 'collected';
-        }
-
-        return $sResult;
-    }
-
-    public function getUID($uri)
-    {
-        $aPathInfo = \pathinfo($uri);
-        return \basename($aPathInfo['filename']);
-    }
-
-    public static function isAddressbooks($uri)
-    {
-        $aPathInfo = \pathinfo($uri);
-        return \strtolower($aPathInfo['dirname']) === \Sabre\CardDAV\Plugin::ADDRESSBOOK_ROOT;
-    }
-
     public static function isContact($uri)
     {
         $sUriExt = \pathinfo($uri, PATHINFO_EXTENSION);
         return ($sUriExt != null && strtoupper($sUriExt) == 'VCF');
-    }
-
-    protected function getCurrentUserId()
-    {
-        $iUserId = 0;
-
-        $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
-            \Afterlogic\DAV\Server::getUser()
-        );
-        if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
-            $iUserId = $oUser->Id;
-        }
-
-        return $iUserId;
-    }
-
-    protected function getContactFromDB($iUserId, $sStorage, $sUID)
-    {
-        return Contact::where('IdUser', $iUserId)
-            ->where('Storage', $sStorage)
-            ->where('Properties->DavContacts::UID', $sUID)
-            ->first();
-    }
-
-    protected function getGroupFromDB($iUserId, $sUID)
-    {
-        return Group::where('IdUser', $iUserId)
-            ->where('Properties->DavContacts::UID', $sUID)
-            ->first();
-    }
-
-    public function afterMethod(\Sabre\HTTP\RequestInterface $request, \Sabre\HTTP\ResponseInterface $response)
-    {
-        $req = $request;
-        $res = $response;
-    }
-
-    public function afterCreateCollection($path)
-    {
-        $aPostData = $this->oServer->httpRequest->getPostData();
-		if (isset($aPostData['resourceType']) && 
-			$aPostData['resourceType'] === "{DAV:}collection,{urn:ietf:params:xml:ns:carddav}addressbook" && 
-			$aPostData['sabreAction'] === 'mkcol')
-		{
-			$oContactsModule = \Aurora\Modules\Contacts\Module::getInstance();
-			$oContactsModule->CreateAddressBook($aPostData['{DAV:}displayname'], $this->getCurrentUserId(), $aPostData['name']);
-		} elseif (self::isAddressbooks($path)) {
-            $aPathInfo = \pathinfo($path);
-			$oContactsModule = \Aurora\Modules\Contacts\Module::getInstance();
-            $oContactsModule->CreateAddressBook($aPathInfo['basename'], $this->getCurrentUserId(), $aPathInfo['basename']);
-        }
     }
 
     /**
@@ -166,144 +67,12 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         return true;
     }
 
-    /**
-     * @param string $sPath
-     * @throws \Sabre\DAV\Exception\NotAuthenticated
-     * @return bool
-     */
-    public function afterUnbind($sPath)
-    {
-        if ($this->oContactsDecorator) {
-            if (self::isContact($sPath)) {
-                $iUserId = $this->getCurrentUserId();
-                if ($iUserId > 0) {
-                    \Aurora\System\Api::setUserId($iUserId);
-
-                    $sStorage = $this->getStorage($sPath);
-                    if ($sStorage === 'collected') {
-                        $sStorage = 'personal';
-                    }
-
-                    $sUID = $this->getUID($sPath);
-                    $oContact = $this->getContactFromDB($iUserId, $sStorage, $sUID);
-                    if ($oContact) {
-                        $this->oContactsDecorator->DeleteContacts(
-                            $iUserId,
-                            $sStorage,
-                            [$oContact->UUID]
-                        );
-                    } else {
-                        $oGroup = $this->getGroupFromDB($iUserId, $sUID);
-                        if ($oGroup) {
-                            $this->oContactsDecorator->DeleteGroup(
-                                $iUserId,
-                                $oGroup->UUID
-                            );
-                        }
-                    }
-                }
-            } elseif (self::isAddressbooks($sPath)) {
-                $aPathInfo = \pathinfo($sPath);
-
-                $dbAddressBook = AddressBook::where('UserId', $this->getCurrentUserId())
-                    ->where('UUID', $aPathInfo['basename'])->first();
-
-                if ($dbAddressBook) {
-                    $this->oContactsDecorator->DeleteAddressBook($dbAddressBook->Id, $this->getCurrentUserId());
-                }
-            }
-        }
-        return true;
-    }
-
     public function beforeCreateFile($path, &$data, \Sabre\DAV\ICollection $parent, &$modified)
     {
         if (self::isContact($path)) {
             if ($parent->childExists(\basename($path))) {
                 throw new \Sabre\DAV\Exception\Conflict();
-
-                return false;
             }
-        }
-    }
-
-    public function afterCreateFile($sPath, \Sabre\DAV\ICollection $oParent)
-    {
-        if (self::isContact($sPath)) {
-            $aPathInfo = pathinfo($sPath);
-            $oNode = $oParent->getChild($aPathInfo['basename']);
-            $sStorage = $this->getStorage($sPath);
-
-            $this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
-        }
-    }
-
-    public function afterWriteContent($sPath, \Sabre\DAV\IFile $oNode)
-    {
-        if ($oNode instanceof \Sabre\CardDAV\ICard) {
-            $sStorage = $this->getStorage($sPath);
-
-            $this->updateOrCreateContactItem($sPath, $oNode, $sStorage);
-        }
-    }
-
-    protected function updateOrCreateContactItem($sPath, \Sabre\DAV\IFile $oNode, $sStorage)
-    {
-        if ($oNode instanceof \Sabre\CardDAV\ICard && $this->oContactsDecorator) {
-            $iUserId = $this->getCurrentUserId();
-
-            if ($iUserId > 0) {
-                \Aurora\System\Api::setUserId($iUserId);
-
-                $sData = $oNode->get();
-
-                $sUID = $this->getUID($sPath);
-                if ($this->getContactFromDB($iUserId, $sStorage, $sUID)) {
-                    $this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sUID, $sStorage);
-                } else {
-                    if ($this->getGroupFromDB($iUserId, $sUID)) {
-                        $this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUID);
-                    } else {
-                        $oVCard = \Sabre\VObject\Reader::read(
-                            $sData,
-                            \Sabre\VObject\Reader::OPTION_IGNORE_INVALID_LINES
-                        );
-                        if ($oVCard instanceof \Sabre\VObject\Component\VCard && $oVCard->UID) {
-                            $oVCard = $oVCard->convert(\Sabre\VObject\Document::VCARD40);
-
-                            if (isset($oVCard->KIND) && strtoupper((string) $oVCard->KIND) === 'GROUP') {
-                                if ($this->getGroupFromDB($iUserId, $sUID)) {
-                                    $this->oDavContactsDecorator->UpdateGroup($iUserId, $sData, $sUID);
-                                } else {
-                                    $this->oDavContactsDecorator->CreateGroup($iUserId, $sData, $sUID);
-                                }
-                            } else {
-                                if ($this->getContactFromDB($iUserId, $sStorage, $sUID)) {
-                                    $this->oDavContactsDecorator->UpdateContact($iUserId, $sData, $sUID, $sStorage);
-                                } else {
-                                    $this->oDavContactsDecorator->CreateContact($iUserId, $sData, $sUID, $sStorage);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public function propPatch($path, PropPatch $propPatch)
-    {
-        if(self::isAddressbooks($path)) {
-            $propPatch->handle('{DAV:}displayname', function($value) use ($path) {  
-                $pathInfo = \pathinfo($path);
-
-                $dbAddressBook = AddressBook::where('UserId', $this->getCurrentUserId())
-                    ->where('UUID', $pathInfo['basename'])->first();
-                if($dbAddressBook) {
-                    $dbAddressBook->Name = $value;
-                    $dbAddressBook->save();
-                }
-            });
         }
     }
 }

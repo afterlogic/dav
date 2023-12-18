@@ -126,10 +126,7 @@ class Server extends \Sabre\DAV\Server
 
             $carddavPlugin = new CardDAV\Plugin();
             if ($this->isModuleEnabled('TeamContacts')) {
-                $this->rootNode->addChild(new CardDAV\GAB\AddressBook(
-                    'gab',
-                    Constants::ADDRESSBOOK_TEAM_DISPLAY_NAME
-                ));
+                $this->rootNode->addChild(new CardDAV\GAB\AddressBook(Backend::Carddav()));
                 $carddavPlugin->directories = ['gab'];
             }
             $this->addPlugin(

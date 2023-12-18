@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\CardDAV\GAB;
 
+use Afterlogic\DAV\Backend;
 use Aurora\Modules\Contacts\Models\Contact;
 
 /**
@@ -14,17 +15,12 @@ use Aurora\Modules\Contacts\Models\Contact;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirectory, \Sabre\DAV\IProperties, \Sabre\DAVACL\IACL
+class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
 {
-    /**
-     * @var string
-     */
-    private $name;
-
     /**
      * @var array
      */
-    private $addressBookInfo;
+    protected $addressBookInfo;
 
     /**
      * @var string
@@ -33,13 +29,10 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
 
     /**
      * Constructor
-     */
-    public function __construct($name, $displayname = '')
+     */ 
+    public function __construct($caldavBackend)
     {
-        $this->name = $name;
-        $this->sUserPublicId = null;
-
-        $this->addressBookInfo['{DAV:}displayname'] = (empty($displayname)) ? $name : $displayname;
+        $this->carddavBackend = $caldavBackend;
     }
 
 
@@ -56,124 +49,31 @@ class AddressBook extends \Sabre\DAV\Collection implements \Sabre\CardDAV\IDirec
      */
     public function getName()
     {
-        return $this->name;
+        return 'gab';
+    }
+
+    protected function initAddressbook()
+    {
+        $oUser = \Afterlogic\DAV\Server::getUserObject();
+        if ($oUser) {
+            $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
+            $addressbook = Backend::Carddav()->getAddressBookForUser($sPrincipalUri, 'gab');
+            if ($addressbook) {
+                $this->addressBookInfo = $addressbook;
+            }
+        }
+    }
+
+    public function getChildren()
+    {
+        $this->initAddressbook();
+        return parent::getChildren();
     }
 
     public function getChild($name)
     {
-        $aPathInfo = pathinfo($name);
-
-        $oContact = Contact::firstWhere('UUID', $aPathInfo['filename']);
-
-        if ($oContact) {
-            $aName = [$oContact->LastName, $oContact->FirstName];
-            $vCard = new \Sabre\VObject\Component\VCard(
-                [
-                    'VERSION' => '3.0',
-                    'UID' => $oContact->UUID,
-                    'FN' => $oContact->FullName,
-                    'N' => (empty($oContact->LastName) && empty($oContact->FirstName)) ? explode(' ', $oContact->FullName) : $aName
-                ]
-            );
-
-            $vCard->add(
-                'EMAIL',
-                $oContact->ViewEmail,
-                [
-                    'type' => ['work'],
-                    'pref' => 1,
-                ]
-            );
-
-            return new Card(
-                [
-                    'uri' => $oContact->UUID . '.vcf',
-                    'carddata' => $vCard->serialize(),
-                    'lastmodified' => strtotime($oContact->DateModified)
-                ]
-            );
-        } else {
-            throw new \Sabre\DAV\Exception\NotFound();
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public function getChildren()
-    {
-        $aCards = [];
-
-        if (!$this->isEnabled()) {
-            return $aCards;
-        }
-
-        $iIdTenant = 0;
-        $oUser = \Aurora\Modules\Core\Module::getInstance()->GetUserByPublicId($this->getUser());
-        if ($oUser) {
-            $iIdTenant = $oUser->IdTenant;
-        }
-
-        $aContacts = Contact::where('Storage', 'team')->where('IdTenant', $iIdTenant)->get();
-
-        foreach ($aContacts as $oContact) {
-            $sFirstName = isset($oContact->FirstName) ? $oContact->FirstName : '';
-            $sLastName = isset($oContact->LastName) ? $oContact->LastName : '';
-            $sFullName = isset($oContact->FullName) ? $oContact->FullName : '';
-            $aName = [$sLastName, $sFirstName];
-            $vCard = new \Sabre\VObject\Component\VCard(
-                [
-                    'VERSION' => '3.0',
-                    'UID' => $oContact->UUID,
-                    'FN' => $sFullName,
-                    'N' => (empty($sLastName) && empty($sFirstName)) ? explode(' ', $sFullName) : $aName
-                ]
-            );
-
-            $vCard->add(
-                'EMAIL',
-                $oContact->ViewEmail,
-                [
-                    'type' => ['work'],
-                    'pref' => 1,
-                ]
-            );
-
-            $aCards[] = new Card(
-                [
-                    'uri' => $oContact->UUID . '.vcf',
-                    'carddata' => $vCard->serialize(),
-                    'lastmodified' => isset($oContact->DateModified) ? strtotime($oContact->DateModified) : time()
-                ]
-            );
-        }
-
-        return $aCards;
-    }
-
-    public function getCTag()
-    {
-        $iResult = Contact::where('Storage', 'team')->count();
-        $oContact = Contact::where('Storage', 'team')->orderBy('DateModified')->first();
-        if ($oContact) {
-            $iResult .= strtotime($oContact->DateModified);
-        }
-
-        return $iResult;
-    }
-
-    public function getProperties($properties)
-    {
-        $this->addressBookInfo['{http://calendarserver.org/ns/}getctag'] = $this->getCTag();
-        $response = [];
-
-        foreach ($properties as $propertyName) {
-            if (isset($this->addressBookInfo[$propertyName])) {
-                $response[$propertyName] = $this->addressBookInfo[$propertyName];
-            }
-        }
-
-        return $response;
+        $this->initAddressbook();
+        return parent::getChild($name);
     }
 
     /* @param array $mutations
