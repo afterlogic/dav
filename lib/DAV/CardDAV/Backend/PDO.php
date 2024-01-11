@@ -334,8 +334,18 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->contactsCardsTableName.' WHERE AddressBookId = ?');
         $stmt->execute([$addressBookId]);
 
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedAddressBooksTableName.' WHERE addressbook_id = ?');
-        $stmt->execute([$addressBookId]);
+        $sharedAddressBooksTableExists = false;
+        try {
+            $this->pdo->query('SELECT 1 FROM ' . $this->sharedAddressBooksTableName);
+            $sharedAddressBooksTableExists = true;
+        } catch (\PDOException $e){
+            $sharedAddressBooksTableExists = false;
+        }
+        
+        if ($sharedAddressBooksTableExists) {
+            $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedAddressBooksTableName.' WHERE addressbook_id = ?');
+            $stmt->execute([$addressBookId]);
+        }
     }
 
     /**
