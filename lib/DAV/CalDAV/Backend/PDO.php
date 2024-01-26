@@ -8,6 +8,7 @@
 namespace Afterlogic\DAV\CalDAV\Backend;
 
 use Afterlogic\DAV\Constants;
+use Sabre\DAV\Xml\Element\Sharee;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -214,6 +215,61 @@ SQL
 	 * @return null|string
 	 */
 	public function shareReply($href, $status, $calendarUri, $inReplyTo, $summary = null) {}
+
+	    /**
+     * Returns the list of people whom a calendar is shared with.
+     *
+     * Every item in the returned list must be a Sharee object with at
+     * least the following properties set:
+     *   $href
+     *   $shareAccess
+     *   $inviteStatus
+     *
+     * and optionally:
+     *   $properties
+     *
+     * @param mixed $calendarId
+     *
+     * @return \Sabre\DAV\Xml\Element\Sharee[]
+     */
+    public function getInvites($calendarId)
+    {
+        if (!is_array($calendarId)) {
+            throw new \InvalidArgumentException('The value passed to getInvites() is expected to be an array with a calendarId and an instanceId');
+        }
+        list($calendarId, $instanceId) = $calendarId;
+
+        $query = <<<SQL
+SELECT
+    principaluri,
+    access,
+    share_href,
+    share_displayname,
+    share_invitestatus
+FROM {$this->calendarInstancesTableName}
+WHERE
+    calendarid = ?
+SQL;
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([$calendarId]);
+
+        $result = [];
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $result[] = new Sharee([
+                'href' => isset($row['share_href']) ? $row['share_href'] : 'mailto:' . \Sabre\HTTP\encodePath(basename($row['principaluri'])),
+                'access' => (int) $row['access'],
+                /// Everyone is always immediately accepted, for now.
+                'inviteStatus' => (int) $row['share_invitestatus'],
+                'properties' => !empty($row['share_displayname'])
+                    ? ['{DAV:}displayname' => $row['share_displayname']]
+                    : [],
+                'principal' => $row['principaluri'],
+            ]);
+        }
+
+        return $result;
+    }
 
 	/**
 	 * Marks this calendar as published.
