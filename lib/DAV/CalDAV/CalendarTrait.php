@@ -7,6 +7,13 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
+use Sabre\CalDAV;
+use Sabre\DAV;
+use Sabre\DAV\Exception\NotFound;
+use Sabre\DAV\MkCol;
+use Sabre\DAVACL;
+use Sabre\Uri;
+
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License

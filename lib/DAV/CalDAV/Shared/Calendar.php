@@ -6,6 +6,8 @@
  */
 
 namespace Afterlogic\DAV\CalDAV\Shared;
+use Afterlogic\DAV\Server;
+use Sabre\DAV\PropPatch;
 
 /**
  * This object represents a CalDAV calendar that is shared by a different user.
@@ -21,5 +23,34 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar {
     public function isOwned()
     {
         return $this->getShareAccess() === \Sabre\DAV\Sharing\Plugin::ACCESS_SHAREDOWNER;
+    }
+
+    /**
+     * Deletes the calendar.
+     */
+    public function delete()
+    {
+        if ($this->isDefault()) {
+            throw new \Sabre\DAV\Exception\Forbidden();
+        }
+
+        parent::delete();
+    }
+
+    /**
+     * Updates properties on this node.
+     *
+     * This method received a PropPatch object, which contains all the
+     * information about the update.
+     *
+     * To update specific properties, call the 'handle' method on this object.
+     * Read the PropPatch documentation for more information.
+     */
+    public function propPatch(PropPatch $propPatch)
+    {
+        if ($this->isDefault()) {
+            throw new \Sabre\DAV\Exception\Forbidden();
+        }
+        parent::propPatch($propPatch);
     }
 }

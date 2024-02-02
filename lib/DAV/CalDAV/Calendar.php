@@ -7,6 +7,8 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
+use Sabre\DAV\PropPatch;
+
 /**
  * This object represents a CalDAV calendar.
  *
@@ -21,5 +23,34 @@ class Calendar extends \Sabre\CalDAV\Calendar {
     public function getProperties($requestedProperties)
     {
         return $this->_getProperties($this->calendarInfo, $requestedProperties);
+    }
+
+    /**
+     * Deletes the calendar.
+     */
+    public function delete()
+    {
+        if ($this->isDefault()) {
+            throw new \Sabre\DAV\Exception\Forbidden();
+        }
+
+        parent::delete();
+    }
+
+    /**
+     * Updates properties on this node.
+     *
+     * This method received a PropPatch object, which contains all the
+     * information about the update.
+     *
+     * To update specific properties, call the 'handle' method on this object.
+     * Read the PropPatch documentation for more information.
+     */
+    public function propPatch(PropPatch $propPatch)
+    {
+        if ($this->isDefault()) {
+            throw new \Sabre\DAV\Exception\Forbidden();
+        }
+        parent::propPatch($propPatch);
     }
 }
