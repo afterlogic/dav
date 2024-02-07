@@ -45,4 +45,9 @@ trait CalendarTrait
         
         return $bIsDefault;
     }
+
+    public function isMain()
+    {
+        return strpos($this->getName(), 'MyCalendar') === 0;
+    }
 }

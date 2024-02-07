@@ -30,7 +30,7 @@ class Calendar extends \Sabre\CalDAV\Calendar {
      */
     public function delete()
     {
-        if ($this->isDefault()) {
+        if ($this->isMain()) {
             throw new \Sabre\DAV\Exception\Forbidden();
         }
 
@@ -48,7 +48,7 @@ class Calendar extends \Sabre\CalDAV\Calendar {
      */
     public function propPatch(PropPatch $propPatch)
     {
-        if ($this->isDefault()) {
+        if ($this->isMain()) {
             throw new \Sabre\DAV\Exception\Forbidden();
         }
         parent::propPatch($propPatch);
