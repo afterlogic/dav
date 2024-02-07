@@ -125,6 +125,13 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome
         if ($SharedContactsModule && !$SharedContactsModule->getConfig('Disabled', true)) {
             if ($this->carddavBackend instanceof Backend\PDO) {
 
+                $sharedWithAllAddressbook = $this->carddavBackend->getSharedWithAllAddressBook($this->principalUri);
+                $objs[] = new SharedWithAll\AddressBook(
+                    $this->carddavBackend,
+                    $sharedWithAllAddressbook,
+                    $this->principalUri
+                );
+
                 $sharedAddressbooks = $this->carddavBackend->getSharedAddressBooks($this->principalUri);
                 foreach ($sharedAddressbooks as $sharedAddressbook) {
                     if ($sharedAddressbook['principaluri'] != $this->principalUri) {
