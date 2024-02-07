@@ -201,6 +201,34 @@ SQL
         return $calendar;
     }
 
+	public function getCalendarIdByUri($uri) 
+	{
+		$stmt = $this->pdo->prepare(<<<SQL
+		SELECT {$this->calendarInstancesTableName}.calendarid FROM {$this->calendarInstancesTableName}
+		WHERE {$this->calendarInstancesTableName}.uri = ? ORDER BY calendarorder ASC
+		SQL
+		);
+		
+		$stmt->execute([$uri]);
+		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		if ($row) {
+			return $row['calendarid'];
+		}
+
+		return false; 
+	}
+
+	public function getParentCalendarByUri($calendarUri) {
+
+		$calendar = false;
+
+		$calendarId = $this->getCalendarIdByUri($calendarUri);
+		$calendar = $this->getParentCalendar($calendarId);
+
+        return $calendar;
+    }
+
 	/**
 	 * This method is called when a user replied to a request to share.
 	 *
