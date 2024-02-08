@@ -7,12 +7,8 @@
 
 namespace Afterlogic\DAV\CalDAV;
 
-use Sabre\CalDAV;
-use Sabre\DAV;
-use Sabre\DAV\Exception\NotFound;
-use Sabre\DAV\MkCol;
-use Sabre\DAVACL;
-use Sabre\Uri;
+use Afterlogic\DAV\Backend;
+use Aurora\System\Enums\UserRole;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -49,5 +45,27 @@ trait CalendarTrait
     public function isMain()
     {
         return strpos($this->getName(), 'MyCalendar') === 0;
+    }
+
+    public function beforePropPatch($propPatch)
+    {
+        if ($this->isMain()) {
+                
+            $initiator = \Aurora\Api::getAuthenticatedUser();
+            $user = false;
+            $coreModule = \Aurora\Api::GetModule('Core');
+            if ($coreModule && isset($this->calendarInfo['principaluri'])) {
+                $user = $coreModule->GetUserByPublicId(basename($this->calendarInfo['principaluri']));
+            }
+
+            if ($initiator && $user && ($initiator->Role === UserRole::SuperAdmin || ($initiator->Role === UserRole::TenantAdmin && $initiator->IdTenant === $user->IdTenant))) {
+                $calendarIds = Backend::CalDAV()->getChildrenCalendarIds($this->calendarInfo['id']);
+                foreach ($calendarIds as $calendarId) {
+                    Backend::CalDAV()->updateCalendar($calendarId, $propPatch);
+                }
+            } else {
+                throw new \Sabre\DAV\Exception\Forbidden();
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@
  */
 
 namespace Afterlogic\DAV\CalDAV\Shared;
-use Afterlogic\DAV\Server;
+
 use Sabre\DAV\PropPatch;
 
 /**
@@ -48,9 +48,7 @@ class Calendar extends \Sabre\CalDAV\SharedCalendar {
      */
     public function propPatch(PropPatch $propPatch)
     {
-        if ($this->isMain()) {
-            throw new \Sabre\DAV\Exception\Forbidden();
-        }
+        $this->beforePropPatch($propPatch);
         parent::propPatch($propPatch);
     }
 }

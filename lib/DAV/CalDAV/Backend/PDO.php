@@ -232,6 +232,30 @@ SQL
         return $calendar;
     }
 
+	public function getChildrenCalendarIds($calendarId) {
+		
+        if (!is_array($calendarId)) {
+            throw new \InvalidArgumentException('The value passed to $calendarId is expected to be an array with a calendarId and an instanceId');
+        }
+        list($calendarId, $instanceId) = $calendarId;
+
+		$stmt = $this->pdo->prepare(<<<SQL
+	SELECT {$this->calendarInstancesTableName}.id as id, calendarid FROM {$this->calendarInstancesTableName}
+	LEFT JOIN {$this->calendarTableName} ON
+		{$this->calendarInstancesTableName}.calendarid = {$this->calendarTableName}.id
+	WHERE {$this->calendarTableName}.id = ? AND {$this->calendarInstancesTableName}.access <> 1 ORDER BY calendarorder ASC
+	SQL
+		);
+		$stmt->execute([$calendarId]);
+
+		$calendars = [];
+		while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {	
+			$calendars[] = [(int) $row['calendarid'], (int) $row['id']];
+		}
+
+		return $calendars;
+	}
+
 	/**
 	 * This method is called when a user replied to a request to share.
 	 *
