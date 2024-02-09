@@ -61,7 +61,9 @@ trait CalendarTrait
             if ($initiator && $user && ($initiator->Role === UserRole::SuperAdmin || ($initiator->Role === UserRole::TenantAdmin && $initiator->IdTenant === $user->IdTenant))) {
                 $calendarIds = Backend::CalDAV()->getChildrenCalendarIds($this->calendarInfo['id']);
                 foreach ($calendarIds as $calendarId) {
-                    Backend::CalDAV()->updateCalendar($calendarId, $propPatch);
+                    $copyPropPatch = clone $propPatch;
+                    Backend::CalDAV()->updateCalendar($calendarId, $copyPropPatch);
+                    $copyPropPatch->commit();
                 }
             } else {
                 throw new \Sabre\DAV\Exception\Forbidden();
