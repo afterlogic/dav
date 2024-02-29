@@ -661,4 +661,25 @@ SQL
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id = ?');
         return $stmt->execute([$groupId]);
     }
+
+    public function renameDirectoryWithPublicLink($userPublicLink, $storage, $path, $newPath)
+    {
+        $tbl = $this->dBPrefix . 'core_min_hashes';
+        $stmt = $this->pdo->prepare('SELECT Id, Data FROM ' . $tbl . ' where Data->"$.UserId" = ? AND Data->"$.Type" = ? AND Data->"$.Path" = ?');
+        $stmt->execute([$userPublicLink, $storage, $path]);
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as $row) {
+            if ($row) {
+                $Data = \json_decode($row['Data'], true);
+                $Data['Path'] = $newPath;
+                $name = $Data['Name'];
+                $hashId = \Aurora\Modules\Min\Module::generateHashId([$userPublicLink, $storage, $newPath, $name]);
+                $Data['__hash__'] = $hashId;
+
+                $stmt = $this->pdo->prepare('UPDATE ' . $tbl . ' SET Data = ?, HashId = ? where Id = ?');
+                $stmt->execute([json_encode($Data), \md5($hashId), $row['Id']]);
+            }
+        }
+    }
 }

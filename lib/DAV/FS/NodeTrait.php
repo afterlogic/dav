@@ -298,9 +298,11 @@ trait NodeTrait
             throw new \Sabre\DAV\Exception\Conflict();
         }
 
+        $pdo = new Backend\PDO();
+        $pdo->renameDirectoryWithPublicLink($this->getUser(), $this->getStorage(), $oldPathForShare, $newPathForShare);
+        
         $oSharedFiles = \Aurora\System\Api::GetModule('SharedFiles');
         if ($oSharedFiles && !$oSharedFiles->getConfig('Disabled', false)) {
-            $pdo = new Backend\PDO();
             $pdo->updateShare(Constants::PRINCIPALS_PREFIX . $this->getUser(), $this->getStorage(), $oldPathForShare, $this->getStorage(), $newPathForShare);
             $pdo->updateSharedFileSharePathWithLike(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oldPathForShare, $newPathForShare);
         }
