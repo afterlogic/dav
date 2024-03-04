@@ -457,6 +457,8 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
             
             $this->addChange($addressBookId, $cardUri, 3);
             $this->addChange($newAddressBookId, $cardUri, 1);
+
+            $result = true;
         }
 
         return $result;
