@@ -12,6 +12,9 @@ namespace Afterlogic\DAV\FS\Backend;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
+
+ use Illuminate\Database\Capsule\Manager as Capsule;
+
 class PDO
 {
     /**
@@ -664,22 +667,22 @@ SQL
 
     public function renameDirectoryWithPublicLink($userPublicLink, $storage, $path, $newPath)
     {
-        $tbl = $this->dBPrefix . 'core_min_hashes';
-        $stmt = $this->pdo->prepare('SELECT Id, Data FROM ' . $tbl . ' where Data->"$.UserId" = ? AND Data->"$.Type" = ? AND Data->"$.Path" = ?');
-        $stmt->execute([$userPublicLink, $storage, $path]);
+        $query = Capsule::connection()->table('core_min_hashes')
+            ->whereJsonContains('Data->UserId', $userPublicLink)
+            ->whereJsonContains('Data->Type', $storage)
+            ->whereJsonContains('Data->Path', $path)
+            ->select('Id', 'Data');
 
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $query->get();
         foreach ($rows as $row) {
-            if ($row) {
-                $Data = \json_decode($row['Data'], true);
-                $Data['Path'] = $newPath;
-                $name = $Data['Name'];
-                $hashId = \Aurora\Modules\Min\Module::generateHashId([$userPublicLink, $storage, $newPath, $name]);
-                $Data['__hash__'] = $hashId;
+            $Data = \json_decode($row->Data, true);
+            $Data['Path'] = $newPath;
+            $name = $Data['Name'];
+            $hashId = \Aurora\Modules\Min\Module::generateHashId([$userPublicLink, $storage, $newPath, $name]);
+            $Data['__hash__'] = $hashId;
 
-                $stmt = $this->pdo->prepare('UPDATE ' . $tbl . ' SET Data = ?, HashId = ? where Id = ?');
-                $stmt->execute([json_encode($Data), \md5($hashId), $row['Id']]);
-            }
+            $stmt = $this->pdo->prepare('UPDATE ' . $this->dBPrefix . 'core_min_hashes' . ' SET Data = ?, HashId = ? where Id = ?');
+            $stmt->execute([json_encode($Data), \md5($hashId), $row->Id]);
         }
     }
 }
