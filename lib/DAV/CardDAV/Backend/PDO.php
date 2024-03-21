@@ -409,37 +409,6 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         return $mAddressBook;
     }
 
-    /**
-     * Returns the addressbook for a specific user.
-     *
-     * @param string $principalUri
-     * @param int $addressbookId
-     * @return array|bool
-     */
-    public function getAddressBookByUriForUser($principalUri, $addressbookUri)
-    {
-        $mAddressBook = false;
-
-        $stmt = $this->pdo->prepare('SELECT id, uri, displayname, principaluri, description, synctoken FROM '.$this->addressBooksTableName.' WHERE principaluri = ? AND uri = ?');
-        $stmt->execute(array($principalUri, $addressbookUri));
-
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if ($row) {
-            $mAddressBook = [
-                'id'                                                          => $row['id'],
-                'uri'                                                         => $row['uri'],
-                'principaluri'                                                => $row['principaluri'],
-                '{DAV:}displayname'                                           => $row['displayname'],
-                '{' . \Sabre\CardDAV\Plugin::NS_CARDDAV . '}addressbook-description' => $row['description'],
-                '{http://calendarserver.org/ns/}getctag'                      => $row['synctoken'],
-                '{http://sabredav.org/ns}sync-token'                          => $row['synctoken'] ? $row['synctoken'] : '0',
-            ];
-        }
-
-        return $mAddressBook;
-    }
-
     public function updateCardAddressBook($addressBookId, $newAddressBookId, $cardUri)
     {
         $result = false;
