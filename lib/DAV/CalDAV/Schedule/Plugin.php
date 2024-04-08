@@ -163,7 +163,12 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         //     $objectNode->put($newObject->serialize());
         // }
         // $iTipMessage->scheduleStatus = '1.2;Message delivered locally';
-    }  
+    }
+    
+    public function scheduleLocalDeliveryParent(\Sabre\VObject\ITip\Message $iTipMessage)
+    {
+        parent::scheduleLocalDelivery($iTipMessage);
+    }
     
     /**
     * This method is triggered before a file gets deleted.
