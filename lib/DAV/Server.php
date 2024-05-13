@@ -396,6 +396,8 @@ class Server extends \Sabre\DAV\Server
                         }
                     }
                 }
+            } elseif ($this->rootNode->childExists('gab')) {
+                $this->rootNode->deleteChild('gab');
             }
         }
     }
