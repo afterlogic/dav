@@ -92,6 +92,41 @@ trait PropertyStorageTrait
         return $parentDir . '/.sabredav';
     }
 
+    public function getData($string) 
+    {
+        $result = json_decode($string, true);
+        $json = json_last_error() === JSON_ERROR_NONE ? $result : false;
+
+        if ($json !== false) {
+            $data = $json;
+        } else {
+            // Unserializing and checking if the resource file contains data for this file
+            $data = unserialize($string);
+        }
+
+        return $data;
+     }
+
+     public function readResourceData($path)
+     {
+        $data = '';
+
+        // opening up the file, and creating a shared lock
+        $handle = fopen($path, 'a+');;
+
+        // Reading data until the eof
+        while (!feof($handle)) {
+            $data .= fread($handle, 8192);
+        }
+
+        $data = $this->getData($data);
+
+        // We're all good
+        fclose($handle);
+
+        return $data;
+     }
+
     /**
      * Returns all the stored resource information
      *
@@ -104,21 +139,8 @@ trait PropertyStorageTrait
             return ['properties' => []];
         }
 
-        // opening up the file, and creating a shared lock
-        $handle = fopen($path, 'r');
-    //        flock($handle,LOCK_SH);
-        $data = '';
+        $data = $this->readResourceData($path);
 
-        // Reading data until the eof
-        while (!feof($handle)) {
-            $data.=fread($handle, 8192);
-        }
-
-        // We're all good
-        fclose($handle);
-
-        // Unserializing and checking if the resource file contains data for this file
-        $data = unserialize($data);
         if (!isset($data[$this->getName()])) {
             return ['properties' => []];
         }
@@ -140,26 +162,13 @@ trait PropertyStorageTrait
     {
         $path = $this->getResourceInfoPath();
 
-        $data = [];
-        if (file_exists($path)) {
-            $handle1 = @fopen($path, 'r');
-            if (is_resource($handle1)) {
-                $data = '';
-                rewind($handle1);
-                // Reading data until the eof
-                while (!feof($handle1)) {
-                    $data.=fread($handle1, 8192);
-                }
-                $data = unserialize($data);
-                fclose($handle1);
-            }
-        }
+        $data = $this->readResourceData($path);
 
         $handle2 = fopen($path, 'w');
         $data[$this->getName()] = $newData;
 
         rewind($handle2);
-        fwrite($handle2, serialize($data));
+        fwrite($handle2, json_encode($data));
         fclose($handle2);
     }
 
@@ -183,17 +192,16 @@ trait PropertyStorageTrait
 
         // Reading data until the eof
         while (!feof($handle)) {
-            $data.=fread($handle, 8192);
+            $data .= fread($handle, 8192);
         }
 
-        // Unserializing and checking if the resource file contains data for this file
-        $data = unserialize($data);
+        $data = $this->getData($data);
         if (isset($data[$this->getName()])) {
             unset($data[$this->getName()]);
         }
         ftruncate($handle, 0);
         rewind($handle);
-        fwrite($handle, serialize($data));
+        fwrite($handle, json_encode($data));
         fclose($handle);
 
         return true;
