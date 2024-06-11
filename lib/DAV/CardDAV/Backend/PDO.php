@@ -293,6 +293,8 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
                         $contactCard->IsGroup = true;
                     }
                     break;
+                case 'X-FREQUENCY':
+                    $contactCard->Frequency = (int) $property->getValue();
             }
         }
         $contactCard->save();
