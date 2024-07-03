@@ -37,7 +37,7 @@ class Server extends \Sabre\DAV\Server
     {
         static $oInstance = null;
         if (is_null($oInstance)) {
-            $oInstance = self::createInstance();
+            $oInstance = new self();
         }
         return $oInstance;
     }
@@ -45,15 +45,6 @@ class Server extends \Sabre\DAV\Server
     public function __invoke()
     {
         return self::getInstance();
-    }
-
-    public function guessBaseUri()
-    {
-        try {
-            return parent::guessBaseUri();
-        } catch (\Sabre\DAV\Exception $exception) {
-            return '/';
-        }
     }
 
     protected function isModuleEnabled($sModule)
@@ -396,8 +387,6 @@ class Server extends \Sabre\DAV\Server
                         }
                     }
                 }
-            } elseif ($this->rootNode->childExists('gab')) {
-                $this->rootNode->deleteChild('gab');
             }
         }
     }
