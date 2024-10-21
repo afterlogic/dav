@@ -250,10 +250,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
                                 $contactCard->ViewEmail = $contactCard->BusinessEmail;
                             }
                         } elseif ($type->has('HOME')) {
-                            $contactCard->BusinessEmail = (string) $property;
+                            $contactCard->PersonalEmail = (string) $property;
                             if ($type->has('PREF')) {
                                 $contactCard->PrimaryEmail = \Aurora\Modules\Contacts\Enums\PrimaryEmail::Personal;
-                                $contactCard->ViewEmail = $contactCard->BusinessEmail;
+                                $contactCard->ViewEmail = $contactCard->PersonalEmail;
                             }
                         } elseif ($type->has('OTHER')) {
                             $contactCard->OtherEmail = (string) $property;
