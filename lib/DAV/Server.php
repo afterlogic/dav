@@ -387,6 +387,8 @@ class Server extends \Sabre\DAV\Server
                         }
                     }
                 }
+            } elseif ($this->rootNode->childExists('gab')) {
+                $this->rootNode->deleteChild('gab');
             }
         }
     }
@@ -437,6 +439,15 @@ class Server extends \Sabre\DAV\Server
         $oAclPlugin = $oServer->getPlugin('acl');
         if ($oAclPlugin instanceof \Sabre\DAVACL\Plugin) {
             $oAclPlugin->checkPrivileges($path, $priv);
+        }
+    }
+
+    public function guessBaseUri()
+    {
+        try {
+            return parent::guessBaseUri();
+        } catch (\Sabre\DAV\Exception $exception) {
+            return '/';
         }
     }
 }
