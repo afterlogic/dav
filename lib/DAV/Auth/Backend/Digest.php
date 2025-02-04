@@ -22,7 +22,7 @@ class Digest extends \Sabre\DAV\Auth\Backend\AbstractDigest
     public function getDigestHash($sRealm, $sUserName)
     {
         if (class_exists('\\Aurora\\System\\Api') && \Aurora\System\Api::IsValid() && $sUserName !== \Afterlogic\DAV\Constants::DAV_PUBLIC_PRINCIPAL && $sUserName !== \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL) {
-            return \Aurora\Modules\Core\Module::Decorator()->GetDigestHash($sUserName, $sRealm, \Aurora\Modules\Mail\Models\MailAccount::class);
+            return \Aurora\Modules\Dav\Module::Decorator()->GetDigestHash($sUserName, $sRealm, \Aurora\Modules\Mail\Models\MailAccount::class);
         }
 
         return null;
