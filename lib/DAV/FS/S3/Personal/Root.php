@@ -87,9 +87,20 @@ class Root extends Directory
 
     protected function createBucket($client, $sBucket)
     {
-        $res = $client->createBucket([
-            'Bucket' => $sBucket
-        ]);
+        $oModule = S3Filestorage\Module::getInstance();
+        $sBucketLocation = $oModule->getConfig('BucketLocation');
+
+        $aOptions = [
+            'Bucket' => $sBucket,
+        ];
+
+        if (!empty($sBucketLocation)) {
+            $aOptions['CreateBucketConfiguration'] = [
+                'LocationConstraint' => $sBucketLocation,
+            ];
+        }
+
+        $res = $client->createBucket($aOptions);
         try {
             $client->putBucketCors([
                 'Bucket' => $sBucket,
