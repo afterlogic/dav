@@ -35,7 +35,11 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 	public function getACL()
 	{
 		$this->init();
-		return parent::getACL();
+		$acl = parent::getACL();
+		$acl = array_filter($acl, function ($val) {
+			return basename($val['principal']) !== 'calendar-proxy-read' && basename($val['principal']) !== 'calendar-proxy-write';
+		});
+		return $acl;
 	}
 
 
