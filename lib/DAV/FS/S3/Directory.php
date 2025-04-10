@@ -264,10 +264,26 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
     public function delete()
     {
-        $res = $this->client->deleteMatchingObjects(
-            $this->bucket,
-            rtrim($this->path, '/') . '/'
-        );
+        if ($this->client->getEndpoint()->getHost() === 'storage.googleapis.com') { // workaround for GCS
+            // gets all objects with prefix
+            $objects = $this->client->listObjectsV2([
+                'Bucket' => $this->bucket,
+                'Prefix' => rtrim($this->path, '/') . '/'
+            ]);
+
+            // delete each object
+            foreach ($objects['Contents'] as $object) {
+                $this->client->deleteObject([
+                    'Bucket' => $this->bucket,
+                    'Key'    => $object['Key']
+                ]);
+            }
+        } else {
+            $this->client->deleteMatchingObjects(
+                $this->bucket,
+                rtrim($this->path, '/') . '/'
+            );
+        }
 
         $this->deleteShares();
     }
