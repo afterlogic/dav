@@ -121,28 +121,23 @@ trait NodeTrait
                 "Prefix" => $sFullFromPath //must have the trailing forward slash "/"
             ]);
 
-            $aKeys = [];
-            foreach ($objects as $object) {
-                $aKeys[] = $object['Key'];
-            }
-
             $batchCopyObject = [];
-            foreach ($aKeys as $sKey) {
-                $sNewKey = \str_replace($sFullFromPath, $sFullToPath, $sKey);
+            foreach ($objects as $object) {
                 $batchCopyObject[] = $this->client->getCommand('CopyObject', [
                     'Bucket'     => $this->bucket,
-                    'Key'        => $sNewKey,
-                    'CopySource' => $this->getCopySource($sKey)
+                    'Key'        => \str_replace($sFullFromPath, $sFullToPath, $object['Key']),
+                    'CopySource' => $this->getCopySource($object['Key'])
                 ]);
             }
-
             $oResults = \Aws\CommandPool::batch($this->client, $batchCopyObject);
+            $mResult = true;
             foreach ($oResults as $oResult) {
                 if ($oResult instanceof \Aws\S3\Exception\S3Exception) {
                     \Aurora\Api::LogException($oResult, \Aurora\System\Enums\LogLevel::Full);
+                    $mResult = false;
+                    break;
                 }
             }
-            $mResult = true;
         } else {
             $res = $this->client->copyObject([
                 'Bucket' => $this->bucket,

@@ -271,12 +271,19 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 'Prefix' => rtrim($this->path, '/') . '/'
             ]);
 
-            // delete each object
+            // delete objects
+            $batchDeleteObject = [];
             foreach ($objects['Contents'] as $object) {
-                $this->client->deleteObject([
+                $batchDeleteObject[] = $this->client->getCommand('DeleteObject', [
                     'Bucket' => $this->bucket,
                     'Key'    => $object['Key']
                 ]);
+            }
+            $oResults = \Aws\CommandPool::batch($this->client, $batchDeleteObject);
+            foreach ($oResults as $oResult) {
+                if ($oResult instanceof \Aws\S3\Exception\S3Exception) {
+                    \Aurora\Api::LogException($oResult, \Aurora\System\Enums\LogLevel::Full);
+                }
             }
         } else {
             $this->client->deleteMatchingObjects(
