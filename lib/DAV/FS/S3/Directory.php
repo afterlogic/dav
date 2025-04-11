@@ -104,41 +104,30 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
         $Path =  rtrim(ltrim($this->path, '/'), '/') . '/';
 
-//        if (!isset(Root::$childrenCache[$Path]) || isset($sPattern)) {
-        if (true) {
-            $iSlashesCount = substr_count($Path, '/');
+        $iSlashesCount = substr_count($Path, '/');
 
-            $results = $this->client->getPaginator('ListObjectsV2', [
-                'Bucket' => $this->bucket,
-                'Prefix' => $Path
-            ]);
+        $results = $this->client->getPaginator('ListObjectsV2', [
+            'Bucket' => $this->bucket,
+            'Prefix' => $Path
+        ]);
 
-            foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item) {
-                $sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
-                if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern)) {
-                    $iItemSlashesCount = substr_count($item['Key'], '/');
-                    if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
-                        $iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern)) {
-                        $children[] = $this->getItem($item);
+        foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item) {
+            $sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
+            if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern)) {
+                $iItemSlashesCount = substr_count($item['Key'], '/');
+                if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
+                    $iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern)) {
+                    $oChild = $this->getItem($item);
+                    if ($oChild) {
+                        $ext = strtolower(substr($oChild->getName(), -5));
+                        if ($oChild->getName() !== '.sabredav' && ($oChild instanceof Directory && $ext !== '.hist')) {
+                            $children[] = $this->getItem($item);
+                        }
                     }
                 }
             }
-
-            foreach ($children as $iKey => $oChild) {
-                $ext = strtolower(substr($oChild->getName(), -5));
-                if ($oChild->getName() === '.sabredav' || ($oChild instanceof Directory && $ext === '.hist')) {
-                    unset($children[$iKey]);
-                }
-            }
-
-            // if ($sPattern) {
-            //     return $children;
-            // } else {
-            //     Root::$childrenCache[$Path] = $children;
-            // }
         }
 
-        // return Root::$childrenCache[$Path];
         return $children;
     }
 

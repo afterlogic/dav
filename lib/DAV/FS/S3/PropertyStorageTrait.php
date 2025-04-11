@@ -25,11 +25,10 @@ trait PropertyStorageTrait
                 $oObject = $this->client->getObject(
                     [
                         'Bucket' => $this->bucket,
-                        'Key' => $path
+                        'Key' =>  \ltrim($path, '/')
                     ]
                 );
-            } catch (\Exception $oEx) {
-            }
+            } catch (\Exception $oEx) {}
             if ($oObject) {
                 $mFileData = (string) $oObject['Body'];
                 $data = unserialize($mFileData);
@@ -134,14 +133,18 @@ trait PropertyStorageTrait
 
     public function getMetadata()
     {
-        $oObject = $this->client->HeadObject([
-            'Bucket' => $this->bucket,
-            'Key' => $this->getPathForS3($this->getPath())
-        ]);
-
         $aMetadata = [];
-        if ($oObject) {
-            $aMetadata = $oObject->get('Metadata');
+
+        $bucket = $this->bucket;
+        $key = $this->getPathForS3($this->getPath());
+        if ($this->client->doesObjectExist($bucket, $key)) {
+            $oObject = $this->client->HeadObject([
+                'Bucket' => $bucket,
+                'Key' => $key
+            ]);
+            if ($oObject) {
+                $aMetadata = $oObject->get('Metadata');
+            }
         }
 
         return $aMetadata;
