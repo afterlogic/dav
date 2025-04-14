@@ -118,11 +118,8 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
                     $iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern)) {
                     $oChild = $this->getItem($item);
-                    if ($oChild) {
-                        $ext = strtolower(substr($oChild->getName(), -5));
-                        if ($oChild->getName() !== '.sabredav' && ($oChild instanceof Directory && $ext !== '.hist')) {
-                            $children[] = $this->getItem($item);
-                        }
+                    if ($oChild->getName() !== '.sabredav' || ($oChild->isDirectoryObject() && !$this->endsWith($oChild->getName(), '.hist'))) {
+                        $children[] = $oChild;
                     }
                 }
             }
