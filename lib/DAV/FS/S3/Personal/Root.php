@@ -26,8 +26,6 @@ class Root extends Directory
 
     public static $childCache;
 
-    public static $childrenCache = [];
-
     public function __construct($sPrefix = null)
     {
         $oModule = S3Filestorage\Module::getInstance();

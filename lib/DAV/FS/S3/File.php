@@ -171,6 +171,8 @@ class File extends \Afterlogic\DAV\FS\File
         if (isset($this->object)) {
             return $this->object['Size'];
         }
+
+        return 0;
     }
 
     public function getETag()

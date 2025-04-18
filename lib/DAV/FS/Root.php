@@ -20,6 +20,8 @@ class Root extends \Sabre\DAV\Collection
 
     protected $path;
 
+    public static $childrenCache = [];
+
     public function getName()
     {
         return 'files';

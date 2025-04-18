@@ -89,7 +89,10 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                 }
                 if ($oResult) {
                     $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
-                    $aSharedFile = $oPdo->getSharedFile(Constants::PRINCIPALS_PREFIX . $this->getUser(), $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName());
+                    $aSharedFile = $oPdo->getSharedFile(
+                        Constants::PRINCIPALS_PREFIX . $this->getUser(), 
+                        $oResult->getNode()->getRelativePath() . '/' . $oResult->getNode()->getName()
+                    );
                     
                     $oResult->setInherited(true);
                     if ($aSharedFile) {

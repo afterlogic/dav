@@ -7,10 +7,8 @@
 
 namespace Afterlogic\DAV\FS\S3;
 
-use Afterlogic\DAV\Constants;
-use Afterlogic\DAV\FS\S3\Personal\Root;
+use Afterlogic\DAV\FS\Root;
 use Afterlogic\DAV\Server;
-use Aws\Common\Exception\MultipartUploadException;
 use Aws\Exception\MultipartUploadException as ExceptionMultipartUploadException;
 use Aws\S3\MultipartUploader;
 
@@ -62,11 +60,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         $this->storage = $storage;
     }
 
-    public function Search($sPattern, $sPath = null)
-    {
-        return $this->getChildren($sPattern) ;
-    }
-
     protected function isCorporate($sPath)
     {
         return \substr($sPath, 0, 9) === \Aurora\System\Enums\FileStorageType::Corporate;
@@ -77,11 +70,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return \substr($sPath, -1) === '/';
     }
 
-    protected function getItem($object)
+    protected function getItem($object, $isDir = false)
     {
         $result = null;
 
-        if ($this->isDirectory($object['Key'])) {
+        if ($isDir) {
             if ($this->isCorporate($object['Key'])) {
                 $result = new Corporate\Directory($object, $this->bucket, $this->client, $this->storage);
             } else {
@@ -98,31 +91,20 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         return $result;
     }
 
-    public function getChildren($sPattern = null)
+    public function getChildren()
     {
         $children = [];
 
-        $Path =  rtrim(ltrim($this->path, '/'), '/') . '/';
+        if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
+            $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
+        } else {
+            $result = JmesQuery::getInstance($this->client, $this->bucket)
+                ->query($this->getPath(), ['limit' => 0]);
 
-        $iSlashesCount = substr_count($Path, '/');
-
-        $results = $this->client->getPaginator('ListObjectsV2', [
-            'Bucket' => $this->bucket,
-            'Prefix' => $Path
-        ]);
-
-        foreach ($results->search('Contents[?starts_with(Key, `' . $Path . '`)]') as $item) {
-            $sItemNameLowercase = \mb_strtolower(\urldecode(\basename($item['Key'])));
-            if (!empty($sPattern) && \mb_strpos($sItemNameLowercase, \mb_strtolower($sPattern)) !== false || empty($sPattern)) {
-                $iItemSlashesCount = substr_count($item['Key'], '/');
-                if ($iItemSlashesCount === $iSlashesCount && substr($item['Key'], -1) !== '/' ||
-                    $iItemSlashesCount === $iSlashesCount + 1 && substr($item['Key'], -1) === '/' || !empty($sPattern)) {
-                    $oChild = $this->getItem($item);
-                    if ($oChild->getName() !== '.sabredav' || ($oChild->isDirectoryObject() && !$this->endsWith($oChild->getName(), '.hist'))) {
-                        $children[] = $oChild;
-                    }
-                }
-            }
+            $children = array_map(function ($child) {
+                return $this->getItem($child, $child['IsDir']);
+            }, $result);
+            Root::$childrenCache[$this->getStorage()][$this->getPath()] = $children;
         }
 
         return $children;
@@ -134,32 +116,48 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      * This method throw DAV\Exception\NotFound if the node does not exist.
      *
      * @param string $name
-     * @throws DAV\Exception\NotFound
-     * @return DAV\INode
+     * @throws \Sabre\DAV\Exception\NotFound
+     * @return \Sabre\DAV\INode
      */
     public function getChild($name)
     {
-        $Path = rtrim($this->path, '/').'/'.$name;
-        // if (isset(Root::$childCache[$Path])) {
-        //     return Root::$childCache[$Path];
-        // } else {
-            foreach ($this->getChildren() as $oChild) {
-                if ($oChild->getName() === $name) {
-                    Root::$childCache[\rtrim($Path)] = $oChild;
-                    return $oChild;
-                }
+        $fullPath = $this->path === '' ? $name : \rtrim($this->path, '/') . '/' . $name;
+        
+        // Trying to check for the presence of "folder" (prefix)
+        $result = $this->client->listObjectsV2([
+            'Bucket' => $this->bucket,
+            'Prefix' => $fullPath . '/',
+            'MaxKeys' => 1,
+        ]);
+    
+        if (!empty($result['Contents'])) {
+            // There is content, so the folder exists.
+            return $this->getItem($result['Contents'][0], true);
+        } else {
+            // Trying to get a file
+            try {
+                $result = $this->client->headObject([
+                    'Bucket' => $this->bucket,
+                    'Key' => $fullPath,
+                ]);
+                $item = [
+                    'Key' => $fullPath,
+                    'LastModified' => $result['LastModified'],
+                    'Size' => $result['ContentLength']
+                ];
+                // If the call is successful, we return the file object
+                return $this->getItem($item, false);
+            } catch (\Aws\Exception\AwsException $e) {
+                // if not a file nor a directory, throw an exception
+                throw new \Sabre\DAV\Exception\NotFound('The object with name: ' . $name . ' could not be found');
             }
-        // }
-
-        // if not a file nor a directory, throw an exception
-        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
+        }
     }
-
 
     public function createDirectory($name)
     {
         $Path = rtrim($this->path, '/').'/'. $name . '/';
-        $mResult = $this->client->putObject([
+        $this->client->putObject([
             'Bucket' => $this->bucket,
             'Key' => $Path
         ]);
@@ -190,7 +188,6 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             try {
                 $uploader->upload();
 
-                Root::$childrenCache = [];
                 $oFile = $this->getChild($name);
                 if ($oFile instanceof \Afterlogic\DAV\FS\File) {
                     // 	if ($rangeType !== 0)
@@ -243,9 +240,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      */
     public function getLastModified()
     {
-        if (isset($this->object)) {
-            return $this->object['LastModified']->getTimestamp();
-        }
+        return isset($this->object) && isset($this->object['LastModified']) && $this->object['LastModified'] instanceof \DateTime ? $this->object['LastModified']->getTimestamp() : null;
     }
 
     public function delete()

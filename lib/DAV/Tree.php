@@ -29,7 +29,6 @@ class Tree extends \Sabre\DAV\Tree
     public function getNodeForPath($path)
     {
         $path = trim($path, '/');
-
         if (isset($this->cache[Server::getUser()][$path])) {
             return $this->cache[Server::getUser()][$path];
         }
@@ -39,21 +38,26 @@ class Tree extends \Sabre\DAV\Tree
             return $this->rootNode;
         }
 
-        // Attempting to fetch its parent
-        list($parentName, $baseName) = split($path);
+        $parts = explode('/', $path);
+        $node = $this->rootNode;
 
-        // If there was no parent, we must simply ask it from the root node.
-        if ($parentName === "") {
-            $node = $this->rootNode->getChild($baseName);
-        } else {
-            // Otherwise, we recursively grab the parent and ask him/her.
-            $parent = $this->getNodeForPath($parentName);
-
-            if (!($parent instanceof ICollection)) {
-                throw new NotFound('Could not find node at path: ' . $path);
+        while (count($parts)) {
+            if (!($node instanceof ICollection)) {
+                throw new NotFound('Could not find node at path: '.$path);
             }
 
-            $node = $parent->getChild($baseName);
+            if ($node instanceof \Sabre\DAV\INodeByPath) {
+                $targetNode = $node->getNodeForPath(implode('/', $parts));
+                if ($targetNode instanceof \Sabre\DAV\Node) {
+                    $node = $targetNode;
+                    break;
+                }
+            }
+
+            $part = array_shift($parts);
+            if ('' !== $part) {
+                $node = $node->getChild($part);
+            }
         }
 
         $this->cache[Server::getUser()][$path] = $node;
