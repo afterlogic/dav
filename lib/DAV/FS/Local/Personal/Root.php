@@ -20,14 +20,14 @@ class Root extends Directory
     {
         $path = \Aurora\System\Api::DataPath() . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_ROOT;
 
-        if (!\file_exists($path)) {
-            \mkdir($path);
+        if (!\is_dir($path)) {
+            @\mkdir($path);
         }
 
         $path = $path . \Afterlogic\DAV\Constants::FILESTORAGE_PATH_PERSONAL;
 
-        if (!\file_exists($path)) {
-            \mkdir($path);
+        if (!\is_dir($path)) {
+            @\mkdir($path);
         }
 
         if (empty($sUserPublicId)) {
@@ -37,8 +37,8 @@ class Root extends Directory
 
         if ($oUser) {
             $path = $path . '/' . $oUser->UUID;
-            if (!\file_exists($path)) {
-                \mkdir($path, 0777, true);
+            if (!\is_dir($path)) {
+                @\mkdir($path, 0777, true);
             }
         }
         parent::__construct($path);
