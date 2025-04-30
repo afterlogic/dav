@@ -111,14 +111,9 @@ class File extends \Afterlogic\DAV\FS\File
         return $sUrl;
     }
 
-    public function get($bRedirectToUrl = null)
+    public function get($bRedirectToUrl = true)
     {
-        if ($bRedirectToUrl === null) {
-            $oS3FilestorageModule = \Aurora\System\Api::GetModule('S3Filestorage');
-            $bRedirectToUrl = $oS3FilestorageModule ? $oS3FilestorageModule->getConfig('RedirectToOriginalFileURLs', true) : true;
-        }
-
-        $sUrl = $this->getUrl();
+        $sUrl = $this->getUrl($bRedirectToUrl);
         if (!empty($sUrl)) {
             $aPathInfo = pathinfo($this->path);
 
@@ -135,15 +130,6 @@ class File extends \Afterlogic\DAV\FS\File
                 \Aurora\System\Api::Location($sUrl);
                 exit;
             }
-        }
-    }
-
-    public function getWithContentDisposition()
-    {
-        $sUrl = $this->getUrl(true);
-        if (!empty($sUrl)) {
-            \Aurora\System\Api::Location($sUrl);
-            exit;
         }
     }
 
