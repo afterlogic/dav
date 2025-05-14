@@ -145,11 +145,11 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
         if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
             $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
         } else {
-            $aChildren = parent::getChildren();
+            $children = parent::getChildren();
 
-            foreach ($aChildren as $iKey => $oChild) {
+            foreach ($children as $iKey => $oChild) {
                 if ($oChild->getName() === '.sabredav' || ($oChild instanceof HistoryDirectory)) {
-                    unset($aChildren[$iKey]);
+                    unset($children[$iKey]);
                 }
             }
         }
