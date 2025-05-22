@@ -163,9 +163,8 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 
         $files = new \Illuminate\Filesystem\Filesystem();
         $files->deleteDirectory($this->path);
-
         $this->deleteShares();
-
+        $this->deleteFavorites();
         $this->updateQuota();
 
         return true;

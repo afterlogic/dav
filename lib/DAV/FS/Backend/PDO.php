@@ -32,6 +32,8 @@ class PDO
      */
     protected $sharedFilesTableName;
 
+    protected $favoritesFilesTableName;
+
     /**
      * Creates the backend
      */
@@ -43,6 +45,7 @@ class PDO
             $this->dBPrefix = \Aurora\System\Api::GetSettings()->DBPrefix;
         }
         $this->sharedFilesTableName = $this->dBPrefix.'adav_sharedfiles';
+        $this->favoritesFilesTableName = $this->dBPrefix.'files_favorites';
     }
 
     /* @param string $principalUri
@@ -684,5 +687,35 @@ SQL
             $stmt = $this->pdo->prepare('UPDATE ' . $this->dBPrefix . 'core_min_hashes' . ' SET Data = ?, HashId = ? where Id = ?');
             $stmt->execute([json_encode($Data), \md5($hashId), $row->Id]);
         }
+    }
+
+    /**
+     *
+     * @param int $userId
+     * @param string $type
+     * @param string $fullPath
+     * @return bool
+     */
+    public function deleteFavorite($userId, $type, $fullPath)
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM ' . $this->favoritesFilesTableName . ' WHERE IdUser = ? AND Type = ? AND FullPath = ?');
+        return !!$stmt->execute([$userId, $type, $fullPath]);
+    }
+
+        /**
+     *
+     * @param int $userId
+     * @param string $type
+     * @param string $fullPath
+     * @return bool
+     */
+    public function updateFavorite($userId, $type, $fullPath, $newType, $newFullPath)
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE " . $this->favoritesFilesTableName . "
+			SET FullPath = ?, Type = ?
+			WHERE FullPath = ? AND IdUser = ? AND Type = ?"
+        );
+        return  $stmt->execute([$newFullPath, $newType, $fullPath, $userId, $type]);
     }
 }

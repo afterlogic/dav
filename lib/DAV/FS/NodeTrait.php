@@ -104,6 +104,23 @@ trait NodeTrait
         }
     }
 
+    public function deleteFavorites()
+    {
+        $result = false;
+        $oFilesModule = \Aurora\System\Api::GetModule('Files');
+        if ($oFilesModule && $oFilesModule->getConfig('AllowFavorites')) {
+            $pdo = new Backend\PDO();
+            $userId = \Aurora\System\Api::getUserIdByPublicId($this->getUser());
+            $result = $pdo->deleteFavorite(
+                $userId,
+                $this->getStorage(),
+                $this->getRelativePath() . '/' . $this->getName()
+            );
+        }
+
+        return $result;
+    }
+
     public function checkFileName($name)
     {
         if (strlen(trim($name)) === 0) {

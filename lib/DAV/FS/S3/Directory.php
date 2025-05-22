@@ -274,6 +274,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
         }
 
         $this->deleteShares();
+        $this->deleteFavorites();
     }
 
     public function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)

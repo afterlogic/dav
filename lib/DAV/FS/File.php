@@ -40,9 +40,8 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL
         $result = parent::delete();
 
         $this->deleteShares();
-
+        $this->deleteFavorites();
         $this->deleteResourceData();
-
         $this->deleteHistoryDirectory();
 
         return $result;

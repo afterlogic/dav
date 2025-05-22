@@ -99,6 +99,7 @@ class Plugin extends \Sabre\DAV\ServerPlugin
         $server->on('method:MOVE', [$this, 'move'], 30);
         $server->on('method:GET', [$this, 'methodGet'], 10);
         $server->on('afterMethod:PUT', [$this, 'afterMethodPut'], 10);
+        $server->on('afterMove', [$this, 'afterMove']);
         $this->server = $server;
     }
 
@@ -287,5 +288,57 @@ class Plugin extends \Sabre\DAV\ServerPlugin
             }
             $node->setProperty('ExtendedProps', $aExtendedProps);
         }
+    }
+
+    protected function getPathInfo($path) {
+        $result = [
+            'plugin' => '',
+            'storage' => '',
+            'path' => '',
+        ];
+        $parts = explode('/', $path);
+        if (isset($parts[0])) {
+            $result['plugin'] = $parts[0];
+        }
+        if (isset($parts[1])) {
+            $result['storage'] = $parts[1];
+        }
+        $result['path'] = '/' . implode('/', array_slice($parts, 2));
+
+        return $result;
+    }
+
+    /**
+     * Called after a node is moved.
+     *
+     * This allows the backend to move all the associated properties.
+     *
+     * @param string $source
+     * @param string $destination
+     */
+    public function afterMove($source, $destination)
+    {
+        $sourcePathInfo = $this->getPathInfo($source);
+        $destinationPathInfo = $this->getPathInfo($destination);
+
+        if ($sourcePathInfo['plugin'] === $this->getPluginName() && $sourcePathInfo['plugin'] === $destinationPathInfo['plugin'] &&
+            !empty($sourcePathInfo['storage']) && !empty($sourcePathInfo['path']) &&
+            !empty($destinationPathInfo['storage'] && !empty($destinationPathInfo['path']))) {
+            $oPdo = new \Afterlogic\DAV\FS\Backend\PDO();
+            $iUserId = \Aurora\Api::getUserIdByPublicId($this->getUser());
+
+            $oFiles = \Aurora\Api::GetModule('Files');
+            if ($oFiles && $oFiles->getConfig('AllowFavorites')) {
+                $oPdo->updateFavorite(
+                    $iUserId, 
+                    $sourcePathInfo['storage'], 
+                    $sourcePathInfo['path'], 
+                    $destinationPathInfo['storage'], 
+                    $destinationPathInfo['path']
+                );
+            }
+        }
+
+        $b = 1;
     }
 }
