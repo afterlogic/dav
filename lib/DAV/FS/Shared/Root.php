@@ -24,8 +24,6 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
 {
     use \Afterlogic\DAV\FS\Shared\DirectoryTrait;
 
-//    use NodeTrait;
-
     protected $pdo = null;
 
     public function __construct()

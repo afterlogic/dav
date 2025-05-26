@@ -14,7 +14,7 @@ use Afterlogic\DAV\Server;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
+class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL, \Afterlogic\DAV\FS\INode
 {
     use NodeTrait;
     use PropertyStorageTrait;
@@ -120,6 +120,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
         return $result;
     }
 
+    /**
+     * @return \Afterlogic\DAV\FS\INode
+     */
     public function getChild($name)
     {
         if (strlen(trim($name)) === 0) {
@@ -138,6 +141,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
         return is_dir($path) ? new self($this->getStorage(), $path) : new File($this->getStorage(), $path);
     }
 
+    /**
+     * @return \Afterlogic\DAV\FS\INode[]
+     */
     public function getChildren()
     {
         $children = [];
