@@ -59,16 +59,26 @@ class Root extends Directory
         throw new \Sabre\DAV\Exception\Forbidden();
     }
 
+    protected function getUsedSize()
+    {
+        $sRootPath = $this->getRootPath();
+        $aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
+        return (int) $aSize['size'];
+    }
+
     public function getQuotaInfo()
     {
+        $sUserSpaceLimitInMb = -1;
+
         $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($this->UserPublicId);
         if ($oUser) {
-            $aQuota = \Aurora\Modules\Files\Module::Decorator()->GetQuota($oUser->Id, $this->getName());
-            return [
-                (int) $aQuota['Used'],
-                (int) $aQuota['Limit']
-            ];
+            $sUserSpaceLimitInMb = $oUser->getExtendedProp('Files::UserSpaceLimitMb') * 1024 * 1024;
         }
+
+        return [
+            (int) $this->getUsedSize(),
+            (int) $sUserSpaceLimitInMb
+        ];
     }
 
     public function getRelativePath()
