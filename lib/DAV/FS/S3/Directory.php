@@ -161,6 +161,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             'Bucket' => $this->bucket,
             'Key' => $Path
         ]);
+
+        if ($this->client->getEndpoint()->getHost() === 'storage.googleapis.com') { // workaround for GCS
+            $oDirectory = $this->getChild($name);
+            if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory) {    
+                $oDirectory->setProperty('lastModified', time());
+            }
+        }
     }
 
     public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
@@ -239,8 +246,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      * @return int
      */
     public function getLastModified()
-    {
-        return isset($this->object) && isset($this->object['LastModified']) && $this->object['LastModified'] instanceof \DateTime ? $this->object['LastModified']->getTimestamp() : null;
+    {   
+        $lastModified = isset($this->object) && isset($this->object['LastModified']) && $this->object['LastModified'] instanceof \DateTime ? $this->object['LastModified']->getTimestamp() : null;
+        if (!$lastModified) { // workaround for GCS
+            $lastModified = $this->getProperty('lastModified');
+        }
+
+        return $lastModified;
     }
 
     public function delete()
