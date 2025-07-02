@@ -121,37 +121,16 @@ class Directory extends \Afterlogic\DAV\FS\Directory
      */
     public function getChild($name)
     {
-        $fullPath = $this->path === '' ? $name : \rtrim($this->path, '/') . '/' . $name;
-        
-        // Trying to check for the presence of "folder" (prefix)
-        $result = $this->client->listObjectsV2([
-            'Bucket' => $this->bucket,
-            'Prefix' => $fullPath . '/',
-            'MaxKeys' => 1,
-        ]);
-    
-        if (!empty($result['Contents'])) {
-            // There is content, so the folder exists.
-            return $this->getItem($result['Contents'][0], true);
-        } else {
-            // Trying to get a file
-            try {
-                $result = $this->client->headObject([
-                    'Bucket' => $this->bucket,
-                    'Key' => $fullPath,
-                ]);
-                $item = [
-                    'Key' => $fullPath,
-                    'LastModified' => $result['LastModified'],
-                    'Size' => $result['ContentLength']
-                ];
-                // If the call is successful, we return the file object
-                return $this->getItem($item, false);
-            } catch (\Aws\Exception\AwsException $e) {
-                // if not a file nor a directory, throw an exception
-                throw new \Sabre\DAV\Exception\NotFound('The object with name: ' . $name . ' could not be found');
+        $Path = rtrim($this->path, '/').'/'.$name;
+
+        foreach ($this->getChildren() as $oChild) {
+            if ($oChild->getName() === $name) {
+                return $oChild;
             }
         }
+
+        // if not a file nor a directory, throw an exception
+        throw new \Sabre\DAV\Exception\NotFound('The file with name: ' . $name . ' could not be found');
     }
 
     public function createDirectory($name)
