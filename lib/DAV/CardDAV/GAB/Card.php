@@ -12,87 +12,30 @@ namespace Afterlogic\DAV\CardDAV\GAB;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Card extends \Sabre\DAV\File implements \Sabre\CardDAV\ICard
+class Card extends \Sabre\CardDAV\Card
 {
-    /**
-     * Contact info
-     *
-     * @var array
-     */
-    private $_cardInfo;
 
-    /**
-     * Constructor
-     *
-     * @param array $cardInfo
-     */
-    public function __construct(array $cardInfo)
+    public function put($cardData)
     {
-        $this->_cardInfo = $cardInfo;
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Put for this card is not allowed.');
     }
 
     /**
-     * Returns the node name
-     *
-     * @return void
+     * Deletes the card.
      */
-    public function getName()
+    public function delete()
     {
-        return $this->_cardInfo['uri'];
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Delete this card is not allowed.');
     }
 
-    /**
-     * Returns the mime content-type
-     *
-     * @return string
-     */
-    public function getContentType()
+    public function getACL()
     {
-        return 'text/x-vcard; charset=utf-8';
-    }
-
-    /**
-     * Returns the vcard
-     *
-     * @return string
-     */
-    public function get()
-    {
-        return $this->_cardInfo['carddata'];
-    }
-
-    /**
-     * Returns the last modification timestamp
-     *
-     * @return int
-     */
-    public function getLastModified()
-    {
-        return $this->_cardInfo['lastmodified'];
-    }
-
-    /**
-     * Returns the size of the vcard
-     *
-     * @return int
-     */
-    public function getSize()
-    {
-        return strlen($this->_cardInfo['carddata']);
-    }
-
-    public function getETag()
-    {
-        if (isset($this->cardData['etag'])) {
-            return $this->cardData['etag'];
-        } else {
-            $data = $this->get();
-            if (is_string($data)) {
-                return '"' . md5($data) . '"';
-            } else {
-                // We refuse to calculate the md5 if it's a stream.
-                return null;
-            }
-        }
+        return [
+            [
+                'privilege' => '{DAV:}read',
+                'principal' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . \Afterlogic\DAV\Server::getUser(),
+                'protected' => true,
+            ],
+        ];
     }
 }

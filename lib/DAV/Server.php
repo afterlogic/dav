@@ -107,7 +107,7 @@ class Server extends \Sabre\DAV\Server
         );
 
         /* Locks Plugin */
-               $this->addPlugin(new \Sabre\DAV\Locks\Plugin(Backend::Locks()));
+        $this->addPlugin(new \Sabre\DAV\Locks\Plugin(Backend::Locks()));
 
         if ($oSettings->GetValue('EnableLogging', false)) {
             /* Logs Plugin */
@@ -125,10 +125,10 @@ class Server extends \Sabre\DAV\Server
             );
 
             $carddavPlugin = new CardDAV\Plugin();
-            if ($this->isModuleEnabled('TeamContacts')) {
-                $this->rootNode->addChild(new CardDAV\GAB\AddressBook(Backend::Carddav()));
-                $carddavPlugin->directories = ['gab'];
-            }
+            // if ($this->isModuleEnabled('TeamContacts')) {
+            //     $this->rootNode->addChild(new CardDAV\GAB\AddressBook(Backend::Carddav()));
+            //     $carddavPlugin->directories = ['gab'];
+            // }
             $this->addPlugin(
                 $carddavPlugin
             );
@@ -136,7 +136,6 @@ class Server extends \Sabre\DAV\Server
             $this->addPlugin(
                 new Contacts\Plugin()
             );
-
 
             /* VCF Export Plugin */
             $this->addPlugin(

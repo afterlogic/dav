@@ -9,6 +9,8 @@ namespace Afterlogic\DAV\CardDAV;
 
 use Afterlogic\DAV\Constants;
 use Aurora\Modules\Contacts\Enums\Access;
+use Afterlogic\DAV\Backend;
+use Afterlogic\DAV\Server;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -169,6 +171,19 @@ class AddressBookRoot extends \Sabre\CardDAV\AddressBookHome
                 return !($obj instanceof Shared\AddressBook) || ($obj instanceof Shared\AddressBook && $obj->getAccess() != Access::NoAccess);
             });
         }
+
+        $TeamContactsModule = \Aurora\System\Api::GetModule('TeamContacts');
+        if ($TeamContactsModule && !$SharedContactsModule->getConfig('Disabled', true)) {
+            $oUser = Server::getUserObject();
+            if ($oUser) {
+                $sPrincipalUri = Constants::PRINCIPALS_PREFIX . $oUser->IdTenant . '_' . Constants::DAV_TENANT_PRINCIPAL;
+                $addressbookInfo = Backend::Carddav()->getAddressBookForUser($sPrincipalUri, 'gab');
+                if ($addressbookInfo) {
+                    $objs[] = new GAB\AddressBook($this->carddavBackend, $addressbookInfo);
+                }
+            }
+        }
+
         return $objs;
     }
 }

@@ -7,8 +7,7 @@
 
 namespace Afterlogic\DAV\CardDAV\GAB;
 
-use Afterlogic\DAV\Backend;
-use Aurora\Modules\Contacts\Models\Contact;
+use Afterlogic\DAV\Server;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -18,33 +17,6 @@ use Aurora\Modules\Contacts\Models\Contact;
 class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
 {
     /**
-     * @var array
-     */
-    protected $addressBookInfo;
-
-    /**
-     * @var string
-     */
-    private $sUserPublicId;
-
-    /**
-     * Constructor
-     */ 
-    public function __construct($caldavBackend)
-    {
-        $this->carddavBackend = $caldavBackend;
-    }
-
-
-    public function getUser()
-    {
-        if ($this->sUserPublicId == null) {
-            $this->sUserPublicId = \Afterlogic\DAV\Server::getUser();
-        }
-        return $this->sUserPublicId;
-    }
-
-    /**
      * @return string
      */
     public function getName()
@@ -52,39 +24,67 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
         return 'gab';
     }
 
-    protected function initAddressbook()
-    {
-        $oUser = \Afterlogic\DAV\Server::getUserObject();
-        if ($oUser) {
-            $sPrincipalUri = \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->IdTenant . '_' . \Afterlogic\DAV\Constants::DAV_TENANT_PRINCIPAL;
-            $addressbook = Backend::Carddav()->getAddressBookForUser($sPrincipalUri, 'gab');
-            if ($addressbook) {
-                $this->addressBookInfo = $addressbook;
-            }
-        }
-    }
-
-    public function getChildren()
-    {
-        $this->initAddressbook();
-        return parent::getChildren();
-    }
-
+    /**
+     * Returns a card.
+     *
+     * @param string $name
+     *
+     * @return Card
+     */
     public function getChild($name)
     {
-        $this->initAddressbook();
-        return parent::getChild($name);
+        $obj = $this->carddavBackend->getCard($this->addressBookInfo['id'], $name);
+        if (!$obj) {
+            throw new \Sabre\DAV\Exception\NotFound('Card not found');
+        }
+
+        return new Card($this->carddavBackend, $this->addressBookInfo, $obj);
+    }
+
+    /**
+     * Returns the full list of cards.
+     *
+     * @return array
+     */
+    public function getChildren()
+    {
+        $objs = $this->carddavBackend->getCards($this->addressBookInfo['id']);
+        $children = [];
+        foreach ($objs as $obj) {
+            $obj['acl'] = $this->getChildACL();
+            $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj);
+        }
+
+        return $children;
+    }
+
+    /**
+     * This method receives a list of paths in it's first argument.
+     * It must return an array with Node objects.
+     *
+     * If any children are not found, you do not have to return them.
+     *
+     * @param string[] $paths
+     *
+     * @return array
+     */
+    public function getMultipleChildren(array $paths)
+    {
+        $objs = $this->carddavBackend->getMultipleCards($this->addressBookInfo['id'], $paths);
+        $children = [];
+        foreach ($objs as $obj) {
+            $obj['acl'] = $this->getChildACL();
+            $children[] = new Card($this->carddavBackend, $this->addressBookInfo, $obj);
+        }
+
+        return $children;
     }
 
     /* @param array $mutations
+     *
      * @return bool|array
      */
     public function updateProperties($mutations)
-    {
-        return false;
-    }
-
-    public function propPatch(\Sabre\DAV\PropPatch $propPatch)
     {
         return false;
     }
@@ -98,8 +98,8 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
      */
     public function getOwner()
     {
-        $sUserPublicId = $this->getUser();
-        return ($sUserPublicId) ? 'principals/' . $sUserPublicId : null;
+        $sUserPublicId = Server::getUser();
+        return $sUserPublicId ? 'principals/' . $sUserPublicId : null;
     }
 
     /**
@@ -128,7 +128,7 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
      */
     public function getACL()
     {
-        $sUserPublicId = $this->getUser();
+        $sUserPublicId = Server::getUser();
         return [
             [
                 'privilege' => '{DAV:}read',
@@ -170,11 +170,50 @@ class AddressBook extends \Afterlogic\DAV\CardDAV\AddressBook
 
     public function isEnabled()
     {
-        $oTenant = \Afterlogic\DAV\Server::getTenantObject();
-        $oUser = \Afterlogic\DAV\Server::getUserObject();
+        $oTenant = Server::getTenantObject();
+        $oUser = Server::getUserObject();
         $bIsModuleDisabledForTenant = isset($oTenant) ? $oTenant->isModuleDisabled('TeamContacts') : false;
         $bIsModuleDisabledForUser = isset($oUser) ? $oUser->isModuleDisabled('TeamContacts') : false;
 
         return !($bIsModuleDisabledForTenant || $bIsModuleDisabledForUser);
+    }
+
+    /**
+     * Creates a new file.
+     *
+     * The contents of the new file must be a valid VCARD.
+     *
+     * This method may return an ETag.
+     *
+     * @param string   $name
+     * @param resource $data
+     *
+     * @return string|null
+     */
+    public function createFile($name, $data = null)
+    {
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Create new nodes is not allowed in this addressbook.');
+    }
+
+    /**
+     * Deletes the entire addressbook.
+     */
+    public function delete()
+    {
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Delete this addressbook is not allowed.');
+    }
+
+    /**
+     * Updates properties on this node.
+     *
+     * This method received a PropPatch object, which contains all the
+     * information about the update.
+     *
+     * To update specific properties, call the 'handle' method on this object.
+     * Read the PropPatch documentation for more information.
+     */
+    public function propPatch(\Sabre\DAV\PropPatch $propPatch)
+    {
+        throw new \Sabre\DAV\Exception\MethodNotAllowed('Updates properties on this addressbook is not allowed.');
     }
 }
