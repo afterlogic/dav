@@ -80,14 +80,14 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
 
     public function createFile($name, $data = null, $rangeType = 0, $offset = 0, $extendedProps = [])
     {
-        $result = false;
+        $result = null;
         if (!$this->childExists($name)) {
             $result = parent::createFile($name);
         }
         $oFile = $this->getChild($name);
 
         if ($oFile instanceof File) {
-            $oFile->patch($data, $rangeType, $offset);
+            $result = $oFile->patch($data, $rangeType, $offset);
 
             $aProps = $oFile->getProperties(['Owner', 'ExtendedProps']);
 
@@ -148,9 +148,9 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
     {
         $children = [];
 
-        if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
-            $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
-        } else {
+        // if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
+        //     $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
+        // } else {
             $children = parent::getChildren();
 
             foreach ($children as $iKey => $oChild) {
@@ -158,7 +158,7 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
                     unset($children[$iKey]);
                 }
             }
-        }
+        // }
 
         return $children;
     }
@@ -198,14 +198,14 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
     public function getFullQuotaInfo()
     {
         $iFreeSize = 0;
+        $iUsageSize = 0;
 
-        $sRootPath = $this->getRootPath(\Aurora\System\Enums\FileStorageType::Personal);
-        $aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
-        $iUsageSize = (int) $aSize['size'];
-
-        $sRootPath = $this->getRootPath(\Aurora\System\Enums\FileStorageType::Corporate);
-        $aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
-        $iUsageSize += (int) $aSize['size'];
+        $personalRoot =  Server::getInstance()->tree->getNodeForPath('files/' . $this->storage);
+        if ($personalRoot instanceof Directory) {
+            $sRootPath = $personalRoot->getRootPath();
+            $aSize = \Aurora\System\Utils::GetDirectorySize($sRootPath);
+            $iUsageSize += (int) $aSize['size'];
+        }
 
         $UserPublicId = $this->getUser();
         if ($UserPublicId) {

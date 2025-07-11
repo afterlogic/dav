@@ -11,7 +11,7 @@ use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\ICollection;
 use Sabre\DAV\IMultiGet;
 
-use function Sabre\Uri\split;
+use Sabre\Uri;
 
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
@@ -70,7 +70,7 @@ class Tree extends \Sabre\DAV\Tree
         // Finding common parents
         $parents = [];
         foreach ($paths as $path) {
-            list($parent, $node) = split($path);
+            list($parent, $node) = Uri\split($path);
             if (!isset($parents[$parent])) {
                 $parents[$parent] = [$node];
             } else {

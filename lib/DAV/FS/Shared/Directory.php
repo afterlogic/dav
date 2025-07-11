@@ -146,10 +146,10 @@ class Directory extends \Afterlogic\DAV\FS\Directory
             if (!(is_array($extendedProps) && isset($extendedProps['InitializationVector']))) {
                 return $this->node->createFile($name, $data, $rangeType, $offset, $extendedProps);
             } else {
-                return false;
+                return null;
             }
         } else {
-            return false;
+            return null;
         }
     }
 

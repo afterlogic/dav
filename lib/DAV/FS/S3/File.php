@@ -64,11 +64,14 @@ class File extends \Afterlogic\DAV\FS\File
 
         // Perform the upload.
         try {
-            $uploader->upload();
-
-            return true;
+            $result = $uploader->upload();
+            if (isset($result['ETag'])) {
+                return $result['ETag'];
+            } else {
+                return null;
+            }
         } catch (MultipartUploadException $e) {
-            return false;
+            return null;
         }
     }
 
@@ -112,25 +115,32 @@ class File extends \Afterlogic\DAV\FS\File
         return $sUrl;
     }
 
-    public function get($bRedirectToUrl = true)
+    public function get()
     {
-        $sUrl = $this->getUrl($bRedirectToUrl);
+        $sUrl = $this->getUrl(false);
         if (!empty($sUrl)) {
-            $aPathInfo = pathinfo($this->path);
+            $context = stream_context_create(array(
+                "ssl"=>array(
+                    "verify_peer"=>false,
+                    "verify_peer_name"=>false,
+                )
+            ));
+            return fopen($sUrl, 'rb', false, $context);
+        }
+    }
 
-            if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') ||
-                strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY' || !$bRedirectToUrl) {
-                $context = stream_context_create(array(
-                    "ssl"=>array(
-                        "verify_peer"=>false,
-                        "verify_peer_name"=>false,
-                    )
-                ));
-                return fopen($sUrl, 'rb', false, $context);
-            } else {
-                \Aurora\System\Api::Location($sUrl);
-                exit;
-            }
+    public function getWithRedirect()
+    {
+        $aPathInfo = pathinfo($this->path);
+        if ((isset($aPathInfo['extension']) && strtolower($aPathInfo['extension']) === 'url') ||
+            strtoupper(\MailSo\Base\Http::SingletonInstance()->GetMethod()) === 'COPY') {
+            return $this->get();
+        }
+
+        $sUrl = $this->getUrl(true);
+        if (!empty($sUrl)) {
+            \Aurora\System\Api::Location($sUrl);
+            exit;
         }
     }
 

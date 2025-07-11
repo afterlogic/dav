@@ -189,7 +189,7 @@ class Root extends \Afterlogic\DAV\FS\Directory implements \Sabre\DAVACL\IACL
     {
         $oFile = $this->getChild($name);
         if ($oFile instanceof File) {
-            $oFile->put($data);
+            return $oFile->put($data);
         } else {
             throw new \Sabre\DAV\Exception\Forbidden();
         }

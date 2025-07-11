@@ -24,7 +24,7 @@ class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL, \Afterlo
         parent::__construct($path);
     }
 
-    public function get($bRedirectToUrl = false)
+    public function get()
     {
         return parent::get();
     }

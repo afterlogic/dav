@@ -95,17 +95,17 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     {
         $children = [];
 
-        if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
-            $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
-        } else {
+        // if (isset(Root::$childrenCache[$this->getStorage()][$this->getPath()])) {
+        //     $children = Root::$childrenCache[$this->getStorage()][$this->getPath()];
+        // } else {
             $result = JmesQuery::getInstance($this->client, $this->bucket)
                 ->query($this->getPath(), ['limit' => 0]);
 
             $children = array_map(function ($child) {
                 return $this->getItem($child, $child['IsDir']);
             }, $result);
-            Root::$childrenCache[$this->getStorage()][$this->getPath()] = $children;
-        }
+        //     Root::$childrenCache[$this->getStorage()][$this->getPath()] = $children;
+        // }
 
         return $children;
     }
@@ -136,16 +136,22 @@ class Directory extends \Afterlogic\DAV\FS\Directory
     public function createDirectory($name)
     {
         $Path = rtrim($this->path, '/').'/'. $name . '/';
-        $this->client->putObject([
-            'Bucket' => $this->bucket,
-            'Key' => $Path
-        ]);
 
-        if ($this->client->getEndpoint()->getHost() === 'storage.googleapis.com') { // workaround for GCS
-            $oDirectory = $this->getChild($name);
-            if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory) {    
-                $oDirectory->setProperty('lastModified', time());
+        try {
+            $this->client->putObject([
+                'Bucket' => $this->bucket,
+                'Key' => $Path
+            ]);
+
+            if ($this->client->getEndpoint()->getHost() === 'storage.googleapis.com') { // workaround for GCS
+                $oDirectory = $this->getChild($name);
+                if ($oDirectory instanceof \Afterlogic\DAV\FS\Directory) {    
+                    $oDirectory->setProperty('lastModified', time());
+                }
             }
+        } catch (\Aws\S3\Exception\S3Exception $ex) {
+            \Aurora\Api::LogException($ex);
+            throw new \Sabre\DAV\Exception\Forbidden();
         }
     }
 
@@ -155,7 +161,11 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
         if ($this->childExists($name)) {
             $oChild = $this->getChild($name);
-            return $oChild->put($data);
+            if ($oChild instanceof \Afterlogic\DAV\FS\File) {
+                return $oChild->put($data);
+            } else {
+                return null;
+            }
         } else {
             $rData = $data;
             if (!is_resource($data)) {
@@ -172,7 +182,7 @@ class Directory extends \Afterlogic\DAV\FS\Directory
 
             // Perform the upload.
             try {
-                $uploader->upload();
+                $uploadResult = $uploader->upload();
 
                 $oFile = $this->getChild($name);
                 if ($oFile instanceof \Afterlogic\DAV\FS\File) {
@@ -201,10 +211,13 @@ class Directory extends \Afterlogic\DAV\FS\Directory
                     $aProps['ExtendedProps'] = $aCurrentExtendedProps;
 
                     $oFile->updateProperties($aProps);
+                    return $oFile->getETag();
+                } else {
+                    return null;
                 }
-                return true;
+
             } catch (ExceptionMultipartUploadException $e) {
-                return false;
+                return null;
             }
         }
     }

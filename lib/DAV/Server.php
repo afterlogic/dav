@@ -413,6 +413,22 @@ class Server extends \Sabre\DAV\Server
         return $oNode;
     }
 
+    public static function copyNode(string $sourcePath, string $destinationPath)
+    {
+        $copyResult = false;
+        try {
+            Server::getInstance()->tree->copy(
+                $sourcePath, 
+                $destinationPath
+            );
+            $copyResult = true;
+        } catch (\Sabre\DAV\Exception) {
+            $copyResult = false;
+        }
+
+        return $copyResult;
+    }
+
     public static function deleteNode($path, $userPublicId = null)
     {
         $result = false;

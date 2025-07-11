@@ -55,10 +55,10 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         return 0;
     }
 
-    public function get($bRedirectToUrl = true)
+    public function get()
     {
         if ($this->node) {
-            return $this->node->get($bRedirectToUrl);
+            return $this->node->get();
         }
 
         return '';
@@ -70,7 +70,7 @@ class File extends \Afterlogic\DAV\FS\File implements \Sabre\DAVACL\IACL
         if ($this->node && !(is_array($aExtendedProps) && isset($aExtendedProps['InitializationVector']))) {
             return $this->node->put($data);
         } else {
-            return false;
+            return null;
         }
     }
 
