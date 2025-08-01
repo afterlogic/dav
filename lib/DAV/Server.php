@@ -422,7 +422,7 @@ class Server extends \Sabre\DAV\Server
                 $destinationPath
             );
             $copyResult = true;
-        } catch (\Sabre\DAV\Exception) {
+        } catch (\Sabre\DAV\Exception $oEx) {
             $copyResult = false;
         }
 
