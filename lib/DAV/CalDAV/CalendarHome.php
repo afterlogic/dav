@@ -89,7 +89,8 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome
 
         // Calendars
         foreach ($this->caldavBackend->getCalendarsForUser($this->principalInfo['uri']) as $calendar) {
-            if ($calendar['uri'] === $name || \substr($name, 0, \strlen(\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID)) === \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID) {
+            if ($calendar['uri'] === $name || 
+                ($name === \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID && \substr($this->principalInfo['uri'], 0, \strlen(\Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID)) === \Afterlogic\DAV\Constants::CALENDAR_DEFAULT_UUID)) {
                 return $this->initCalendar($calendar);
             }
         }
