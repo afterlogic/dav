@@ -403,7 +403,7 @@ class Server extends \Sabre\DAV\Server
         self::setUser($userPublicId);
         try {
             $oNode = self::getInstance()->tree->getNodeForPath($path);
-            if (method_exists($oNode, 'init')) {
+            if ($oNode && method_exists($oNode, 'init')) {
                 $oNode->init();
             }
         } catch (\Exception $oEx) {
