@@ -24,6 +24,8 @@ class Backend
         $oDavModule = \Aurora\System\Api::GetModuleDecorator('Dav');
         if ($oDavModule) {
             try {
+                // workaround for special characters in username (iOS 18+)
+                $sUserName = \urldecode($sUserName);
                 $mResult = $oDavModule->Login($sUserName, $sPassword);
 
                 if (isset($mResult['AuthToken'])) {
