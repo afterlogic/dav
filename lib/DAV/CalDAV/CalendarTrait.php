@@ -17,6 +17,16 @@ use Aurora\System\Enums\UserRole;
  */
 trait CalendarTrait
 {
+    public function getBaseCalendarId()
+    {
+        return $this->calendarInfo['id'][0];
+    }
+
+    public function getCalendarInstanceId()
+    {
+        return $this->calendarInfo['id'][1];
+    }
+
     public function _getProperties($calendarInfo, $requestedProperties = [])
     {
         $response = [];
