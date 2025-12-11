@@ -14,7 +14,7 @@ use Afterlogic\DAV\Server;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL, \Afterlogic\DAV\FS\INode
+class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL, \Afterlogic\DAV\FS\INode, \Sabre\DAV\IProperties
 {
     use NodeTrait;
     use PropertyStorageTrait;
@@ -299,5 +299,35 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
             0,
             0,
         ];
+    }
+
+    public function moveInto($targetName, $sourcePath, \Sabre\DAV\INode $sourceNode)
+    {
+        // We only support moving files and directories
+        if (!$sourceNode instanceof self && !$sourceNode instanceof File) {
+            return false;
+        }
+
+        // Saving properties before move
+        $sourceProperties = $sourceNode->getProperties([]);
+        // Deleting resource data to avoid conflicts
+        $sourceNode->deleteResourceData();
+
+        $result = parent::moveInto($targetName, $sourcePath, $sourceNode);
+
+        if ($result && !empty($sourceProperties)) {
+            $targetNode = null;
+            try {
+                $targetNode = $this->getChild($targetName);
+            } catch (\Exception $oEx) {
+                // not found
+            }
+
+            if ($targetNode instanceof \Afterlogic\DAV\FS\File || $targetNode instanceof \Afterlogic\DAV\FS\Directory) {
+                $targetNode->updateProperties($sourceProperties);
+            }
+        }
+
+        return $result;
     }
 }

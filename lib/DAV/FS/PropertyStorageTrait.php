@@ -7,6 +7,7 @@
 
 namespace Afterlogic\DAV\FS;
 
+use Sabre\DAV\PropPatch;
 /**
  * @license https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
@@ -14,6 +15,12 @@ namespace Afterlogic\DAV\FS;
  */
 trait PropertyStorageTrait
 {
+    protected $supportedProperties = [
+        'Owner',
+        'Name',
+        'ExtendedProps',
+    ];
+
     public function getProperty($sName)
     {
         $aData = $this->getResourceData();
@@ -88,7 +95,11 @@ trait PropertyStorageTrait
      */
     public function getResourceInfoPath()
     {
-        list($parentDir) = \Sabre\Uri\split($this->path);
+        $parentDir = '';
+        if ($this->path) {
+            list($parentDir) = \Sabre\Uri\split($this->path);
+        }
+
         return $parentDir . '/.sabredav';
     }
 
@@ -205,5 +216,14 @@ trait PropertyStorageTrait
         fclose($handle);
 
         return true;
+    }
+
+    public function propPatch(PropPatch $propPatch)
+    {
+        $propPatch->handle($this->supportedProperties, function ($mutations) {
+            $this->updateProperties($mutations);
+
+            return true;
+        });
     }
 }

@@ -12,7 +12,7 @@ namespace Afterlogic\DAV\FS;
  * @license https://afterlogic.com/products/common-licensing Afterlogic Software License
  * @copyright Copyright (c) 2019, Afterlogic Corp.
  */
-class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL, \Afterlogic\DAV\FS\INode
+class File extends \Sabre\DAV\FSExt\File implements \Sabre\DAVACL\IACL, \Afterlogic\DAV\FS\INode, \Sabre\DAV\IProperties
 {
     use NodeTrait;
     use PropertyStorageTrait;
