@@ -3,7 +3,7 @@
 namespace Afterlogic\DAV;
 
 use Sabre\VObject\Splitter\VCard as VCardSplitter;
-use Sabre\Vobject\Splitter\ICalendar as ICalendarSplitter;
+use Sabre\VObject\Splitter\ICalendar as ICalendarSplitter;
 
 class VObjectSplitter
 {
