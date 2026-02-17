@@ -136,7 +136,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
 		{
 			foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription)
 			{
-                $aChildren[] = new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
+                $aChildren[] = new Subscription($this->caldavBackend, $subscription);
             }
 		}
 
@@ -273,7 +273,7 @@ class CalendarHome  extends \Sabre\CalDAV\CalendarHome
         if ($this->caldavBackend instanceof \Sabre\CalDAV\Backend\SubscriptionSupport) {
             foreach ($this->caldavBackend->getSubscriptionsForUser($this->principalInfo['uri']) as $subscription) {
                 if ($subscription['uri'] === $name) {
-                    return new \Sabre\CalDAV\Subscriptions\Subscription($this->caldavBackend, $subscription);
+                    return new Subscription($this->caldavBackend, $subscription);
                 }
             }
         }
