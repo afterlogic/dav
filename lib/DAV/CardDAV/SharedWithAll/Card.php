@@ -39,4 +39,10 @@ class Card extends \Sabre\CardDAV\Card
             ],
         ];
     }
+
+    public function getLastModified()
+    {
+        $lastModified = parent::getLastModified();
+        return $lastModified ? $lastModified : 1;
+    }
 }
