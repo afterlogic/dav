@@ -112,25 +112,34 @@ trait PropertyStorageTrait
             $data = $json;
         } else {
             // Unserializing and checking if the resource file contains data for this file
-            $data = unserialize($string);
+            $data = @unserialize($string, ['allowed_classes' => false]);
+            if ($data === false && $string !== 'b:0;') {
+                $data = [];
+            }
         }
 
-        return $data;
+        return is_array($data) ? $data : [];
      }
 
      public function readResourceData($path)
      {
-        $data = '';
+        $sData = '';
 
         // opening up the file, and creating a shared lock
-        $handle = fopen($path, 'a+');;
+        $handle = fopen($path, 'a+');
+
+        if (!$handle) {
+            return [];
+        }
+
+        rewind($handle);
 
         // Reading data until the eof
         while (!feof($handle)) {
-            $data .= fread($handle, 8192);
+            $sData .= fread($handle, 8192);
         }
 
-        $data = $this->getData($data);
+        $data = $this->getData($sData);
 
         // We're all good
         fclose($handle);
@@ -179,7 +188,11 @@ trait PropertyStorageTrait
         $data[$this->getName()] = $newData;
 
         rewind($handle2);
-        fwrite($handle2, json_encode($data));
+        $json = json_encode($data);
+        if ($json === false) {
+            $json = '{}';
+        }
+        fwrite($handle2, $json);
         fclose($handle2);
     }
 
@@ -196,6 +209,10 @@ trait PropertyStorageTrait
 
         // opening up the file, and creating a shared lock
         $handle = fopen($path, 'a+');
+        if (!$handle) {
+            return true;
+        }
+
         flock($handle, LOCK_EX);
         $data = '';
 
