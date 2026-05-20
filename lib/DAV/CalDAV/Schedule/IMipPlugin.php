@@ -57,6 +57,12 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
      */
     public function schedule(ITip\Message $iTipMessage)
     {
+        // Check if the event has already passed (fix B: prevent sending invites for past events)
+        if ($this->isEventInPast($iTipMessage)) {
+            $iTipMessage->scheduleStatus = '5.3;Event is in the past; iTip delivery suppressed';
+            return;
+        }
+
         // Not sending any emails if the system considers the update
         // insignificant.
         if (!$iTipMessage->significantChange) {
@@ -173,17 +179,79 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                 }
             }
 
-            Helper::sendAppointmentMessage(
-                $senderEmail, 
-                $recipient, 
-                $subject, 
-                $iTipMessage->message, 
-                $iTipMessage->method,
-                $htmlBody
-            );
-            $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
-    
+            // Wrap the message sending in a try-catch block (fix A: handle SMTP errors gracefully)
+            try {
+                Helper::sendAppointmentMessage(
+                    $senderEmail,
+                    $recipient,
+                    $subject,
+                    $iTipMessage->message,
+                    $iTipMessage->method,
+                    $htmlBody
+                );
+                // Only set success status if sending succeeded
+                $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+            } catch (\Exception $e) {
+                // Set failure status — this prevents retries for this attendee
+                $iTipMessage->scheduleStatus = '5.1; Delivery failed; Error: ' . $e->getMessage();
+                // Continue processing other attendees (the foreach loop in parent class will continue)
+            }
         }
         return false;
     }
+
+    /**
+     * Checks if the event has already passed (DTEND or DTSTART is in the past)
+     * and doesn't extend into the future via RRULE.
+     *
+     * @param ITip\Message $iTipMessage
+     * @return bool
+     */
+    private function isEventInPast(ITip\Message $iTipMessage): bool
+    {
+        $vEvent = $iTipMessage->message->VEVENT;
+
+        // Check DTSTART
+        if (isset($vEvent->DTSTART)) {
+            $dtStart = $vEvent->DTSTART->getDateTime();
+            if ($dtStart < new \DateTime('now', new \DateTimeZone('UTC'))) {
+                // Check if there's an RRULE that extends into the future
+                if (isset($vEvent->RRULE)) {
+                    try {
+                        $rruleIterator = new \Sabre\VObject\Recur\RRuleIterator(
+                            $vEvent->RRULE->getValue(),
+                            $dtStart
+                        );
+
+                        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+                        $rruleIterator->fastForward($now);
+
+                        if ($rruleIterator->valid()) {
+                            return false; // Event has future occurrences
+                        } else {
+                            // All occurrences are in the past
+                            return true;
+                        }
+                    } catch (\Exception $e) {
+                        // In case of any parsing error, assume future occurrences exist
+                        return false;
+                    }
+                } else {
+                    // No RRULE — event is one-time and in the past
+                    return true;
+                }
+            }
+        }
+
+        // Check DTEND if present
+        if (isset($vEvent->DTEND)) {
+            $dtEnd = $vEvent->DTEND->getDateTime();
+            if ($dtEnd < new \DateTime('now', new \DateTimeZone('UTC'))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }
