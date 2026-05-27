@@ -197,7 +197,6 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                 // Continue processing other attendees (the foreach loop in parent class will continue)
             }
         }
-        return false;
     }
 
     /**

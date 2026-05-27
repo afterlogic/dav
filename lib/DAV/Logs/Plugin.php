@@ -72,7 +72,9 @@ class Plugin extends \Sabre\DAV\ServerPlugin
 
             \Aurora\System\Api::Log('IN <<<<<<<<<<<<<<<<<<<<<<', \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
             $rResponseBody = $response->getBodyAsStream();
-            \rewind($rResponseBody);
+            if (is_resource($rResponseBody)) {
+                rewind($rResponseBody);
+            }
             $sResponseBody = stream_get_contents($rResponseBody);
             \Aurora\System\Api::LogObject($sResponseBody, \Aurora\System\Enums\LogLevel::Full, 'sabredav-');
         }
