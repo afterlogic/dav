@@ -210,10 +210,15 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
     {
         $vEvent = $iTipMessage->message->VEVENT;
 
+        $utc = new \DateTimeZone('UTC');
+        $now = new \DateTime('now', $utc);
+
         // Check DTSTART
         if (isset($vEvent->DTSTART)) {
             $dtStart = $vEvent->DTSTART->getDateTime();
-            if ($dtStart < new \DateTime('now', new \DateTimeZone('UTC'))) {
+            $dtStart->setTimezone($utc);
+
+            if ($dtStart < $now) {
                 // Check if there's an RRULE that extends into the future
                 if (isset($vEvent->RRULE)) {
                     try {
@@ -222,30 +227,28 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                             $dtStart
                         );
 
-                        $now = new \DateTime('now', new \DateTimeZone('UTC'));
                         $rruleIterator->fastForward($now);
 
                         if ($rruleIterator->valid()) {
-                            return false; // Event has future occurrences
-                        } else {
-                            // All occurrences are in the past
-                            return true;
+                            return false;
                         }
+
+                        return true;
                     } catch (\Exception $e) {
-                        // In case of any parsing error, assume future occurrences exist
                         return false;
                     }
-                } else {
-                    // No RRULE — event is one-time and in the past
-                    return true;
                 }
+
+                return true;
             }
         }
 
         // Check DTEND if present
         if (isset($vEvent->DTEND)) {
             $dtEnd = $vEvent->DTEND->getDateTime();
-            if ($dtEnd < new \DateTime('now', new \DateTimeZone('UTC'))) {
+            $dtEnd->setTimezone($utc);
+
+            if ($dtEnd < $now) {
                 return true;
             }
         }
