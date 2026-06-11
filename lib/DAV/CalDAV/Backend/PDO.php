@@ -86,7 +86,7 @@ SQL
         return \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $sTenantPrincipal;
     }
 
-    public function getPublicCalendar($calendarId)
+    public function getPublicCalendar($calendarId, $sUserPublicId = null)
     {
         $calendar = false;
 
@@ -95,16 +95,28 @@ SQL
 
         // Making fields a comma-delimited list
         $fields = implode(', ', $fields);
+
+        $wherePrincipalUri = '';
+        if ($sUserPublicId !== null) {
+            $wherePrincipalUri = " AND $this->calendarInstancesTableName.principaluri = ?";
+        }
+
         $stmt = $this->pdo->prepare(
             <<<SQL
 SELECT {$this->calendarInstancesTableName}.id as id, $fields FROM {$this->calendarInstancesTableName}
     LEFT JOIN {$this->calendarTableName} ON
         {$this->calendarInstancesTableName}.calendarid = {$this->calendarTableName}.id
-WHERE access = 1 AND {$this->calendarInstancesTableName}.uri = ? AND public = 1 ORDER BY calendarorder ASC
+WHERE access = 1 AND {$this->calendarInstancesTableName}.uri = ? AND public = 1 $wherePrincipalUri ORDER BY calendarorder ASC
 SQL
         );
 
-        $stmt->execute([$calendarId]);
+        $params = [$calendarId];
+
+        if ($sUserPublicId !== null) {
+            $params[] = 'principals/' . $sUserPublicId;
+        }
+
+        $stmt->execute($params);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if ($row) {
             $components = [];
