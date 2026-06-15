@@ -263,17 +263,15 @@ SQL
      *
      * @return bool
      */
-    public function getPublishStatus($calendarUri)
+    public function getPublishStatus($principalUri, $calendarUri)
     {
         $bResult = false;
-        $oUser = \Aurora\System\Api::getAuthenticatedUser();
-        if ($oUser) {
-            $stmt = $this->pdo->prepare('SELECT public FROM ' . $this->calendarInstancesTableName . ' WHERE principaluri = ? AND uri = ?');
-            $stmt->execute([\Afterlogic\DAV\Constants::PRINCIPALS_PREFIX . $oUser->PublicId, $calendarUri]);
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if ($row) {
-                $bResult = (bool) $row['public'];
-            }
+
+        $stmt = $this->pdo->prepare('SELECT public FROM ' . $this->calendarInstancesTableName . ' WHERE principaluri = ? AND uri = ?');
+        $stmt->execute([$principalUri, $calendarUri]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ($row) {
+            $bResult = (bool) $row['public'];
         }
 
         return $bResult;
