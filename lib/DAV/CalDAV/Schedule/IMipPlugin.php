@@ -215,8 +215,8 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
 
         // Check DTSTART
         if (isset($vEvent->DTSTART)) {
-            $dtStart = $vEvent->DTSTART->getDateTime();
-            $dtStart->setTimezone($utc);
+            $dtStart = $vEvent->DTSTART->getDateTime()->setTimezone($utc);
+
 
             if ($dtStart < $now) {
                 // Check if there's an RRULE that extends into the future
@@ -245,8 +245,8 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
 
         // Check DTEND if present
         if (isset($vEvent->DTEND)) {
-            $dtEnd = $vEvent->DTEND->getDateTime();
-            $dtEnd->setTimezone($utc);
+            $dtEnd = $vEvent->DTEND->getDateTime()->setTimezone($utc);
+
 
             if ($dtEnd < $now) {
                 return true;
