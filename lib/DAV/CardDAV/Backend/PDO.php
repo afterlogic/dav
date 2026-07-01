@@ -9,6 +9,8 @@ namespace Afterlogic\DAV\CardDAV\Backend;
 
 use Afterlogic\DAV\Constants;
 use Aurora\Modules\Contacts\Models\ContactCard;
+use Override;
+use Sabre\DAV\PropPatch;
 use Sabre\VObject\Component\VCard;
 use Sabre\VObject\Reader;
 
@@ -433,5 +435,32 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
         }
 
         return $result;
+    }
+
+    #[Override]
+    public function createAddressBook($principalUri, $url, array $properties)
+    {
+        // Strip tags from displayname property
+        if (isset($properties['{DAV:}displayname'])) {
+            $properties['{DAV:}displayname'] = strip_tags($properties['{DAV:}displayname']);
+        }
+
+        return parent::createAddressBook($principalUri, $url, $properties);
+    }
+
+    #[Override]
+    public function updateAddressBook($addressBookId, PropPatch $propPatch)
+    {
+        // Strip tags from displayname property
+        $mutations = $propPatch->getMutations();
+
+        if (array_key_exists('{DAV:}displayname', $mutations) && $mutations['{DAV:}displayname'] !== null) {
+            $mutations['{DAV:}displayname'] = strip_tags($mutations['{DAV:}displayname']);
+
+            $ref = new \ReflectionProperty($propPatch, 'mutations');
+            $ref->setValue($propPatch, $mutations);
+        }
+
+        return parent::updateAddressBook($addressBookId, $propPatch);
     }
 }
