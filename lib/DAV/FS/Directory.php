@@ -75,6 +75,12 @@ class Directory extends \Sabre\DAV\FSExt\Directory implements \Sabre\DAVACL\IACL
             throw new \Sabre\DAV\Exception\Conflict('Can\'t create a directory');
         }
 
+        // Check for long names and truncate if necessary
+        $maxLength = 255; // Maximum filename length in most filesystems
+        if (strlen($name) > $maxLength) {
+            throw new \Sabre\DAV\Exception\Forbidden('Name is too long');
+        }
+
         parent::createDirectory($name);
     }
 
