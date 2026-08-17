@@ -38,7 +38,7 @@ class Root extends Directory
         if ($oUser) {
             $path = $path . '/' . $oUser->UUID;
             if (!\is_dir($path)) {
-                @\mkdir($path, 0777, true);
+                @\mkdir($path, 0750, true);
             }
         }
         parent::__construct($path);

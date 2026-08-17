@@ -34,7 +34,7 @@ class Root extends Directory
         if ($oTenant) {
             $path = $path . '/' . $oTenant->Id;
             if (!\is_dir($path)) {
-                @\mkdir($path, 0777, true);
+                @\mkdir($path, 0750, true);
             }
         }
         parent::__construct($path);
