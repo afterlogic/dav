@@ -8,6 +8,8 @@
 namespace Afterlogic\DAV\CalDAV\Backend;
 
 use Afterlogic\DAV\Constants;
+use Override;
+use Sabre\DAV\PropPatch;
 use Sabre\DAV\Xml\Element\Sharee;
 
 /**
@@ -41,12 +43,33 @@ class PDO extends \Sabre\CalDAV\Backend\PDO
 
     public function createCalendar($principalUri, $calendarUri, array $properties)
     {
+        // Strip tags from displayname property
+        if (isset($properties['{DAV:}displayname'])) {
+            $properties['{DAV:}displayname'] = strip_tags($properties['{DAV:}displayname']);
+        }
+
         $sOrderProp = '{http://apple.com/ns/ical/}calendar-order';
         if (!isset($properties[$sOrderProp])) {
             $properties[$sOrderProp] = 1;
         }
 
         return parent::createCalendar($principalUri, $calendarUri, $properties);
+    }
+
+    #[Override]
+    public function updateCalendar($calendarId, PropPatch $propPatch)
+    {
+        // Strip tags from displayname property
+        $mutations = $propPatch->getMutations();
+
+        if (array_key_exists('{DAV:}displayname', $mutations) && $mutations['{DAV:}displayname'] !== null) {
+            $mutations['{DAV:}displayname'] = strip_tags($mutations['{DAV:}displayname']);
+
+            $ref = new \ReflectionProperty($propPatch, 'mutations');
+            $ref->setValue($propPatch, $mutations);
+        }
+
+        return parent::updateCalendar($calendarId, $propPatch);
     }
 
     public function deletePrincipalCalendars($principalUri)
