@@ -458,6 +458,10 @@ class PDO extends \Sabre\CardDAV\Backend\PDO
             $mutations['{DAV:}displayname'] = strip_tags($mutations['{DAV:}displayname']);
 
             $ref = new \ReflectionProperty($propPatch, 'mutations');
+            // TODO: remove setAccessible() once minimum PHP version is raised to 8.1+
+            // (Reflection accessibility checks became a no-op in PHP 8.1, but on <8.1
+            // this call is required or setValue() throws ReflectionException).
+            $ref->setAccessible(true);
             $ref->setValue($propPatch, $mutations);
         }
 
