@@ -639,8 +639,13 @@ SQL
      */
     public function deleteShareByGroupIds($principaluri, $storage, $uid, $groupIds)
     {
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND uid = ? AND group_id in (?)');
-        return $stmt->execute([$principaluri, $storage, $uid, implode(',', $groupIds)]);
+        if (empty($groupIds)) {
+            return true;
+        }
+        $groupIds = array_map('intval', $groupIds);
+        $placeholders = implode(',', array_fill(0, count($groupIds), '?'));
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND storage = ? AND uid = ? AND group_id in (' . $placeholders . ')');
+        return $stmt->execute(array_merge([$principaluri, $storage, $uid], $groupIds));
     }
 
         /**
@@ -658,8 +663,13 @@ SQL
 
     public function deleteShareNotInGroups($principaluri, $groupIds)
     {
-        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id NOT IN (' . implode(', ', $groupIds) . ') AND principaluri = ? AND group_id > 0');
-        return $stmt->execute([$principaluri]);
+        if (empty($groupIds)) {
+            return true;
+        }
+        $groupIds = array_map('intval', $groupIds);
+        $placeholders = implode(', ', array_fill(0, count($groupIds), '?'));
+        $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id NOT IN (' . $placeholders . ') AND principaluri = ? AND group_id > 0');
+        return $stmt->execute(array_merge([$principaluri], $groupIds));
     }
 
     public function deleteSharesByGroupId($groupId)
