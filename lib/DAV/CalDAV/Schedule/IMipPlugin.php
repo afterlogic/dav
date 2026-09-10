@@ -106,7 +106,10 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
         }
 
         $subject = 'iTIP message';
-        switch (strtoupper($iTipMessage->method)) {
+        $method = strtoupper($iTipMessage->method);
+        $sendEmail = false;
+
+        switch ($method) {
             case 'REPLY':
                 $sPartstat = $iTipMessage->message->VEVENT->ATTENDEE['PARTSTAT']->getValue();
                 $oModule = Api::GetModule('CalendarMeetingsPlugin');
@@ -124,13 +127,20 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                             break;
                     }
                 }
+                $sendEmail = true;
                 break;
             case 'REQUEST':
                 $subject = $summary;
+                $sendEmail = true;
                 break;
             case 'CANCEL':
                 $subject = 'Cancelled: ' . $summary;
+                $sendEmail = true;
                 break;
+        }
+
+        if (!$sendEmail) {
+            return;
         }
 
         $headers = [
@@ -144,8 +154,8 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
 
         $htmlBody = '';
 
-        if (strtoupper($iTipMessage->method) === 'REQUEST') {
-            
+        // Generate HTML body for REQUEST and REPLY
+        if ($method === 'REQUEST' || $method === 'REPLY') {
             $oUser = Module::getInstance()->GetUserByPublicId($senderEmail);
 
             /** @var \Sabre\VObject\Property\ICalendar\DateTime $oDTSTART */
@@ -178,24 +188,24 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                     $attendee->setValue(trim(substr($sAttendee, $iPos + 11),'/'));
                 }
             }
+        }
 
-            // Wrap the message sending in a try-catch block (fix A: handle SMTP errors gracefully)
-            try {
-                Helper::sendAppointmentMessage(
-                    $senderEmail,
-                    $recipient,
-                    $subject,
-                    $iTipMessage->message,
-                    $iTipMessage->method,
-                    $htmlBody
-                );
-                // Only set success status if sending succeeded
-                $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
-            } catch (\Exception $e) {
-                // Set failure status — this prevents retries for this attendee
-                $iTipMessage->scheduleStatus = '5.1; Delivery failed; Error: ' . $e->getMessage();
-                // Continue processing other attendees (the foreach loop in parent class will continue)
-            }
+        // Wrap the message sending in a try-catch block (fix A: handle SMTP errors gracefully)
+        try {
+            Helper::sendAppointmentMessage(
+                $senderEmail,
+                $recipient,
+                $subject,
+                $iTipMessage->message,
+                $iTipMessage->method,
+                $htmlBody
+            );
+            // Only set success status if sending succeeded
+            $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+        } catch (\Exception $e) {
+            // Set failure status — this prevents retries for this attendee
+            $iTipMessage->scheduleStatus = '5.1; Delivery failed; Error: ' . $e->getMessage();
+            // Continue processing other attendees (the foreach loop in parent class will continue)
         }
     }
 
