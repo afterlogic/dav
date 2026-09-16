@@ -684,7 +684,7 @@ SQL
         $groupIds = array_map('intval', $groupIds);
         $placeholders = implode(', ', array_fill(0, count($groupIds), '?'));
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id NOT IN (' . $placeholders . ') AND principaluri = ? AND group_id > 0');
-        return $stmt->execute(array_merge([$principaluri], $groupIds));
+        return $stmt->execute(array_merge($groupIds, [$principaluri]));
     }
 
     public function deleteSharesByGroupId($groupId)
