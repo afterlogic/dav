@@ -181,6 +181,30 @@ SQL
         return $aResult;
     }
 
+    /**
+     * Whether a share row already exists for this exact (principaluri, path, group_id)
+     * combination, so callers that create one share per group member can skip re-creating
+     * one that's already there instead of inserting a duplicate row.
+     *
+     * @param string $principalUri
+     * @param string $path
+     * @param int $groupId
+     * @return bool
+     */
+    public function sharedFileExists($principalUri, $path, $groupId = 0)
+    {
+        $stmt = $this->pdo->prepare(
+            <<<SQL
+SELECT 1 FROM {$this->sharedFilesTableName}
+WHERE principaluri = ? AND path = ? AND group_id = ?
+SQL
+        );
+
+        $stmt->execute([$principalUri, $path, $groupId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
     /* @param string $principalUri
     /* @param string $uid
      * @return array
