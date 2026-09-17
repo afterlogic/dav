@@ -57,9 +57,14 @@ class File extends \Afterlogic\DAV\FS\File
         }
 
         // Prepare the upload parameters.
+        // The SDK's defaults (5 MB parts, 5 concurrent parts) leave large-file uploads
+        // network-bound well below what typical datacenter/broadband links can sustain;
+        // bigger parts and more concurrency let a big upload use more of the link.
         $uploader = new MultipartUploader($this->client, $rData, [
             'Bucket' => $this->bucket,
-            'Key'    => $this->path
+            'Key'    => $this->path,
+            'part_size' => 16 * 1024 * 1024,
+            'concurrency' => 8,
         ]);
 
         // Perform the upload.
