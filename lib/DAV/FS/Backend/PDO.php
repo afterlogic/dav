@@ -700,12 +700,25 @@ SQL
         return $stmt->execute([$principaluri, $groupId]);
     }
 
+    /**
+     * Deletes this principal's group-based shares (group_id > 0) for groups NOT in $groupIds --
+     * i.e. keeps only the shares that belong to a group the user still belongs to.
+     *
+     * @param string $principaluri
+     * @param int[] $groupIds The groups the user currently belongs to. An empty array means
+     *   "belongs to no group", so every group-based share is removed -- not skipped.
+     */
     public function deleteShareNotInGroups($principaluri, $groupIds)
     {
+        $groupIds = array_values(array_filter(array_map('intval', $groupIds), function ($groupId) {
+            return $groupId > 0;
+        }));
+
         if (empty($groupIds)) {
-            return true;
+            $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE principaluri = ? AND group_id > 0');
+            return $stmt->execute([$principaluri]);
         }
-        $groupIds = array_map('intval', $groupIds);
+
         $placeholders = implode(', ', array_fill(0, count($groupIds), '?'));
         $stmt = $this->pdo->prepare('DELETE FROM '.$this->sharedFilesTableName.' WHERE group_id NOT IN (' . $placeholders . ') AND principaluri = ? AND group_id > 0');
         return $stmt->execute(array_merge($groupIds, [$principaluri]));
