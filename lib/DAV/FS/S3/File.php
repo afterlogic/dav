@@ -97,7 +97,7 @@ class File extends \Afterlogic\DAV\FS\File
         $oS3Filestorage = \Aurora\Modules\S3Filestorage\Module::getInstance();
         $iPresignedLinkLifetime = 60;
         if ($oS3Filestorage) {
-            $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifeTimeMinutes', $iPresignedLinkLifetime);
+            $iPresignedLinkLifetime = $oS3Filestorage->getConfig('PresignedLinkLifetimeMinutes', $iPresignedLinkLifetime);
         }
 
         return $this->client->createPresignedRequest(
