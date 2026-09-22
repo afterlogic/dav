@@ -40,47 +40,14 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
             return;
         }
 
-        // We found a principal URL, now we need to find its inbox.
-        // Unfortunately we may not have sufficient privileges to find this, so
-        // we are temporarily turning off ACL to let this come through.
-        //
-        // Once we support PHP 5.5, this should be wrapped in a try..finally
-        // block so we can ensure that privilege gets added again after.
-        $this->server->removeListener('propFind', [$aclPlugin, 'propFind']);
-
-        $result = $this->server->getProperties(
-            $principalUri,
-            [
-                '{DAV:}principal-URL',
-                 $caldavNS.'calendar-home-set',
-                 $caldavNS.'schedule-inbox-URL',
-                 $caldavNS.'schedule-default-calendar-URL',
-                '{http://sabredav.org/ns}email-address',
-            ]
-        );
-
-        // Re-registering the ACL event
-        $this->server->on('propFind', [$aclPlugin, 'propFind'], 20);
-
-        if (!isset($result[$caldavNS.'schedule-inbox-URL'])) {
-            $iTipMessage->scheduleStatus = '5.2;Could not find local inbox';
-
-            return;
-        }
-        if (!isset($result[$caldavNS.'calendar-home-set'])) {
+        $caldavPlugin = $this->server->getPlugin('caldav');
+        $homePath = $caldavPlugin->getCalendarHomeForPrincipal($principalUri);
+        if (!$homePath) {
             $iTipMessage->scheduleStatus = '5.2;Could not locate a calendar-home-set';
 
             return;
         }
-        if (!isset($result[$caldavNS.'schedule-default-calendar-URL'])) {
-            $iTipMessage->scheduleStatus = '5.2;Could not find a schedule-default-calendar-URL property';
-
-            return;
-        }
-
-        $calendarPath = $result[$caldavNS.'schedule-default-calendar-URL']->getHref();
-        $homePath = $result[$caldavNS.'calendar-home-set']->getHref();
-        $inboxPath = $result[$caldavNS.'schedule-inbox-URL']->getHref();
+        $inboxPath = $homePath.'/inbox/';
 
         if ('REPLY' === $iTipMessage->method) {
             $privilege = 'schedule-deliver-reply';
@@ -88,8 +55,47 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
             $privilege = 'schedule-deliver-invite';
         }
 
-        if (!$aclPlugin->checkPrivileges($inboxPath, $caldavNS.$privilege, \Sabre\DAVACL\Plugin::R_PARENT, false)) {
+        // We may not have sufficient privileges to check this, so we are
+        // temporarily turning off ACL to let this come through.
+        $this->server->removeListener('propFind', [$aclPlugin, 'propFind']);
+        $hasPrivilege = $aclPlugin->checkPrivileges($inboxPath, $caldavNS.$privilege, \Sabre\DAVACL\Plugin::R_PARENT, false);
+        $this->server->on('propFind', [$aclPlugin, 'propFind'], 20);
+
+        if (!$hasPrivilege) {
             $iTipMessage->scheduleStatus = '3.8;insufficient privileges: '.$privilege.' is required on the recipient schedule inbox.';
+
+            return;
+        }
+
+        // We deliberately avoid resolving the recipient's calendars through
+        // $this->server->tree / getProperties(): the "calendars" node is a
+        // single object shared for the whole request (it's added once when
+        // the server boots - see Server::initCalendars()), and it lazily
+        // latches onto whichever principal first initializes it
+        // (CalendarHome::init() only sets $principalInfo "if empty"). That's
+        // normally the sender/organizer, since their own request always
+        // touches it first (e.g. the PUT that triggered this scheduling).
+        // Going through the shared tree would then silently read/write
+        // calendar objects against the organizer's own calendars instead of
+        // the recipient's. A CalendarHome instance we construct ourselves
+        // resolves everything from its own $principalInfo instead, so it's
+        // safe to use for a different principal than the one the tree is
+        // currently bound to.
+        $recipientPrincipalInfo = ['uri' => $principalUri, 'id' => basename($principalUri)];
+        $home = new \Afterlogic\DAV\CalDAV\CalendarHome(\Afterlogic\DAV\Backend::Caldav(), $recipientPrincipalInfo);
+        $inbox = $home->getChild('inbox');
+
+        $targetCalendar = null;
+        foreach ($home->getChildren() as $child) {
+            $isOwnCalendar = ($child instanceof \Afterlogic\DAV\CalDAV\Calendar)
+                || ($child instanceof \Afterlogic\DAV\CalDAV\Shared\Calendar && $child->isOwned());
+            if ($isOwnCalendar) {
+                $targetCalendar = $child;
+                break;
+            }
+        }
+        if (!$targetCalendar) {
+            $iTipMessage->scheduleStatus = '5.2;Could not find a schedule-default-calendar-URL property';
 
             return;
         }
@@ -100,21 +106,20 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
 
         $newFileName = 'sabredav-'.\Sabre\DAV\UUIDUtil::getUUID().'.ics';
 
-        $user = basename($principalUri);
-        $home = \Afterlogic\DAV\Server::getNodeForPath($homePath, $user);
-        $inbox = \Afterlogic\DAV\Server::getNodeForPath($inboxPath, $user);
-
         $currentObject = null;
         $objectNode = null;
         $oldICalendarData = null;
         $isNewNode = false;
 
-        $home->init();
         $result = $home->getCalendarObjectByUID($uid);
         if ($result) {
             // There was an existing object, we need to update probably.
-            $objectPath = $homePath.'/'.$result;
-            $objectNode = \Afterlogic\DAV\Server::getNodeForPath($objectPath, $user);
+            // $result is "<calendar uri>/<object uri>", relative to $home.
+            list($existingCalendarUri, $existingObjectUri) = explode('/', $result, 2);
+            $existingCalendar = ($existingCalendarUri === $targetCalendar->getName())
+                ? $targetCalendar
+                : $home->getChild($existingCalendarUri);
+            $objectNode = $existingCalendar->getChild($existingObjectUri);
             $oldICalendarData = $objectNode->get();
             $currentObject = \Sabre\VObject\Reader::read($oldICalendarData);
         } else {
@@ -123,9 +128,9 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
 
         $broker = new \Sabre\VObject\ITip\Broker();
         $broker->significantChangeProperties = array_merge(
-            $broker->significantChangeProperties, 
+            $broker->significantChangeProperties,
             $this->customSignificantChangeProperties
-        );        
+        );
         $newObject = $broker->processMessage($iTipMessage, $currentObject);
 
         $inbox->createFile($newFileName, $iTipMessage->message->serialize());
@@ -146,8 +151,7 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         // We may need to look a bit deeper into this later. Supporting ACL
         // here would be nice.
         if ($isNewNode) {
-            $calendar = \Afterlogic\DAV\Server::getNodeForPath($calendarPath, $user);
-            $calendar->createFile($newFileName, $newObject->serialize());
+            $targetCalendar->createFile($newFileName, $newObject->serialize());
         } else {
             // If the message was a reply, we may have to inform other
             // attendees of this attendees status. Therefore we're shooting off
