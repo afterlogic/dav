@@ -72,13 +72,43 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
     public function getPrincipalByPath($path)
     {
         list(, $sUsername) = \Sabre\Uri\split($path);
+        $aAddresses = array_merge([$sUsername], $this->getPrincipalAliases($sUsername));
         return array(
             'id' => $sUsername,
             'uri' => \Afterlogic\DAV\Constants::PRINCIPALS_PREFIX.$sUsername,
 			'{http://sabredav.org/ns}email-address' => $sUsername,
-            '{DAV:}alternate-URI-set' => ['mailto:' . $sUsername],
+            '{DAV:}alternate-URI-set' => array_map(function ($sAddress) {
+                return 'mailto:' . $sAddress;
+            }, $aAddresses),
             '{DAV:}displayname' => $sUsername,
         );
+    }
+
+    /**
+     * Returns alias email addresses of the user (without the primary one).
+     * The addresses are provided by modules subscribed to the Dav::GetPrincipalAliases event.
+     *
+     * @param string $sUsername
+     * @return array
+     */
+    protected function getPrincipalAliases($sUsername)
+    {
+        static $aCache = [];
+
+        if (!isset($aCache[$sUsername])) {
+            $aArgs = ['PublicId' => $sUsername];
+            $aAliases = [];
+            \Aurora\System\EventEmitter::getInstance()->emit('Dav', 'GetPrincipalAliases', $aArgs, $aAliases);
+
+            $aCache[$sUsername] = array_values(array_unique(array_filter(
+                is_array($aAliases) ? $aAliases : [],
+                function ($sAlias) use ($sUsername) {
+                    return is_string($sAlias) && $sAlias !== '' && strcasecmp($sAlias, $sUsername) !== 0;
+                }
+            )));
+        }
+
+        return $aCache[$sUsername];
     }
 
     /**
@@ -209,11 +239,14 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
         switch ($scheme) {
             case "mailto":
 
-                $oUser = \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId(
-                    $value
-                );
-                if ($oUser instanceof \Aurora\Modules\Core\Models\User) {
+                if ($this->userExistsByPublicId($value)) {
                     $uri = $principalPrefix . '/' . $value;
+                } else {
+                    // Not a primary address - ask modules if it's a known alias of some user.
+                    $sOwnerPublicId = $this->findPrincipalOwnerByAlias($value);
+                    if ($sOwnerPublicId) {
+                        $uri = $principalPrefix . '/' . $sOwnerPublicId;
+                    }
                 }
                 break;
             default:
@@ -221,5 +254,33 @@ class PDO extends \Sabre\DAVACL\PrincipalBackend\PDO
                 return null;
         }
         return $uri;
+    }
+
+    /**
+     * Checks whether a user with the given PublicId (primary email) exists.
+     *
+     * @param string $sPublicId
+     * @return bool
+     */
+    protected function userExistsByPublicId($sPublicId)
+    {
+        return \Aurora\Modules\Core\Module::Decorator()->GetUserByPublicId($sPublicId) instanceof \Aurora\Modules\Core\Models\User;
+    }
+
+    /**
+     * Finds the PublicId of the user who owns the given alias address.
+     * Modules subscribed to the Dav::GetPrincipalByAlias event should set
+     * $mResult to the owner's PublicId (string) if the alias is theirs.
+     *
+     * @param string $sAlias
+     * @return string|null
+     */
+    protected function findPrincipalOwnerByAlias($sAlias)
+    {
+        $aArgs = ['Alias' => $sAlias];
+        $mResult = null;
+        \Aurora\System\EventEmitter::getInstance()->emit('Dav', 'GetPrincipalByAlias', $aArgs, $mResult);
+
+        return is_string($mResult) && $mResult !== '' ? $mResult : null;
     }
 }
