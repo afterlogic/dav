@@ -57,6 +57,18 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
      */
     public function schedule(ITip\Message $iTipMessage)
     {
+        // Skip entirely if the message was already delivered to a local
+        // mailbox by Schedule\Plugin::scheduleLocalDelivery(), which runs
+        // before this listener (it's registered at the default priority,
+        // while this plugin explicitly asks for a higher one, so it runs
+        // later - see Sabre\Event\EmitterTrait). Without this check we'd
+        // overwrite its "1.2;Message delivered locally" status with our own
+        // and still send a redundant email to a recipient who already got
+        // the invite through their own schedule-inbox.
+        if ($iTipMessage->scheduleStatus && 0 === strpos($iTipMessage->scheduleStatus, '1.2')) {
+            return;
+        }
+
         // Check if the event has already passed (fix B: prevent sending invites for past events)
         if ($this->isEventInPast($iTipMessage)) {
             $iTipMessage->scheduleStatus = '5.3;Event is in the past; iTip delivery suppressed';
