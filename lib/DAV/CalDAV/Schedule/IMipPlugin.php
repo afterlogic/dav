@@ -57,21 +57,28 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
      */
     public function schedule(ITip\Message $iTipMessage)
     {
-        // Skip entirely if the message was already delivered to a local
-        // mailbox by Schedule\Plugin::scheduleLocalDelivery(), which runs
-        // before this listener (it's registered at the default priority,
-        // while this plugin explicitly asks for a higher one, so it runs
-        // later - see Sabre\Event\EmitterTrait). Without this check we'd
-        // overwrite its "1.2;Message delivered locally" status with our own
-        // and still send a redundant email to a recipient who already got
-        // the invite through their own schedule-inbox.
-        if ($iTipMessage->scheduleStatus && 0 === strpos($iTipMessage->scheduleStatus, '1.2')) {
+        // Schedule\Plugin::scheduleLocalDelivery() runs before this listener
+        // (it's registered at the default priority, while this plugin
+        // explicitly asks for a higher one, so it runs later - see
+        // Sabre\Event\EmitterTrait) and sets "1.2;Message delivered locally"
+        // for recipients that have a local principal.
+        $bDeliveredLocally = $iTipMessage->scheduleStatus && 0 === strpos($iTipMessage->scheduleStatus, '1.2');
+
+        // For locally delivered messages only REQUEST is still sent by email,
+        // so that the recipient gets the invitation with Accept/Decline
+        // buttons in the webmail. REPLY and CANCEL are skipped: the organizer
+        // already gets them through local delivery, and CANCEL is also sent
+        // by CalendarMeetingsPlugin::onDeleteEvent, so emailing them here
+        // would produce duplicates.
+        if ($bDeliveredLocally && strtoupper($iTipMessage->method) !== 'REQUEST') {
             return;
         }
 
         // Check if the event has already passed (fix B: prevent sending invites for past events)
         if ($this->isEventInPast($iTipMessage)) {
-            $iTipMessage->scheduleStatus = '5.3;Event is in the past; iTip delivery suppressed';
+            if (!$bDeliveredLocally) {
+                $iTipMessage->scheduleStatus = '5.3;Event is in the past; iTip delivery suppressed';
+            }
             return;
         }
 
@@ -212,9 +219,16 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
                 $iTipMessage->method,
                 $htmlBody
             );
-            // Only set success status if sending succeeded
-            $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+            // Only set success status if sending succeeded. A locally delivered
+            // message keeps its "1.2" status, the email is just a notification.
+            if (!$bDeliveredLocally) {
+                $iTipMessage->scheduleStatus = '1.1; Scheduling message is sent via iMip';
+            }
         } catch (\Exception $e) {
+            if ($bDeliveredLocally) {
+                Api::Log('iMip notification for a locally delivered message failed: ' . $e->getMessage(), \Aurora\System\Enums\LogLevel::Error);
+                return;
+            }
             // Set failure status — this prevents retries for this attendee
             $iTipMessage->scheduleStatus = '5.1; Delivery failed; Error: ' . $e->getMessage();
             // Continue processing other attendees (the foreach loop in parent class will continue)
