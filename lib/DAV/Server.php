@@ -23,6 +23,14 @@ class Server extends \Sabre\DAV\Server
     public $rootNode = null;
 
     /**
+     * True when the server handles a request of a DAV client (see exec()). False when Aurora
+     * modules use the server while handling an API request.
+     *
+     * @var bool
+     */
+    protected $bDavRequest = false;
+
+    /**
      * @return \Afterlogic\DAV\Server
      */
     public static function createInstance()
@@ -249,10 +257,20 @@ class Server extends \Sabre\DAV\Server
         $sRequestUri = empty($_SERVER['REQUEST_URI']) ? '' : \trim($_SERVER['REQUEST_URI']);
 
         if ($this->isModuleEnabled('Dav') && !strpos(urldecode($sRequestUri), '../')) {
+            $this->bDavRequest = true;
             parent::start();
         } else {
             echo 'Access denied';
         }
+    }
+
+    /**
+     * @return bool True when the server handles a request of a DAV client, false when Aurora
+     *              modules use it while handling an API request
+     */
+    public function isDavRequest()
+    {
+        return $this->bDavRequest;
     }
 
     public static function setUser($sUserPublicId)

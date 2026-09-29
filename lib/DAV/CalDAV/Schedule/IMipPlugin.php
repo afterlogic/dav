@@ -64,13 +64,7 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
         // for recipients that have a local principal.
         $bDeliveredLocally = $iTipMessage->scheduleStatus && 0 === strpos($iTipMessage->scheduleStatus, '1.2');
 
-        // For locally delivered messages only REQUEST is still sent by email,
-        // so that the recipient gets the invitation with Accept/Decline
-        // buttons in the webmail. REPLY and CANCEL are skipped: the organizer
-        // already gets them through local delivery, and CANCEL is also sent
-        // by CalendarMeetingsPlugin::onDeleteEvent, so emailing them here
-        // would produce duplicates.
-        if ($bDeliveredLocally && strtoupper($iTipMessage->method) !== 'REQUEST') {
+        if ($bDeliveredLocally && $this->isEmailAlreadySentByWebmail($iTipMessage, $this->isDavRequest())) {
             return;
         }
 
@@ -233,6 +227,31 @@ class IMipPlugin extends \Sabre\CalDAV\Schedule\IMipPlugin
             $iTipMessage->scheduleStatus = '5.1; Delivery failed; Error: ' . $e->getMessage();
             // Continue processing other attendees (the foreach loop in parent class will continue)
         }
+    }
+
+    /**
+     * For a locally delivered message the email is a notification for the users who work in
+     * the webmail. It is sent for REQUEST, REPLY and CANCEL, except when the change is made in
+     * the webmail itself: then CalendarMeetingsPlugin has already emailed REPLY
+     * (Manager::appointmentAction()) and CANCEL (onDeleteEvent(), onUpdateEventAttendees()),
+     * and another email would be a duplicate.
+     *
+     * @param ITip\Message $iTipMessage
+     * @param bool $bDavRequest True if the change comes from a DAV client
+     * @return bool
+     */
+    private function isEmailAlreadySentByWebmail(ITip\Message $iTipMessage, $bDavRequest)
+    {
+        return !$bDavRequest && in_array(strtoupper($iTipMessage->method), ['REPLY', 'CANCEL'], true);
+    }
+
+    /**
+     * @return bool True if the change comes from a DAV client, false if it's made through the
+     *              Aurora API (webmail)
+     */
+    private function isDavRequest()
+    {
+        return $this->server instanceof \Afterlogic\DAV\Server && $this->server->isDavRequest();
     }
 
     /**
