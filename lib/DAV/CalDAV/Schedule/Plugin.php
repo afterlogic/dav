@@ -47,25 +47,6 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
 
             return;
         }
-        $inboxPath = $homePath.'/inbox/';
-
-        if ('REPLY' === $iTipMessage->method) {
-            $privilege = 'schedule-deliver-reply';
-        } else {
-            $privilege = 'schedule-deliver-invite';
-        }
-
-        // We may not have sufficient privileges to check this, so we are
-        // temporarily turning off ACL to let this come through.
-        $this->server->removeListener('propFind', [$aclPlugin, 'propFind']);
-        $hasPrivilege = $aclPlugin->checkPrivileges($inboxPath, $caldavNS.$privilege, \Sabre\DAVACL\Plugin::R_PARENT, false);
-        $this->server->on('propFind', [$aclPlugin, 'propFind'], 20);
-
-        if (!$hasPrivilege) {
-            $iTipMessage->scheduleStatus = '3.8;insufficient privileges: '.$privilege.' is required on the recipient schedule inbox.';
-
-            return;
-        }
 
         // We deliberately avoid resolving the recipient's calendars through
         // $this->server->tree / getProperties(): the "calendars" node is a
@@ -85,15 +66,23 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         $home = new \Afterlogic\DAV\CalDAV\CalendarHome(\Afterlogic\DAV\Backend::Caldav(), $recipientPrincipalInfo);
         $inbox = $home->getChild('inbox');
 
-        $targetCalendar = null;
-        foreach ($home->getChildren() as $child) {
-            $isOwnCalendar = ($child instanceof \Afterlogic\DAV\CalDAV\Calendar)
-                || ($child instanceof \Afterlogic\DAV\CalDAV\Shared\Calendar && $child->isOwned());
-            if ($isOwnCalendar) {
-                $targetCalendar = $child;
-                break;
-            }
+        if ('REPLY' === $iTipMessage->method) {
+            $privilege = 'schedule-deliver-reply';
+        } else {
+            $privilege = 'schedule-deliver-invite';
         }
+
+        // The privilege is checked on the recipient's own inbox node. The path
+        // $homePath.'/inbox/' would be resolved through the shared tree, i.e.
+        // against the organizer's inbox (see above).
+        $hasPrivilege = in_array($caldavNS.$privilege, $aclPlugin->getCurrentUserPrivilegeSet($inbox), true);
+        if (!$hasPrivilege) {
+            $iTipMessage->scheduleStatus = '3.8;insufficient privileges: '.$privilege.' is required on the recipient schedule inbox.';
+
+            return;
+        }
+
+        $targetCalendar = $this->getScheduleDefaultCalendar($home);
         if (!$targetCalendar) {
             $iTipMessage->scheduleStatus = '5.2;Could not find a schedule-default-calendar-URL property';
 
@@ -169,6 +158,45 @@ class Plugin extends \Sabre\CalDAV\Schedule\Plugin
         $iTipMessage->scheduleStatus = '1.2;Message delivered locally';
     }
     
+    /**
+     * Returns the calendar that scheduling messages are delivered to, like
+     * schedule-default-calendar-URL in Sabre: a calendar the user owns that
+     * supports VEVENT. The user's default calendar is preferred. A calendar
+     * with no supported-calendar-component-set supports all components.
+     *
+     * @param \Afterlogic\DAV\CalDAV\CalendarHome $home
+     * @return \Afterlogic\DAV\CalDAV\Calendar|\Afterlogic\DAV\CalDAV\Shared\Calendar|null
+     */
+    protected function getScheduleDefaultCalendar($home)
+    {
+        $sccs = '{'.self::NS_CALDAV.'}supported-calendar-component-set';
+        $firstCalendar = null;
+
+        foreach ($home->getChildren() as $child) {
+            $isOwnCalendar = ($child instanceof \Afterlogic\DAV\CalDAV\Calendar)
+                || ($child instanceof \Afterlogic\DAV\CalDAV\Shared\Calendar && $child->isOwned());
+            if (!$isOwnCalendar) {
+                continue;
+            }
+
+            $properties = $child->getProperties([$sccs]);
+            $components = isset($properties[$sccs]) ? $properties[$sccs]->getValue() : [];
+            if ($components && !in_array('VEVENT', $components, true)) {
+                // e.g. a list of Apple Reminders, it supports only VTODO
+                continue;
+            }
+
+            if ($child->isDefault()) {
+                return $child;
+            }
+            if (!$firstCalendar) {
+                $firstCalendar = $child;
+            }
+        }
+
+        return $firstCalendar;
+    }
+
     public function scheduleLocalDeliveryParent(\Sabre\VObject\ITip\Message $iTipMessage)
     {
         parent::scheduleLocalDelivery($iTipMessage);
